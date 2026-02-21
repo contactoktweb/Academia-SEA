@@ -84,68 +84,52 @@ const nacionales = [
 export default function CertificacionesPage() {
   return (
     <>
-      {/* Hero - dark with shield iconography */}
+      {/* Hero - Centered prestige style with seal */}
       <section className="relative overflow-hidden bg-[#0c1b3a]">
-        <div className="pointer-events-none absolute -top-40 -right-32 h-[500px] w-[500px] rounded-full bg-sea-blue/12 blur-[140px]" />
-        <div className="pointer-events-none absolute -bottom-20 -left-20 h-[350px] w-[350px] rounded-full bg-mint/10 blur-[120px]" />
+        {/* Decorative glow */}
+        <div className="pointer-events-none absolute top-[30%] left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-sea-blue/10 blur-[150px]" />
+        <div className="pointer-events-none absolute top-[50%] left-[20%] h-48 w-48 rounded-full bg-mint/12 blur-[100px]" />
+        <div className="pointer-events-none absolute top-[40%] right-[20%] h-40 w-40 rounded-full bg-yellow-soft/8 blur-[80px]" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-4 py-24 lg:px-8 lg:py-32">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-            {/* Text */}
-            <div className="flex flex-col gap-6">
-              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-mint/20 bg-mint/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-mint">
-                <Award className="h-3.5 w-3.5" />
-                Avala tu nivel
-              </span>
-              <h1 className="text-pretty text-4xl font-extrabold leading-tight text-white sm:text-5xl lg:text-6xl">
-                Certificaciones con{" "}
-                <span className="bg-gradient-to-r from-mint to-sea-blue-light bg-clip-text text-transparent">
-                  validez oficial
-                </span>
-              </h1>
-              <p className="max-w-lg text-base leading-relaxed text-slate-300 md:text-lg">
-                Te preparamos y aplicamos examenes reconocidos a nivel internacional y nacional
-                para que certifiques tu dominio del idioma ingles.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {["TOEFL", "TOEIC", "CENNI", "ELeT"].map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-white backdrop-blur-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
+        {/* Subtle ring decoration */}
+        <div className="pointer-events-none absolute top-1/2 left-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.03]" />
+        <div className="pointer-events-none absolute top-1/2 left-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.04]" />
+
+        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-4 py-28 text-center lg:py-40">
+          {/* Seal icon */}
+          <div className="relative mb-8">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-yellow-soft/30 bg-gradient-to-br from-yellow-soft/20 to-amber-500/10 shadow-lg shadow-yellow-soft/10 backdrop-blur-sm">
+              <Award className="h-10 w-10 text-yellow-soft" />
             </div>
+            <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-mint shadow-lg shadow-mint/30" />
+          </div>
 
-            {/* Visual - stacked cert icons */}
-            <div className="hidden lg:flex lg:justify-center">
-              <div className="relative">
-                {/* Background glow */}
-                <div className="absolute -inset-12 rounded-full bg-gradient-to-br from-sea-blue/10 via-transparent to-mint/10 blur-3xl" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-mint/20 bg-white/5 px-5 py-2 text-xs font-semibold tracking-widest uppercase text-mint backdrop-blur-sm">
+            Centro Aplicador Autorizado
+          </span>
 
-                <div className="relative grid grid-cols-2 gap-4">
-                  <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                    <Globe className="h-10 w-10 text-sea-blue-light" />
-                    <span className="text-xs font-bold text-white">Internacional</span>
-                    <span className="text-[10px] text-slate-400">TOEFL / TOEIC</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                    <Flag className="h-10 w-10 text-mint" />
-                    <span className="text-xs font-bold text-white">Nacional</span>
-                    <span className="text-[10px] text-slate-400">CENNI / ELeT</span>
-                  </div>
-                  <div className="col-span-2 flex items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                    <ShieldCheck className="h-10 w-10 text-yellow-soft" />
-                    <div>
-                      <p className="text-xs font-bold text-white">Centro Aplicador Autorizado</p>
-                      <p className="text-[10px] text-slate-400">ETS & SEP en la region de Jalisco</p>
-                    </div>
-                  </div>
-                </div>
+          <h1 className="mt-8 text-balance text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl md:text-6xl lg:text-7xl">
+            Certifica tu ingles con{" "}
+            <span className="bg-gradient-to-r from-mint via-sea-blue-light to-yellow-soft bg-clip-text text-transparent">validez oficial</span>
+          </h1>
+
+          <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-slate-300/90 md:text-lg">
+            Somos centro aplicador autorizado de examenes TOEFL y TOEIC. Te preparamos y certificamos con reconocimiento internacional y nacional.
+          </p>
+
+          {/* Cert badges */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+            {[
+              { label: "TOEFL", sub: "Internacional", color: "border-sea-blue/30 bg-sea-blue/10 text-sea-blue-light" },
+              { label: "TOEIC", sub: "Internacional", color: "border-sea-blue/30 bg-sea-blue/10 text-sea-blue-light" },
+              { label: "CENNI", sub: "Nacional (SEP)", color: "border-mint/30 bg-mint/10 text-mint" },
+              { label: "ELeT", sub: "Nacional", color: "border-mint/30 bg-mint/10 text-mint" },
+            ].map((tag) => (
+              <div key={tag.label} className={`flex flex-col items-center rounded-2xl border px-6 py-3.5 backdrop-blur-sm ${tag.color}`}>
+                <span className="text-sm font-extrabold">{tag.label}</span>
+                <span className="text-[10px] font-medium opacity-70">{tag.sub}</span>
               </div>
-            </div>
+            ))}
           </div>
         </div>
 

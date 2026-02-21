@@ -16,7 +16,7 @@ import {
   Clock,
   Users,
 } from "lucide-react"
-import { useState } from "react"
+
 
 const locations = [
   {
@@ -77,86 +77,59 @@ export default function ContactoPage() {
 
   return (
     <>
-      {/* Hero - with location preview cards */}
+      {/* Hero - Centered with location dots */}
       <section className="relative overflow-hidden bg-[#0c1b3a]">
-        <div className="pointer-events-none absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-sea-blue/12 blur-[140px]" />
-        <div className="pointer-events-none absolute -bottom-32 -right-32 h-[400px] w-[400px] rounded-full bg-mint/10 blur-[120px]" />
-        <div className="pointer-events-none absolute top-20 -left-20 h-48 w-48 rounded-full bg-yellow-soft/8 blur-[80px]" />
+        {/* Decorative blurs */}
+        <div className="pointer-events-none absolute top-[25%] left-[20%] h-64 w-64 rounded-full bg-[#25d366]/15 blur-[120px]" />
+        <div className="pointer-events-none absolute bottom-[30%] right-[15%] h-56 w-56 rounded-full bg-sea-blue/15 blur-[100px]" />
+        <div className="pointer-events-none absolute top-[60%] left-[55%] h-40 w-40 rounded-full bg-mint/10 blur-[80px]" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-4 py-24 lg:px-8 lg:py-32">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-            <div className="flex flex-col gap-6">
-              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-sea-blue-light/20 bg-sea-blue/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-sea-blue-light">
-                <MapPin className="h-3.5 w-3.5" />
-                3 Sedes en Jalisco
-              </span>
-              <h1 className="text-pretty text-4xl font-extrabold leading-tight text-white sm:text-5xl lg:text-6xl">
-                Inscribete y{" "}
-                <span className="bg-gradient-to-r from-sea-blue-light to-mint bg-clip-text text-transparent">
-                  comienza hoy
-                </span>
-              </h1>
-              <p className="max-w-lg text-base leading-relaxed text-slate-300 md:text-lg">
-                Estamos listos para ayudarte a comenzar tu camino en el dominio del idioma ingles.
-                Encuentra toda la informacion para inscribirte.
-              </p>
+        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-4 py-28 text-center lg:py-40">
+          <span className="inline-flex items-center gap-2 rounded-full border border-sea-blue-light/20 bg-white/5 px-5 py-2 text-xs font-semibold tracking-widest uppercase text-sea-blue-light backdrop-blur-sm">
+            <MapPin className="h-3.5 w-3.5" />
+            3 Sedes en Jalisco
+          </span>
+
+          <h1 className="mt-8 text-balance text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl md:text-6xl lg:text-7xl">
+            Estamos cerca de ti,{" "}
+            <span className="bg-gradient-to-r from-[#25d366] to-mint bg-clip-text text-transparent">inscribete hoy</span>
+          </h1>
+
+          <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-slate-300/90 md:text-lg">
+            Visitanos en cualquiera de nuestras sucursales o contactanos por WhatsApp. Te guiamos paso a paso en tu proceso de inscripcion.
+          </p>
+
+          {/* Location pills */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+            {locations.map((loc) => (
               <a
-                href="https://wa.me/523213875702"
+                key={loc.name}
+                href={`https://wa.me/${loc.whatsapp}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex w-fit items-center gap-2 rounded-xl bg-sea-blue px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-sea-blue/25 transition-all hover:-translate-y-0.5 hover:bg-sea-blue-light"
+                className="group flex items-center gap-3 rounded-full border border-white/10 bg-white/5 py-2.5 pr-5 pl-2.5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10"
               >
-                <MessageCircle className="h-5 w-5" />
-                Contactar por WhatsApp
-              </a>
-            </div>
-
-            {/* Location selector */}
-            <div className="hidden lg:block">
-              <div className="relative">
-                <div className="absolute -inset-8 rounded-3xl bg-gradient-to-br from-sea-blue/10 via-transparent to-mint/10 blur-2xl" />
-                <div className="relative flex flex-col gap-3">
-                  {locations.map((loc, i) => (
-                    <button
-                      key={loc.name}
-                      onClick={() => setActiveLocation(i)}
-                      className={`flex items-center gap-4 rounded-2xl border p-5 text-left transition-all ${
-                        activeLocation === i
-                          ? "border-white/20 bg-white/10 shadow-lg backdrop-blur-sm"
-                          : "border-white/5 bg-white/5 backdrop-blur-sm hover:border-white/10 hover:bg-white/8"
-                      }`}
-                    >
-                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${loc.accent}`}>
-                        <MapPin className="h-6 w-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-white">{loc.name}</p>
-                        <p className="mt-0.5 text-xs text-slate-400">{loc.phone}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <a
-                          href={`tel:+${loc.whatsapp}`}
-                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 transition-all hover:bg-white/15"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Phone className="h-4 w-4 text-white" />
-                        </a>
-                        <a
-                          href={`https://wa.me/${loc.whatsapp}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#25d366] transition-all hover:opacity-80"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MessageCircle className="h-4 w-4 text-white" />
-                        </a>
-                      </div>
-                    </button>
-                  ))}
+                <div className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${loc.accent}`}>
+                  <MapPin className="h-4 w-4 text-white" />
                 </div>
-              </div>
-            </div>
+                <div className="text-left">
+                  <p className="text-xs font-bold text-white">{loc.name}</p>
+                  <p className="text-[10px] text-slate-400">{loc.phone}</p>
+                </div>
+              </a>
+            ))}
           </div>
+
+          {/* CTA button */}
+          <a
+            href="https://wa.me/523213875702"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group mt-10 flex items-center gap-2 rounded-xl bg-[#25d366] px-8 py-4 text-sm font-bold text-white shadow-lg shadow-[#25d366]/25 transition-all hover:-translate-y-0.5 hover:bg-[#22c55e]"
+          >
+            <MessageCircle className="h-5 w-5" />
+            Contactar por WhatsApp
+          </a>
         </div>
 
         <div className="absolute bottom-0 left-0 z-10 w-full">

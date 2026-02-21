@@ -79,63 +79,42 @@ const courses = [
 export default function CursosPage() {
   return (
     <>
-      {/* Hero - Gradient with floating course icons */}
+      {/* Hero - Centered with colorful course pills */}
       <section className="relative overflow-hidden bg-[#0c1b3a]">
-        {/* Blobs */}
-        <div className="pointer-events-none absolute top-0 -left-32 h-[400px] w-[400px] rounded-full bg-sea-blue/15 blur-[140px]" />
-        <div className="pointer-events-none absolute -bottom-20 right-0 h-[350px] w-[350px] rounded-full bg-mint/12 blur-[120px]" />
-        <div className="pointer-events-none absolute top-10 right-1/3 h-48 w-48 rounded-full bg-yellow-soft/10 blur-[80px]" />
+        {/* Decorative color splashes */}
+        <div className="pointer-events-none absolute top-[20%] left-[15%] h-72 w-72 rounded-full bg-sea-blue/20 blur-[120px]" />
+        <div className="pointer-events-none absolute top-[30%] right-[15%] h-56 w-56 rounded-full bg-mint/15 blur-[100px]" />
+        <div className="pointer-events-none absolute bottom-[20%] left-[40%] h-48 w-48 rounded-full bg-amber-500/10 blur-[90px]" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-4 py-24 lg:px-8 lg:py-32">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-            {/* Text */}
-            <div className="flex flex-col gap-6">
-              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-sea-blue-light/20 bg-sea-blue/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-sea-blue-light">
-                <Sparkles className="h-3.5 w-3.5" />
-                Oferta Educativa
-              </span>
-              <h1 className="text-pretty text-4xl font-extrabold leading-tight text-white sm:text-5xl lg:text-6xl">
-                Un curso para{" "}
-                <span className="bg-gradient-to-r from-sea-blue-light to-mint bg-clip-text text-transparent">
-                  cada etapa
-                </span>
-                <br />
-                de tu vida
-              </h1>
-              <p className="max-w-lg text-base leading-relaxed text-slate-300 md:text-lg">
-                Desde preescolar hasta nivel empresarial, todos nuestros cursos utilizan la
-                metodologia Macmillan Education con docentes certificados.
-              </p>
+        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-4 py-28 text-center lg:py-40">
+          <span className="inline-flex items-center gap-2 rounded-full border border-sea-blue-light/20 bg-white/5 px-5 py-2 text-xs font-semibold tracking-widest uppercase text-sea-blue-light backdrop-blur-sm">
+            <Sparkles className="h-3.5 w-3.5" />
+            Metodologia Macmillan
+          </span>
+
+          <h1 className="mt-8 text-balance text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl md:text-6xl lg:text-7xl">
+            Un curso para cada{" "}
+            <span className="bg-gradient-to-r from-sea-blue-light to-mint bg-clip-text text-transparent">etapa de tu vida</span>
+          </h1>
+
+          <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-slate-300/90 md:text-lg">
+            Desde preescolar hasta nivel empresarial, todos nuestros programas combinan la metodologia Macmillan Education con docentes certificados y tecnologia de punta.
+          </p>
+
+          {/* Course pills row */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
+            {courses.map((course) => (
               <a
+                key={course.title}
                 href="#cursos"
-                className="group flex w-fit items-center gap-2 rounded-xl bg-sea-blue px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-sea-blue/25 transition-all hover:-translate-y-0.5 hover:bg-sea-blue-light"
+                className="group flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10"
               >
-                Ver todos los cursos
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </a>
-            </div>
-
-            {/* Floating icon grid */}
-            <div className="hidden lg:block">
-              <div className="relative mx-auto w-full max-w-sm">
-                <div className="grid grid-cols-3 gap-4">
-                  {courses.map((course, i) => (
-                    <div
-                      key={course.title}
-                      className={`flex flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm transition-all hover:-translate-y-1 hover:bg-white/10 ${i === 0 ? "col-span-2 flex-row justify-center gap-4" : ""} ${i === courses.length - 1 ? "col-span-2 flex-row justify-center gap-4" : ""}`}
-                    >
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${course.accentFrom} ${course.accentTo}`}>
-                        <course.icon className="h-6 w-6 text-white" />
-                      </div>
-                      <div className={`${i === 0 || i === courses.length - 1 ? "" : "text-center"}`}>
-                        <p className="text-xs font-bold text-white">{course.title}</p>
-                        <p className="text-[10px] text-slate-400">{course.badge}</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br ${course.accentFrom} ${course.accentTo}`}>
+                  <course.icon className="h-4 w-4 text-white" />
                 </div>
-              </div>
-            </div>
+                <span className="text-xs font-semibold text-white">{course.title}</span>
+              </a>
+            ))}
           </div>
         </div>
 

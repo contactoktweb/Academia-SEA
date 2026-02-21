@@ -78,53 +78,54 @@ const timeline = [
 export default function NosotrosPage() {
   return (
     <>
-      {/* Hero - Diagonal split with gradient & stats */}
+      {/* Hero - Centered text with floating orbs */}
       <section className="relative overflow-hidden bg-[#0c1b3a]">
-        {/* Blobs */}
-        <div className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-sea-blue/15 blur-[140px]" />
-        <div className="pointer-events-none absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-mint/10 blur-[120px]" />
+        {/* Decorative orbs */}
+        <div className="pointer-events-none absolute top-1/4 left-[10%] h-64 w-64 rounded-full bg-sea-blue/20 blur-[100px]" />
+        <div className="pointer-events-none absolute bottom-1/4 right-[10%] h-56 w-56 rounded-full bg-mint/15 blur-[100px]" />
+        <div className="pointer-events-none absolute top-[60%] left-[50%] h-40 w-40 -translate-x-1/2 rounded-full bg-yellow-soft/10 blur-[80px]" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-4 py-24 lg:px-8 lg:py-32">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-            {/* Text */}
-            <div className="flex flex-col gap-6">
-              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-sea-blue-light/20 bg-sea-blue/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-sea-blue-light">
-                <BookOpen className="h-3.5 w-3.5" />
-                Nuestra Historia
+        {/* Radial dot pattern */}
+        <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+
+        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-4 py-28 text-center lg:py-40">
+          <span className="inline-flex items-center gap-2 rounded-full border border-sea-blue-light/20 bg-white/5 px-5 py-2 text-xs font-semibold tracking-widest uppercase text-sea-blue-light backdrop-blur-sm">
+            <BookOpen className="h-3.5 w-3.5" />
+            Desde 2008 en Jalisco
+          </span>
+
+          <h1 className="mt-8 text-balance text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl md:text-6xl lg:text-7xl">
+            Donde aprender ingles{" "}
+            <span className="relative inline-block">
+              <span className="bg-gradient-to-r from-sea-blue-light via-mint to-sea-blue-light bg-clip-text text-transparent">
+                transforma vidas
               </span>
-              <h1 className="text-pretty text-4xl font-extrabold leading-tight text-white sm:text-5xl lg:text-6xl">
-                Conoce{" "}
-                <span className="bg-gradient-to-r from-sea-blue-light to-mint bg-clip-text text-transparent">
-                  Academia SEA
-                </span>
-              </h1>
-              <p className="max-w-lg text-base leading-relaxed text-slate-300 md:text-lg">
-                Somos una escuela de ingles fundada en 2008 con el objetivo de ofrecer ensenanza de calidad
-                en la region de Jalisco. A lo largo de mas de 15 anos, hemos formado miles de estudiantes
-                exitosos, desde ninos en preescolar hasta profesionales del sector empresarial.
-              </p>
-            </div>
+              <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none"><path d="M2 8C50 2 100 2 150 6C200 10 250 4 298 7" stroke="url(#underline-grad)" strokeWidth="3" strokeLinecap="round" /><defs><linearGradient id="underline-grad" x1="0" y1="0" x2="300" y2="0"><stop stopColor="#60A5FA" /><stop offset="1" stopColor="#a7f3d0" /></linearGradient></defs></svg>
+            </span>
+          </h1>
 
-            {/* Stats grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { value: 15, suffix: "+", label: "Anos de experiencia", icon: Calendar, accent: "border-sea-blue/30 bg-sea-blue/5" },
-                { value: 5000, suffix: "+", label: "Alumnos formados", icon: GraduationCap, accent: "border-mint/30 bg-mint/5" },
-                { value: 3, suffix: "", label: "Sedes en Jalisco", icon: MapPin, accent: "border-yellow-soft/30 bg-yellow-soft/5" },
-                { value: 98, suffix: "%", label: "Satisfaccion", icon: Heart, accent: "border-sea-blue-light/30 bg-sea-blue-light/5" },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className={`flex flex-col items-center gap-3 rounded-2xl border p-6 backdrop-blur-sm ${stat.accent}`}
-                >
-                  <stat.icon className="h-6 w-6 text-slate-300" />
-                  <p className="text-3xl font-extrabold text-white md:text-4xl">
+          <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-slate-300/90 md:text-lg">
+            Mas de 15 anos formando estudiantes exitosos con una metodologia que combina innovacion, calidez humana y resultados comprobables. Desde preescolar hasta el mundo empresarial.
+          </p>
+
+          {/* Inline stats */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-8 lg:gap-12">
+            {[
+              { value: 15, suffix: "+", label: "Anos" },
+              { value: 5000, suffix: "+", label: "Alumnos" },
+              { value: 3, suffix: "", label: "Sedes" },
+              { value: 98, suffix: "%", label: "Satisfaccion" },
+            ].map((stat, i) => (
+              <div key={stat.label} className="flex items-center gap-3">
+                {i > 0 && <div className="hidden h-8 w-px bg-white/10 sm:block" />}
+                <div className={`${i > 0 ? "sm:pl-3" : ""}`}>
+                  <p className="text-2xl font-extrabold text-white md:text-3xl">
                     <AnimatedCounter target={stat.value} suffix={stat.suffix} />
                   </p>
-                  <p className="text-center text-xs font-medium text-slate-400">{stat.label}</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">{stat.label}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
 
