@@ -1,14 +1,7 @@
-import type { Metadata } from "next"
+"use client"
 
-export const metadata: Metadata = {
-  title: "Aviso de Privacidad",
-  description:
-    "Aviso de Privacidad Integral para clientes y alumnos de Academia SEA.",
-  openGraph: {
-    title: "Aviso de Privacidad | Academia SEA",
-    description: "Aviso de Privacidad Integral de Academia SEA.",
-  },
-}
+import { ShieldCheck, ChevronDown } from "lucide-react"
+import { useState } from "react"
 
 const sections = [
   {
@@ -85,42 +78,104 @@ const sections = [
   },
 ]
 
-export default function PrivacidadPage() {
+function AccordionItem({ section }: { section: (typeof sections)[0] }) {
+  const [isOpen, setIsOpen] = useState(false)
+
   return (
-    <section className="bg-background py-16 lg:py-24">
-      <div className="mx-auto max-w-3xl px-4 lg:px-8">
-        <div className="mb-12">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-sea-blue">
-            Legal
-          </p>
-          <h1 className="text-pretty text-3xl font-extrabold text-heading md:text-4xl">
-            Aviso de Privacidad Integral
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">Clientes y Alumnos</p>
-        </div>
-
-        <div className="flex flex-col gap-10">
-          {sections.map((section) => (
-            <article key={section.id} className="flex flex-col gap-3">
-              <h2 className="text-lg font-bold text-sea-blue">
-                <span className="mr-2 text-heading">{section.id}.</span>
-                {section.title}
-              </h2>
-              <p className="text-sm leading-relaxed text-foreground">
-                {section.content}
-              </p>
-            </article>
-          ))}
-        </div>
-
-        <div className="mt-16 rounded-2xl border border-border bg-card p-6 text-center">
-          <p className="text-xs text-muted-foreground">
-            Ultima actualizacion: Enero 2024. Para cualquier duda o aclaracion sobre este
-            Aviso de Privacidad, contactenos en cualquiera de nuestras sucursales o a traves de
-            nuestras lineas telefonicas.
-          </p>
+    <div className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:shadow-md">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center gap-4 p-6 text-left transition-colors hover:bg-secondary/50"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sea-blue/10 text-sm font-extrabold text-sea-blue">
+          {section.id}
+        </span>
+        <span className="flex-1 text-sm font-bold text-heading lg:text-base">{section.title}</span>
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+      <div
+        className={`grid transition-all duration-300 ${
+          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-border px-6 pb-6 pt-4">
+            <p className="text-sm leading-relaxed text-muted-foreground">{section.content}</p>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+  )
+}
+
+export default function PrivacidadPage() {
+  return (
+    <>
+      {/* Hero - minimal legal style */}
+      <section className="relative overflow-hidden bg-[#0c1b3a]">
+        <div className="pointer-events-none absolute -top-40 -left-40 h-[400px] w-[400px] rounded-full bg-sea-blue/10 blur-[140px]" />
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 lg:px-8 lg:py-28">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sea-blue to-sea-blue-light shadow-lg shadow-sea-blue/20">
+              <ShieldCheck className="h-8 w-8 text-white" />
+            </div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wider text-slate-300 backdrop-blur-sm">
+              Documento Legal
+            </span>
+            <h1 className="mt-6 text-pretty text-3xl font-extrabold text-white sm:text-4xl lg:text-5xl">
+              Aviso de Privacidad Integral
+            </h1>
+            <p className="mt-4 text-base text-slate-400">
+              Clientes y Alumnos de Academia SEA
+            </p>
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 z-10 w-full">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full" preserveAspectRatio="none">
+            <path d="M0 60V30C360 0 720 10 1080 30C1260 40 1380 45 1440 30V60H0Z" className="fill-background" />
+          </svg>
+        </div>
+      </section>
+
+      {/* Content - accordion style */}
+      <section className="bg-background py-20 lg:py-28">
+        <div className="mx-auto max-w-3xl px-4 lg:px-8">
+          {/* Quick nav */}
+          <div className="mb-12 flex flex-wrap items-center justify-center gap-2">
+            {sections.map((s) => (
+              <span
+                key={s.id}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-xs font-bold text-muted-foreground"
+              >
+                {s.id}
+              </span>
+            ))}
+          </div>
+
+          {/* Accordion */}
+          <div className="flex flex-col gap-3">
+            {sections.map((section) => (
+              <AccordionItem key={section.id} section={section} />
+            ))}
+          </div>
+
+          {/* Footer note */}
+          <div className="mt-16 overflow-hidden rounded-3xl bg-gradient-to-br from-sea-blue/10 to-mint/10 p-px">
+            <div className="rounded-3xl bg-card p-8 text-center">
+              <ShieldCheck className="mx-auto mb-3 h-8 w-8 text-sea-blue" />
+              <p className="text-sm font-semibold text-heading">Ultima actualizacion: Enero 2024</p>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                Para cualquier duda o aclaracion sobre este Aviso de Privacidad, contactenos en
+                cualquiera de nuestras sucursales o a traves de nuestras lineas telefonicas.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   )
 }

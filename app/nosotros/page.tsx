@@ -1,3 +1,5 @@
+"use client"
+
 import type { Metadata } from "next"
 import {
   Heart,
@@ -11,105 +13,160 @@ import {
   Users,
   Monitor,
   MapPin,
+  BookOpen,
+  GraduationCap,
+  Calendar,
+  CheckCircle,
 } from "lucide-react"
+import { useEffect, useState, useRef } from "react"
 
-export const metadata: Metadata = {
-  title: "Nuestra Escuela",
-  description:
-    "Conoce la historia, mision, vision y valores de Academia SEA. Escuela de ingles fundada en 2008 con presencia en Jalisco.",
-  openGraph: {
-    title: "Nuestra Escuela | Academia SEA",
-    description:
-      "Conoce la historia, mision, vision y valores de Academia SEA en Jalisco.",
-  },
+function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef<HTMLSpanElement>(null)
+  const [hasAnimated, setHasAnimated] = useState(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated) {
+          setHasAnimated(true)
+          let start = 0
+          const duration = 2000
+          const step = Math.ceil(target / (duration / 16))
+          const timer = setInterval(() => {
+            start += step
+            if (start >= target) {
+              setCount(target)
+              clearInterval(timer)
+            } else {
+              setCount(start)
+            }
+          }, 16)
+        }
+      },
+      { threshold: 0.5 }
+    )
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [target, hasAnimated])
+
+  return (
+    <span ref={ref}>
+      {count}
+      {suffix}
+    </span>
+  )
 }
 
 const valores = [
-  { icon: Shield, label: "Responsabilidad", color: "bg-sea-blue/10 text-sea-blue" },
-  { icon: ThumbsUp, label: "Honestidad", color: "bg-mint/40 text-accent-foreground" },
-  { icon: Sparkles, label: "Excelencia", color: "bg-yellow-soft text-amber-700" },
-  { icon: Flame, label: "Pasion", color: "bg-red-50 text-red-600" },
-  { icon: Award, label: "Calidad", color: "bg-sea-blue-light/20 text-sea-dark" },
-  { icon: Users, label: "Respeto", color: "bg-mint/40 text-accent-foreground" },
+  { icon: Shield, label: "Responsabilidad", desc: "Cumplimos cada compromiso con alumnos y familias", color: "from-sea-blue to-sea-blue-light" },
+  { icon: ThumbsUp, label: "Honestidad", desc: "Transparencia en cada aspecto de nuestra labor", color: "from-[#059669] to-mint" },
+  { icon: Sparkles, label: "Excelencia", desc: "Buscamos los mas altos estandares educativos", color: "from-amber-500 to-yellow-soft" },
+  { icon: Flame, label: "Pasion", desc: "Amamos lo que hacemos y eso se nota", color: "from-red-500 to-orange-400" },
+  { icon: Award, label: "Calidad", desc: "Metodologia y materiales de nivel internacional", color: "from-sea-dark to-sea-blue" },
+  { icon: Users, label: "Respeto", desc: "Valoramos a cada persona en nuestra comunidad", color: "from-[#059669] to-mint" },
+]
+
+const timeline = [
+  { year: "2008", title: "Fundacion", desc: "Nace Academia SEA en la region de Jalisco con la mision de ofrecer ensenanza de calidad." },
+  { year: "2012", title: "Expansion", desc: "Abrimos nuestra segunda sede y ampliamos la oferta a nivel secundaria y primaria." },
+  { year: "2016", title: "Certificaciones", desc: "Nos convertimos en centro aplicador de TOEFL y TOEIC en la region." },
+  { year: "2020", title: "Era Digital", desc: "Lanzamos clases en linea manteniendo la calidad de la ensenanza presencial." },
+  { year: "2024", title: "Hoy", desc: "3 sedes, mas de 5000 alumnos formados y reconocimiento como lideres en Jalisco." },
 ]
 
 export default function NosotrosPage() {
   return (
     <>
-      {/* Hero */}
-      <section className="bg-background py-16 lg:py-24">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-sea-blue">
-              Nuestra Escuela
-            </p>
-            <h1 className="text-pretty text-4xl font-extrabold text-heading md:text-5xl">
-              Conoce Academia SEA
-            </h1>
-            <p className="mt-6 text-base leading-relaxed text-muted-foreground md:text-lg">
-              Somos una escuela de ingles que se fundo en el ano 2008 con el objetivo de ofrecer
-              ensenanza de calidad en el idioma ingles en la region de Jalisco. A lo largo de mas de
-              15 anos, hemos formado miles de estudiantes exitosos, desde ninos en preescolar hasta
-              profesionales del sector empresarial.
-            </p>
+      {/* Hero - Diagonal split with gradient & stats */}
+      <section className="relative overflow-hidden bg-[#0c1b3a]">
+        {/* Blobs */}
+        <div className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-sea-blue/15 blur-[140px]" />
+        <div className="pointer-events-none absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-mint/10 blur-[120px]" />
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 py-24 lg:px-8 lg:py-32">
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+            {/* Text */}
+            <div className="flex flex-col gap-6">
+              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-sea-blue-light/20 bg-sea-blue/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-sea-blue-light">
+                <BookOpen className="h-3.5 w-3.5" />
+                Nuestra Historia
+              </span>
+              <h1 className="text-pretty text-4xl font-extrabold leading-tight text-white sm:text-5xl lg:text-6xl">
+                Conoce{" "}
+                <span className="bg-gradient-to-r from-sea-blue-light to-mint bg-clip-text text-transparent">
+                  Academia SEA
+                </span>
+              </h1>
+              <p className="max-w-lg text-base leading-relaxed text-slate-300 md:text-lg">
+                Somos una escuela de ingles fundada en 2008 con el objetivo de ofrecer ensenanza de calidad
+                en la region de Jalisco. A lo largo de mas de 15 anos, hemos formado miles de estudiantes
+                exitosos, desde ninos en preescolar hasta profesionales del sector empresarial.
+              </p>
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { value: 15, suffix: "+", label: "Anos de experiencia", icon: Calendar, accent: "border-sea-blue/30 bg-sea-blue/5" },
+                { value: 5000, suffix: "+", label: "Alumnos formados", icon: GraduationCap, accent: "border-mint/30 bg-mint/5" },
+                { value: 3, suffix: "", label: "Sedes en Jalisco", icon: MapPin, accent: "border-yellow-soft/30 bg-yellow-soft/5" },
+                { value: 98, suffix: "%", label: "Satisfaccion", icon: Heart, accent: "border-sea-blue-light/30 bg-sea-blue-light/5" },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className={`flex flex-col items-center gap-3 rounded-2xl border p-6 backdrop-blur-sm ${stat.accent}`}
+                >
+                  <stat.icon className="h-6 w-6 text-slate-300" />
+                  <p className="text-3xl font-extrabold text-white md:text-4xl">
+                    <AnimatedCounter target={stat.value} suffix={stat.suffix} />
+                  </p>
+                  <p className="text-center text-xs font-medium text-slate-400">{stat.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+        {/* Wave */}
+        <div className="absolute bottom-0 left-0 z-10 w-full">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full" preserveAspectRatio="none">
+            <path d="M0 60V30C360 0 720 10 1080 30C1260 40 1380 45 1440 30V60H0Z" className="fill-background" />
+          </svg>
         </div>
       </section>
 
-      {/* Mision, Vision y Valores */}
-      <section className="bg-card py-20 lg:py-28">
+      {/* Timeline */}
+      <section className="bg-background py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="mx-auto mb-16 max-w-2xl text-center">
-            <h2 className="text-pretty text-3xl font-bold text-heading md:text-4xl">
-              Mision, Vision y Valores
+          <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-sea-blue/20 bg-sea-blue/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-sea-blue">
+              Trayectoria
+            </span>
+            <h2 className="text-pretty text-3xl font-extrabold text-heading md:text-4xl">
+              Nuestra historia en el tiempo
             </h2>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-2">
-            {/* Mision */}
-            <div className="flex flex-col gap-4 rounded-2xl border border-border bg-background p-8 shadow-sm">
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-sea-blue/10">
-                <Target className="h-7 w-7 text-sea-blue" />
-              </div>
-              <h3 className="text-xl font-bold text-heading">Mision</h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Formar personas competentes en el idioma ingles a traves de una metodologia de
-                ensenanza innovadora, con docentes altamente capacitados, utilizando tecnologia de
-                punta y fomentando valores que contribuyan al desarrollo integral de nuestros
-                alumnos.
-              </p>
-            </div>
+          {/* Horizontal timeline on desktop, vertical on mobile */}
+          <div className="relative">
+            {/* Desktop: horizontal line */}
+            <div className="absolute top-6 right-0 left-0 hidden h-0.5 bg-gradient-to-r from-sea-blue via-mint to-sea-blue-light lg:block" />
 
-            {/* Vision */}
-            <div className="flex flex-col gap-4 rounded-2xl border border-border bg-background p-8 shadow-sm">
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-mint/40">
-                <Eye className="h-7 w-7 text-accent-foreground" />
-              </div>
-              <h3 className="text-xl font-bold text-heading">Vision</h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Ser la institucion lider en la ensenanza del idioma ingles en la region, reconocida
-                por la calidad de nuestros programas, la excelencia de nuestros docentes y la
-                formacion integral que brindamos a nuestros estudiantes para competir en un entorno
-                globalizado.
-              </p>
-            </div>
-          </div>
-
-          {/* Valores */}
-          <div className="mt-12">
-            <h3 className="mb-8 text-center text-xl font-bold text-heading">Nuestros Valores</h3>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              {valores.map((valor) => (
-                <div
-                  key={valor.label}
-                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-background p-6 text-center transition-all hover:shadow-md"
-                >
-                  <div
-                    className={`flex h-12 w-12 items-center justify-center rounded-xl ${valor.color}`}
-                  >
-                    <valor.icon className="h-6 w-6" />
+            <div className="grid gap-8 lg:grid-cols-5 lg:gap-4">
+              {timeline.map((item, i) => (
+                <div key={item.year} className="relative flex flex-col items-center gap-4 text-center lg:pt-16">
+                  {/* Dot */}
+                  <div className="absolute top-0 hidden h-12 w-12 items-center justify-center rounded-full border-4 border-background bg-sea-blue shadow-lg shadow-sea-blue/20 lg:flex">
+                    <span className="text-xs font-extrabold text-white">{item.year}</span>
                   </div>
-                  <span className="text-sm font-semibold text-foreground">{valor.label}</span>
+
+                  {/* Card */}
+                  <div className="group w-full rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-xl">
+                    <span className="mb-2 inline-block text-sm font-extrabold text-sea-blue lg:hidden">{item.year}</span>
+                    <h3 className="text-base font-bold text-heading">{item.title}</h3>
+                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{item.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -117,77 +174,167 @@ export default function NosotrosPage() {
         </div>
       </section>
 
-      {/* Programa y Modalidades */}
-      <section className="bg-background py-20 lg:py-28">
+      {/* Mision & Vision - overlapping cards */}
+      <section className="bg-card py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="mx-auto mb-16 max-w-2xl text-center">
-            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-sea-blue">
-              Programa Educativo
-            </p>
-            <h2 className="text-pretty text-3xl font-bold text-heading md:text-4xl">
-              Nuestro Programa y Modalidades
+          <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-mint/30 bg-mint/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+              Filosofia
+            </span>
+            <h2 className="text-pretty text-3xl font-extrabold text-heading md:text-4xl">
+              Mision y Vision
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Ofrecemos un programa integral que cubre todos los niveles del idioma ingles, desde
-              principiante hasta avanzado, con metodologia Macmillan Education y respaldo de la SEP.
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2 lg:gap-0">
+            {/* Mision */}
+            <div className="relative z-10 rounded-2xl border border-border bg-background p-10 shadow-xl lg:rounded-r-none lg:border-r-0">
+              <div className="pointer-events-none absolute -top-10 -left-10 h-32 w-32 rounded-full bg-sea-blue/5 blur-2xl" />
+              <div className="relative">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sea-blue to-sea-blue-light shadow-lg shadow-sea-blue/20">
+                  <Target className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-extrabold text-heading">Mision</h3>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                  Formar personas competentes en el idioma ingles a traves de una metodologia de ensenanza
+                  innovadora, con docentes altamente capacitados, utilizando tecnologia de punta y fomentando
+                  valores que contribuyan al desarrollo integral de nuestros alumnos.
+                </p>
+              </div>
+            </div>
+
+            {/* Vision */}
+            <div className="relative rounded-2xl border border-border bg-[#0c1b3a] p-10 text-white shadow-xl lg:rounded-l-none lg:-ml-px">
+              <div className="pointer-events-none absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-mint/10 blur-2xl" />
+              <div className="relative">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-mint to-[#059669] shadow-lg shadow-mint/20">
+                  <Eye className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-extrabold text-white">Vision</h3>
+                <p className="mt-4 text-sm leading-relaxed text-slate-300">
+                  Ser la institucion lider en la ensenanza del idioma ingles en la region, reconocida
+                  por la calidad de nuestros programas, la excelencia de nuestros docentes y la formacion
+                  integral que brindamos a nuestros estudiantes para competir en un entorno globalizado.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Valores - Creative hexagonal/circular grid */}
+      <section className="relative overflow-hidden bg-background py-20 lg:py-28">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.015]">
+          <div
+            className="h-full w-full"
+            style={{
+              backgroundImage: "radial-gradient(circle, #1E3A8A 1px, transparent 1px)",
+              backgroundSize: "32px 32px",
+            }}
+          />
+        </div>
+
+        <div className="relative mx-auto max-w-7xl px-4 lg:px-8">
+          <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-yellow-soft/50 bg-yellow-soft/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-amber-700">
+              Lo que nos define
+            </span>
+            <h2 className="text-pretty text-3xl font-extrabold text-heading md:text-4xl">
+              Nuestros Valores
+            </h2>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {valores.map((valor, i) => (
+              <div
+                key={valor.label}
+                className="group relative overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all hover:-translate-y-1 hover:shadow-xl"
+              >
+                {/* Gradient top bar */}
+                <div className={`absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r ${valor.color}`} />
+
+                {/* Large number bg */}
+                <span className="pointer-events-none absolute -right-2 -bottom-4 text-[80px] font-black leading-none text-foreground/[0.02] transition-colors group-hover:text-sea-blue/[0.04]">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+
+                <div className="relative flex flex-col gap-4">
+                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${valor.color} shadow-lg transition-transform group-hover:scale-110`}>
+                    <valor.icon className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-heading">{valor.label}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{valor.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Modalidades - side by side with unique cards */}
+      <section className="bg-card py-20 lg:py-28">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+          <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-sea-blue/20 bg-sea-blue/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-sea-blue">
+              Programa Educativo
+            </span>
+            <h2 className="text-pretty text-3xl font-extrabold text-heading md:text-4xl">
+              Nuestras Modalidades
+            </h2>
+            <p className="max-w-lg text-base leading-relaxed text-muted-foreground">
+              Elige la modalidad que mejor se adapte a tu estilo de vida. Misma calidad, mismo compromiso.
             </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-8 lg:grid-cols-2">
             {/* Presencial */}
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-sm">
-              <div className="pointer-events-none absolute top-0 right-0 h-24 w-24 rounded-bl-full bg-sea-blue/5" />
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-sea-blue/10">
-                <MapPin className="h-7 w-7 text-sea-blue" />
+            <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-sea-blue to-sea-dark p-px shadow-xl shadow-sea-blue/10">
+              <div className="h-full rounded-3xl bg-card p-8 lg:p-10">
+                <div className="pointer-events-none absolute -top-20 -right-20 h-40 w-40 rounded-full bg-sea-blue/5 blur-2xl transition-all group-hover:bg-sea-blue/10" />
+                <div className="relative">
+                  <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sea-blue to-sea-dark shadow-lg shadow-sea-blue/20">
+                    <MapPin className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-extrabold text-heading">Clases Presenciales</h3>
+                  <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                    Asiste a nuestras instalaciones en El Grullo, Autlan o Union de Tula. Aulas equipadas,
+                    grupos reducidos e interaccion directa con docentes certificados.
+                  </p>
+                  <div className="mt-6 grid grid-cols-2 gap-3">
+                    {["Grupos reducidos", "Tecnologia educativa", "Material Macmillan", "Horarios flexibles"].map((item) => (
+                      <div key={item} className="flex items-center gap-2 rounded-xl bg-sea-blue/5 px-3 py-2">
+                        <CheckCircle className="h-3.5 w-3.5 shrink-0 text-sea-blue" />
+                        <span className="text-xs font-medium text-foreground">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <h3 className="mt-6 text-xl font-bold text-heading">Clases Presenciales</h3>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Asiste a nuestras instalaciones en El Grullo, Autlan o Union de Tula. Disfruta de
-                aulas equipadas con tecnologia educativa, grupos reducidos y la interaccion directa
-                con nuestros docentes certificados. La experiencia presencial incluye actividades
-                dinamicas, practicas de conversacion y acceso a material fisico y digital.
-              </p>
-              <ul className="mt-4 flex flex-col gap-2">
-                {[
-                  "Grupos reducidos",
-                  "Aulas equipadas con tecnologia",
-                  "Material Macmillan incluido",
-                  "Horarios flexibles",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-foreground">
-                    <span className="h-1.5 w-1.5 rounded-full bg-sea-blue" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
             </div>
 
             {/* En Linea */}
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-sm">
-              <div className="pointer-events-none absolute top-0 right-0 h-24 w-24 rounded-bl-full bg-mint/20" />
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-mint/40">
-                <Monitor className="h-7 w-7 text-accent-foreground" />
+            <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-mint to-[#059669] p-px shadow-xl shadow-mint/10">
+              <div className="h-full rounded-3xl bg-card p-8 lg:p-10">
+                <div className="pointer-events-none absolute -top-20 -right-20 h-40 w-40 rounded-full bg-mint/5 blur-2xl transition-all group-hover:bg-mint/10" />
+                <div className="relative">
+                  <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-mint to-[#059669] shadow-lg shadow-mint/20">
+                    <Monitor className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-extrabold text-heading">Clases en Linea</h3>
+                  <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                    Aprende desde cualquier lugar con conexion a internet. Misma calidad, metodologia
+                    y seguimiento personalizado con herramientas digitales interactivas.
+                  </p>
+                  <div className="mt-6 grid grid-cols-2 gap-3">
+                    {["Plataforma interactiva", "Clases en vivo", "Material digital", "Total flexibilidad"].map((item) => (
+                      <div key={item} className="flex items-center gap-2 rounded-xl bg-mint/10 px-3 py-2">
+                        <CheckCircle className="h-3.5 w-3.5 shrink-0 text-accent-foreground" />
+                        <span className="text-xs font-medium text-foreground">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <h3 className="mt-6 text-xl font-bold text-heading">Clases en Linea</h3>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Aprende ingles desde la comodidad de tu hogar o cualquier lugar con conexion a
-                internet. Nuestras clases en linea mantienen la misma calidad, metodologia y
-                seguimiento personalizado que nuestras clases presenciales, con herramientas
-                digitales interactivas.
-              </p>
-              <ul className="mt-4 flex flex-col gap-2">
-                {[
-                  "Plataforma interactiva",
-                  "Clases en vivo con docente",
-                  "Acceso a material digital",
-                  "Flexibilidad de horarios",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-foreground">
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent-foreground" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </div>
