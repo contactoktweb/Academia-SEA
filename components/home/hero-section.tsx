@@ -60,34 +60,12 @@ export function HeroSection() {
                 Iniciar Inscripción
                 <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
-              <Link
-                href="/cursos"
-                className="group inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-7 py-3.5 text-sm font-semibold text-[#1a2b4a] shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-              >
-                <Download className="h-4 w-4" />
-                Descargar Plan de Estudios
-              </Link>
+
             </div>
           </div>
 
           {/* ─── Right Column: Images ─── */}
           <div className="relative mx-auto w-full max-w-lg lg:mx-0 lg:max-w-none">
-            {/* Floating 98% stat card */}
-            <div className="absolute -left-4 top-0 z-30 flex items-center gap-3 rounded-xl border border-slate-100 bg-white px-5 py-3.5 shadow-xl shadow-slate-200/50 sm:left-4 md:left-8 lg:-left-10 lg:top-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f0f4f8]">
-                <Globe2 className="h-5 w-5 text-[#1a2b4a]" />
-              </div>
-              <div>
-                <p className="text-2xl font-extrabold leading-none text-[#1a2b4a]">
-                  98%
-                </p>
-                <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  Tasa de aprobación
-                  <br />
-                  en certificaciones
-                </p>
-              </div>
-            </div>
 
             {/* Images grid */}
             <div className="relative ml-auto grid w-full grid-cols-2 gap-3 pt-12 sm:pt-16 lg:pt-0">

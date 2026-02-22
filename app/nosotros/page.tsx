@@ -60,19 +60,19 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
 }
 
 const valores = [
-  { icon: Shield, label: "Responsabilidad", desc: "Cumplimos cada compromiso con alumnos y familias", color: "from-sea-blue to-sea-blue-light" },
-  { icon: ThumbsUp, label: "Honestidad", desc: "Transparencia en cada aspecto de nuestra labor", color: "from-[#059669] to-mint" },
-  { icon: Sparkles, label: "Excelencia", desc: "Buscamos los mas altos estandares educativos", color: "from-amber-500 to-yellow-soft" },
-  { icon: Flame, label: "Pasion", desc: "Amamos lo que hacemos y eso se nota", color: "from-red-500 to-orange-400" },
-  { icon: Award, label: "Calidad", desc: "Metodologia y materiales de nivel internacional", color: "from-sea-dark to-sea-blue" },
-  { icon: Users, label: "Respeto", desc: "Valoramos a cada persona en nuestra comunidad", color: "from-[#059669] to-mint" },
+  { icon: Shield, label: "Responsabilidad y compromiso", desc: "Cumplimos cada meta y acuerdo con nuestros alumnos y sus familias.", color: "from-sea-blue to-sea-blue-light" },
+  { icon: ThumbsUp, label: "Honestidad", desc: "Actuamos con total transparencia e integridad en cada paso de nuestra labor.", color: "from-[#059669] to-mint" },
+  { icon: Sparkles, label: "Excelencia en el servicio", desc: "Brindamos la mejor atencion buscando los maximos estandares educativos.", color: "from-amber-500 to-yellow-soft" },
+  { icon: Flame, label: "Pasión por lo que hacemos", desc: "Amamos enseñar y ese entusiasmo transforma la experiencia en el aula.", color: "from-red-500 to-orange-400" },
+  { icon: Award, label: "Calidad", desc: "Metodologia probada y materiales didacticos de nivel internacional.", color: "from-sea-dark to-sea-blue" },
+  { icon: Users, label: "Respeto y humildad", desc: "Creamos un ambiente armonioso donde todas las personas son valoradas.", color: "from-[#059669] to-mint" },
 ]
 
 const timeline = [
-  { year: "2008", title: "Fundacion", desc: "Nace Academia SEA en la region de Jalisco con la mision de ofrecer ensenanza de calidad." },
+  { year: "2008", title: "Fundacion", desc: "Nace Academia SEA en la region de Jalisco con la mision de ofrecer enseñanza de calidad." },
   { year: "2012", title: "Expansion", desc: "Abrimos nuestra segunda sede y ampliamos la oferta a nivel secundaria y primaria." },
   { year: "2016", title: "Certificaciones", desc: "Nos convertimos en centro aplicador de TOEFL y TOEIC en la region." },
-  { year: "2020", title: "Era Digital", desc: "Lanzamos clases en linea manteniendo la calidad de la ensenanza presencial." },
+  { year: "2020", title: "Era Digital", desc: "Lanzamos clases en linea manteniendo la calidad de la enseñanza presencial." },
   { year: "2024", title: "Hoy", desc: "3 sedes, mas de 5000 alumnos formados y reconocimiento como lideres en Jalisco." },
 ]
 
@@ -93,7 +93,6 @@ export default function NosotrosPage() {
             { value: 15, suffix: "+", label: "Años" },
             { value: 5000, suffix: "+", label: "Alumnos" },
             { value: 3, suffix: "", label: "Sedes" },
-            { value: 98, suffix: "%", label: "Satisfacción" },
           ].map((stat, i) => (
             <div key={stat.label} className="flex items-center gap-3">
               {i > 0 && <div className="hidden h-8 w-px bg-slate-200 sm:block" />}
@@ -168,7 +167,7 @@ export default function NosotrosPage() {
                 </div>
                 <h3 className="text-2xl font-extrabold text-heading">Mision</h3>
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                  Formar personas competentes en el idioma ingles a traves de una metodologia de ensenanza
+                  Formar personas competentes en el idioma ingles a traves de una metodologia de enseñanza
                   innovadora, con docentes altamente capacitados, utilizando tecnologia de punta y fomentando
                   valores que contribuyan al desarrollo integral de nuestros alumnos.
                 </p>
@@ -184,7 +183,7 @@ export default function NosotrosPage() {
                 </div>
                 <h3 className="text-2xl font-extrabold text-white">Vision</h3>
                 <p className="mt-4 text-sm leading-relaxed text-slate-300">
-                  Ser la institucion lider en la ensenanza del idioma ingles en la region, reconocida
+                  Ser la institucion lider en la enseñanza del idioma ingles en la region, reconocida
                   por la calidad de nuestros programas, la excelencia de nuestros docentes y la formacion
                   integral que brindamos a nuestros estudiantes para competir en un entorno globalizado.
                 </p>

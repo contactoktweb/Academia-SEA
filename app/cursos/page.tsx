@@ -41,14 +41,14 @@ const courses = [
   },
   {
     title: "Nivel Primaria",
-    badge: "Ninos",
+    badge: "Niños",
     icon: BookOpen,
     accentFrom: "from-amber-500",
     accentTo: "to-yellow-soft",
     badgeBg: "bg-yellow-soft text-amber-700",
     image: "/images/course-primary.jpg",
     description:
-      "Combina aprendizaje y diversion con actividades interactivas, juegos, canciones y material visual. Los ninos aprenden ingles de forma natural y con confianza.",
+      "Combina aprendizaje y diversion con actividades interactivas, juegos, canciones y material visual. Los niños aprenden ingles de forma natural y con confianza.",
     highlights: ["Aprendizaje ludico", "Canciones y juegos", "Material visual", "Confianza en el idioma"],
   },
   {
@@ -60,7 +60,7 @@ const courses = [
     badgeBg: "bg-sea-blue-light/20 text-sea-dark",
     image: "/images/course-preschool.jpg",
     description:
-      "Introducimos a los mas pequenos al idioma ingles a traves de cuentos, musica y juegos. En esta etapa crucial, los ninos adquieren idiomas de forma natural.",
+      "Introducimos a los mas pequeños al idioma ingles a traves de cuentos, musica y juegos. En esta etapa crucial, los niños adquieren idiomas de forma natural.",
     highlights: ["Cuentos y musica", "Juegos interactivos", "Adquisicion natural", "Ambiente seguro"],
   },
   {

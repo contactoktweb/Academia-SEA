@@ -93,9 +93,7 @@ export default function ContactoPage() {
             {locations.map((loc) => (
               <a
                 key={loc.name}
-                href={`https://wa.me/${loc.whatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#ubicaciones"
                 className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white py-2.5 pr-5 pl-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
               >
                 <div className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${loc.accent}`}>
@@ -109,16 +107,11 @@ export default function ContactoPage() {
             ))}
           </div>
 
-          {/* CTA button */}
-          <a
-            href="https://wa.me/523213875702"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center gap-2 rounded-xl bg-[#25d366] px-8 py-4 text-sm font-bold text-white shadow-lg shadow-[#25d366]/25 transition-all hover:-translate-y-0.5 hover:bg-[#22c55e]"
-          >
-            <MessageCircle className="h-5 w-5" />
-            Contactar por WhatsApp
-          </a>
+          {/* CTA informative text */}
+          <div className="flex items-center gap-2 rounded-xl bg-white/60 px-6 py-3 text-sm font-medium text-slate-600 shadow-sm border border-slate-200/60">
+            <MessageCircle className="h-5 w-5 text-[#25d366]" />
+            Comunícate por WhatsApp a cualquiera de nuestras 3 sedes abajo.
+          </div>
         </div>
       </SubpageHero>
 
@@ -173,7 +166,7 @@ export default function ContactoPage() {
                   {[
                     "Identificacion oficial (INE, pasaporte o credencial escolar)",
                     "Comprobante de domicilio reciente",
-                    "Fotografia tamano infantil (2 fotos)",
+                    "Fotografia tamaño infantil (2 fotos)",
                     "Pago de inscripcion",
                   ].map((req) => (
                     <div key={req} className="flex items-start gap-3 rounded-xl bg-background p-4">
@@ -189,7 +182,7 @@ export default function ContactoPage() {
       </section>
 
       {/* Ubicaciones */}
-      <section className="bg-card py-20 lg:py-28">
+      <section id="ubicaciones" className="bg-card py-20 lg:py-28 scroll-mt-20">
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-mint/30 bg-mint/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
@@ -236,13 +229,6 @@ export default function ContactoPage() {
                     >
                       <MessageCircle className="h-4 w-4" />
                       WhatsApp
-                    </a>
-                    <a
-                      href={`tel:+${loc.whatsapp}`}
-                      className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition-all hover:bg-secondary"
-                    >
-                      <Phone className="h-4 w-4" />
-                      Llamar
                     </a>
                   </div>
                 </div>
@@ -321,9 +307,7 @@ export default function ContactoPage() {
             No esperes mas para aprender ingles. Inscribete ahora y se parte de la comunidad Academia SEA.
           </p>
           <a
-            href="https://wa.me/523213875702"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#ubicaciones"
             className="mt-8 inline-flex items-center gap-2 rounded-xl bg-sea-blue px-10 py-4 text-base font-bold text-white shadow-lg shadow-sea-blue/25 transition-all hover:-translate-y-0.5 hover:bg-sea-blue-light"
           >
             <MessageCircle className="h-5 w-5" />

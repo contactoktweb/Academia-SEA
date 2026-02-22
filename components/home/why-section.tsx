@@ -23,7 +23,7 @@ const features = [
     icon: Users,
     title: "Docentes Certificados",
     description:
-      "Nuestro equipo de profesores cuenta con certificaciones internacionales y amplia experiencia en la ensenanza.",
+      "Nuestro equipo de profesores cuenta con certificaciones internacionales y amplia experiencia en la enseñanza.",
     color: "bg-yellow-soft",
     iconBg: "bg-yellow-soft text-amber-700",
     span: "",
@@ -32,14 +32,14 @@ const features = [
     icon: Globe,
     title: "Red Educativa Internacional",
     description:
-      "Formamos parte de una red educativa que nos conecta con estandares internacionales de ensenanza del idioma ingles.",
+      "Formamos parte de una red educativa que nos conecta con estandares internacionales de enseñanza del idioma ingles.",
     color: "bg-sea-blue-light",
     iconBg: "bg-sea-blue-light/20 text-sea-dark",
     span: "",
   },
   {
     icon: Star,
-    title: "15+ Anos de Trayectoria",
+    title: "15+ Años de Trayectoria",
     description:
       "Desde 2008 hemos formado miles de estudiantes exitosos en el dominio del idioma ingles en la region.",
     color: "bg-sea-dark",
@@ -82,7 +82,7 @@ export function WhySection() {
             <span className="text-sea-blue">Academia SEA</span>
           </h2>
           <p className="max-w-lg text-base leading-relaxed text-muted-foreground">
-            Descubre todo lo que nos hace el centro de ensenanza de ingles lider en Jalisco.
+            Descubre todo lo que nos hace el centro de enseñanza de ingles lider en Jalisco.
           </p>
         </div>
 

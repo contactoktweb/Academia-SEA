@@ -17,7 +17,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm leading-relaxed text-footer-foreground/80">
-              Centro de aprendizaje lider en Jalisco en la ensenanza del idioma ingles con mas de 15 anos de experiencia.
+              Centro de aprendizaje lider en Jalisco en la enseñanza del idioma ingles con mas de 15 años de experiencia.
             </p>
             <a
               href="https://www.facebook.com/AcademiaSEA"

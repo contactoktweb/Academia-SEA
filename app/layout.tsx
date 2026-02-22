@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: '%s | Academia SEA',
   },
   description:
-    'Academia SEA es un centro de aprendizaje lider en Jalisco en la ensenanza del idioma ingles con mas de 15 anos de experiencia. Cursos para todas las edades, certificaciones TOEFL, TOEIC y CENNI.',
+    'Academia SEA es un centro de aprendizaje lider en Jalisco en la enseñanza del idioma ingles con mas de 15 años de experiencia. Cursos para todas las edades, certificaciones TOEFL, TOEIC y CENNI.',
   keywords: [
     'escuela de ingles',
     'academia de ingles Jalisco',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Academia SEA | Escuela de Ingles en Jalisco',
     description:
-      'Centro de aprendizaje lider en Jalisco con mas de 15 anos de experiencia en la ensenanza del idioma ingles.',
+      'Centro de aprendizaje lider en Jalisco con mas de 15 años de experiencia en la enseñanza del idioma ingles.',
     url: 'https://www.academiasea.mx',
     siteName: 'Academia SEA',
     locale: 'es_MX',
