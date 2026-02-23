@@ -39,8 +39,8 @@ const locations = [
   },
   {
     name: "Union de Tula",
-    phone: "316 688 08 19",
-    whatsapp: "523166880819",
+    phone: "321 387 57 02",
+    whatsapp: "523213875702",
     accent: "from-amber-500 to-yellow-soft",
     iconBg: "bg-amber-500",
     hours: "Lunes a Viernes: 4:00 PM - 8:00 PM | Sabados: 10:00 AM - 2:00 PM",

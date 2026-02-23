@@ -94,7 +94,7 @@ export function Footer() {
               </li>
               <li className="flex items-start gap-2">
                 <Phone className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>316 688 08 19 (Union de Tula)</span>
+                <span>321 387 57 02 (Union de Tula)</span>
               </li>
             </ul>
           </div>
