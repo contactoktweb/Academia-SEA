@@ -87,24 +87,6 @@ export default function NosotrosPage() {
         titleHighlight="transforma vidas."
         subtitle="Más de 15 años formando estudiantes exitosos con una metodología que combina innovación, calidez humana y resultados comprobables. Desde preescolar hasta el mundo empresarial."
       >
-        {/* Inline stats */}
-        <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-12">
-          {[
-            { value: 15, suffix: "+", label: "Años" },
-            { value: 5000, suffix: "+", label: "Alumnos" },
-            { value: 3, suffix: "", label: "Sedes" },
-          ].map((stat, i) => (
-            <div key={stat.label} className="flex items-center gap-3">
-              {i > 0 && <div className="hidden h-8 w-px bg-slate-200 sm:block" />}
-              <div className={`${i > 0 ? "sm:pl-3" : ""}`}>
-                <p className="text-2xl font-extrabold text-[#1a2b4a] md:text-3xl">
-                  <AnimatedCounter target={stat.value} suffix={stat.suffix} />
-                </p>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">{stat.label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
       </SubpageHero>
 
       {/* Timeline */}

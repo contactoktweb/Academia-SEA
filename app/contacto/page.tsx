@@ -27,7 +27,7 @@ const locations = [
     whatsapp: "523213875702",
     accent: "from-sea-blue to-sea-blue-light",
     iconBg: "bg-sea-blue",
-    hours: "Lunes a Viernes: 8:00 - 20:00",
+    hours: "Lunes a Viernes: 4:00 PM - 8:00 PM | Sabados: 10:00 AM - 2:00 PM",
   },
   {
     name: "Autlan",
@@ -35,7 +35,7 @@ const locations = [
     whatsapp: "523173823060",
     accent: "from-[#059669] to-mint",
     iconBg: "bg-[#059669]",
-    hours: "Lunes a Viernes: 8:00 - 20:00",
+    hours: "Lunes a Viernes: 4:00 PM - 8:00 PM | Sabados: 10:00 AM - 2:00 PM",
   },
   {
     name: "Union de Tula",
@@ -43,7 +43,7 @@ const locations = [
     whatsapp: "523166880819",
     accent: "from-amber-500 to-yellow-soft",
     iconBg: "bg-amber-500",
-    hours: "Lunes a Viernes: 8:00 - 20:00",
+    hours: "Lunes a Viernes: 4:00 PM - 8:00 PM | Sabados: 10:00 AM - 2:00 PM",
   },
 ]
 

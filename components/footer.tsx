@@ -65,11 +65,11 @@ export function Footer() {
             <ul className="flex flex-col gap-3 text-sm text-footer-foreground/80">
               <li className="flex items-start gap-2">
                 <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>Lunes a Viernes: 7:00 AM - 8:00 PM</span>
+                <span>Lunes a Viernes: 4:00 PM - 8:00 PM</span>
               </li>
               <li className="flex items-start gap-2">
                 <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>Sabados: 8:00 AM - 2:00 PM</span>
+                <span>Sabados: 10:00 AM - 2:00 PM</span>
               </li>
             </ul>
           </div>
