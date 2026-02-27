@@ -108,7 +108,7 @@ export default function CursosPage() {
 
       {/* Course Cards - alternating layout */}
       <section id="cursos" className="bg-background py-20 lg:py-28">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
           <div className="flex flex-col gap-20">
             {courses.map((course, i) => {
               const isReversed = i % 2 !== 0

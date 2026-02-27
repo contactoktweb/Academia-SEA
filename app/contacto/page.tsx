@@ -118,7 +118,7 @@ export default function ContactoPage() {
 
       {/* Proceso - visual stepper */}
       <section className="bg-background py-20 lg:py-28">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
           <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-sea-blue/20 bg-sea-blue/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-sea-blue">
               <ClipboardList className="h-3.5 w-3.5" />
@@ -184,7 +184,7 @@ export default function ContactoPage() {
 
       {/* Ubicaciones */}
       <section id="ubicaciones" className="bg-card py-20 lg:py-28 scroll-mt-20">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
           <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-mint/30 bg-mint/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
               <MapPin className="h-3.5 w-3.5" />
@@ -254,7 +254,7 @@ export default function ContactoPage() {
 
       {/* Calendario + Reglamento */}
       <section className="bg-background py-20 lg:py-28">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="group rounded-3xl border border-border bg-card p-8 transition-all hover:shadow-xl lg:p-10">
               <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sea-blue to-sea-blue-light shadow-lg shadow-sea-blue/20">

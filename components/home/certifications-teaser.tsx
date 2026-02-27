@@ -11,7 +11,7 @@ export function CertificationsTeaser() {
 
   return (
     <section className="py-24 bg-white overflow-hidden">
-      <div className="container px-4 md:px-6 mx-auto">
+      <div className="mx-auto max-w-[1440px] px-4 md:px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1 relative">
             <div className="absolute inset-0 bg-blue-600/5 rounded-[2.5rem] transform -rotate-3 scale-105" />

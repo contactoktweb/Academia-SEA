@@ -112,7 +112,7 @@ export default function CertificacionesPage() {
 
       {/* Internacionales */}
       <section className="bg-background py-20 lg:py-28">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
           <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-sea-blue/20 bg-sea-blue/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-sea-blue">
               <Globe className="h-3.5 w-3.5" />
@@ -172,7 +172,7 @@ export default function CertificacionesPage() {
 
       {/* Nacionales */}
       <section className="bg-card py-20 lg:py-28">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
           <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-mint/30 bg-mint/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
               <Flag className="h-3.5 w-3.5" />

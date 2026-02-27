@@ -26,7 +26,7 @@ const features = [
 export function WhySection() {
   return (
     <section className="py-24 bg-white">
-      <div className="container px-4 md:px-6 mx-auto">
+      <div className="mx-auto max-w-[1440px] px-4 md:px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-sm font-semibold text-blue-600 tracking-wider uppercase mb-3">
             Ventaja Competitiva

@@ -5,7 +5,7 @@ import { Facebook, Phone, MapPin, Clock, Heart } from "lucide-react"
 export function Footer() {
   return (
     <footer className="bg-footer-bg text-footer-foreground">
-      <div className="mx-auto max-w-7xl px-4 py-16 lg:px-8">
+      <div className="mx-auto max-w-[1440px] px-4 py-16 lg:px-8">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="flex flex-col gap-4">
@@ -44,8 +44,8 @@ export function Footer() {
                 { href: "/nosotros", label: "Nuestra Escuela" },
                 { href: "/cursos", label: "Cursos" },
                 { href: "/certificaciones", label: "Certificaciones" },
-                { href: "/contacto", label: "Contacto" },
                 { href: "/privacidad", label: "Aviso de Privacidad" },
+                { href: "/contacto", label: "Contacto" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link

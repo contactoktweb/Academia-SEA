@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
+import { usePathname } from "next/navigation"
 
 const navLinks = [
   { href: "/", label: "Inicio" },
@@ -17,6 +18,7 @@ const navLinks = [
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,7 +30,7 @@ export function Header() {
 
   return (
     <div className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? "pt-2" : "pt-4"}`}>
-      <header className={`mx-auto max-w-7xl px-4 md:px-6 transition-all duration-300`}>
+      <header className={`mx-auto max-w-[1440px] px-4 md:px-6 transition-all duration-300`}>
         <div className={`relative flex items-center justify-between rounded-full bg-white/75 backdrop-blur-md border border-slate-200/50 shadow-sm transition-all duration-300 px-6 h-16 ${scrolled ? "shadow-md" : ""}`}>
           {/* Logo */}
           <Link href="/" className="relative z-50 flex flex-shrink-0 items-center gap-2 -ml-6 lg:-ml-10">
@@ -44,15 +46,19 @@ export function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden items-center gap-2 lg:flex" aria-label="Navegacion principal">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-full px-4 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-sea-blue"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors hover:bg-slate-100 hover:text-sea-blue ${isActive ? "bg-slate-100 text-sea-blue" : "text-slate-700"
+                    }`}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
           </nav>
 
           {/* CTA */}
@@ -81,16 +87,20 @@ export function Header() {
             }`}
         >
           <div className="rounded-3xl bg-white/95 backdrop-blur-md border border-slate-200/50 shadow-xl p-3 flex flex-col gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-2xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-sea-blue"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-slate-100 hover:text-sea-blue ${isActive ? "bg-slate-100 text-sea-blue" : "text-slate-700"
+                    }`}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
             <Link
               href="/contacto"
               onClick={() => setMobileOpen(false)}

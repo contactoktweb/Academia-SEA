@@ -20,7 +20,7 @@ export function HeroSection() {
       />
 
       {/* Main hero content */}
-      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-6 pt-14 md:pt-20 lg:px-8 lg:pb-10">
+      <div className="relative z-10 mx-auto max-w-[1440px] px-4 pb-6 pt-14 md:pt-20 lg:px-8 lg:pb-10">
         <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-0">
           {/* ─── Left Column: Text ─── */}
           <div className="flex flex-col gap-6 lg:gap-8 lg:pr-8 lg:pt-6">
@@ -120,7 +120,7 @@ export function HeroSection() {
 
       {/* Accreditations bottom bar */}
       <div className="relative z-10 border-t border-slate-200/60 bg-white/60 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 px-4 py-5 sm:flex-row sm:items-center sm:gap-10 lg:px-8">
+        <div className="mx-auto flex max-w-[1440px] flex-col items-start gap-4 px-4 py-5 sm:flex-row sm:items-center sm:gap-10 lg:px-8">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
             Acreditaciones y Validez Oficial
           </p>

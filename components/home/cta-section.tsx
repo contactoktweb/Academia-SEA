@@ -17,7 +17,7 @@ export function CtaSection() {
             <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-sea-blue-light rounded-full blur-3xl opacity-50" />
             <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-72 h-72 bg-sea-blue/50 rounded-full blur-2xl opacity-50" />
 
-            <div className="container relative z-10 px-4 md:px-6 mx-auto text-center">
+            <div className="mx-auto max-w-[1440px] relative z-10 px-4 md:px-6 text-center">
                 <div className="max-w-3xl mx-auto">
                     <h2 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight leading-tight">
                         Impulsa tu carrera en Comercio Exterior hoy mismo
