@@ -1,58 +1,95 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Clock, Star } from "lucide-react"
+
+const courses = [
+  {
+    title: "Diplomado en Tráfico y Aduanas",
+    category: "Comercio Exterior",
+    duration: "120 hrs",
+    rating: "4.9",
+    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2670&auto=format&fit=crop",
+    slug: "/programas/trafico-y-aduanas",
+  },
+  {
+    title: "Especialidad en Logística Internacional",
+    category: "Logística",
+    duration: "90 hrs",
+    rating: "4.8",
+    image: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=2670&auto=format&fit=crop",
+    slug: "/programas/logistica-internacional",
+  },
+  {
+    title: "Gestión de Cadena de Suministro",
+    category: "Supply Chain",
+    duration: "60 hrs",
+    rating: "5.0",
+    image: "https://images.unsplash.com/photo-1553413077-190dd305871c?q=80&w=2670&auto=format&fit=crop",
+    slug: "/programas/cadena-de-suministro",
+  }
+]
 
 export function CoursesTeaser() {
   return (
-    <section className="bg-background py-20 lg:py-28">
-      <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <div className="flex flex-col items-center gap-12 lg:flex-row lg:gap-16">
-          <div className="relative w-full max-w-lg overflow-hidden rounded-2xl shadow-xl">
-            <Image
-              src="/images/courses-preview.jpg"
-              alt="Estudiantes en cursos de ingles"
-              width={560}
-              height={400}
-              className="h-auto w-full object-cover"
-            />
-            <div className="absolute bottom-4 left-4 rounded-xl bg-sea-blue px-4 py-2 shadow-lg">
-              <p className="text-xs font-bold text-primary-foreground">Todos los niveles</p>
-            </div>
-          </div>
-
-          <div className="flex max-w-xl flex-col gap-5">
-            <p className="text-sm font-semibold uppercase tracking-wider text-sea-blue">
-              Nuestros cursos
-            </p>
-            <h2 className="text-pretty text-3xl font-bold text-heading md:text-4xl">
-              Cursos de ingles para todas las edades
+    <section className="py-24 bg-slate-50">
+      <div className="container px-4 md:px-6 mx-auto">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div className="max-w-2xl">
+            <h2 className="text-sm font-semibold text-blue-600 tracking-wider uppercase mb-3">
+              Catálogo Académico
             </h2>
-            <p className="text-base leading-relaxed text-muted-foreground">
-              Desde preescolar hasta nivel empresarial, tenemos el programa perfecto para ti.
-              Nuestros cursos estan disenados para cada etapa de la vida, con grupos reducidos y
-              atencion personalizada.
-            </p>
-            <ul className="flex flex-col gap-2">
-              {[
-                "Jovenes y Adultos (Basico a Avanzado)",
-                "Secundaria y Primaria",
-                "Preescolar",
-                "Curso Empresarial",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm text-foreground">
-                  <span className="h-1.5 w-1.5 rounded-full bg-sea-blue" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/cursos"
-              className="mt-2 inline-flex items-center gap-2 self-start rounded-xl bg-sea-blue px-6 py-3 text-sm font-semibold text-primary-foreground transition-all hover:bg-sea-blue-light hover:shadow-lg"
-            >
-              Ver todos los cursos
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+              Programas Destacados
+            </h3>
           </div>
+          <Link
+            href="/programas"
+            className="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+          >
+            Ver todos los programas
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {courses.map((course, index) => (
+            <Link
+              key={index}
+              href={course.slug}
+              className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100"
+            >
+              <div className="relative h-56 overflow-hidden bg-slate-200">
+                <Image
+                  src={course.image}
+                  alt={course.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-slate-900 rounded-full">
+                    {course.category}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-6 flex flex-col flex-grow">
+                <h4 className="text-xl font-bold text-slate-900 mb-4 group-hover:text-blue-600 transition-colors">
+                  {course.title}
+                </h4>
+
+                <div className="mt-auto flex items-center justify-between text-sm text-slate-500 pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-blue-600" />
+                    <span>{course.duration}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    <span className="font-medium text-slate-700">{course.rating}</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

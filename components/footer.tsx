@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { Facebook, Phone, MapPin, Clock } from "lucide-react"
+import Image from "next/image"
+import { Facebook, Phone, MapPin, Clock, Heart } from "lucide-react"
 
 export function Footer() {
   return (
@@ -9,12 +10,13 @@ export function Footer() {
           {/* Brand */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sea-blue">
-                <span className="text-lg font-bold text-primary-foreground">S</span>
-              </div>
-              <span className="text-xl font-bold text-primary-foreground">
-                Academia <span className="text-sea-blue-light">SEA</span>
-              </span>
+              <Image
+                src="/images/SEA_LOGO-02.png"
+                alt="Academia SEA Logo Blanco"
+                width={250}
+                height={60}
+                className="h-14 w-auto object-contain transition-transform duration-300 hover:scale-[1.02]"
+              />
             </Link>
             <p className="text-sm leading-relaxed text-footer-foreground/80">
               Centro de aprendizaje lider en Jalisco en la enseñanza del idioma ingles con mas de 15 años de experiencia.
@@ -102,15 +104,29 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-footer-foreground/20 pt-8 md:flex-row">
-          <p className="text-xs text-footer-foreground/60">
-            &copy; {new Date().getFullYear()} Academia SEA. Todos los derechos reservados.
-          </p>
-          <Link
-            href="/privacidad"
-            className="text-xs text-footer-foreground/60 transition-colors hover:text-sea-blue-light"
-          >
-            Aviso de Privacidad
-          </Link>
+          <div className="flex flex-col items-center gap-2 md:items-start text-xs text-footer-foreground/60">
+            <p>
+              &copy; {new Date().getFullYear()} Academia SEA. Todos los derechos reservados.
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-4 md:flex-row">
+            <Link
+              href="/privacidad"
+              className="text-xs text-footer-foreground/60 transition-colors hover:text-sea-blue-light"
+            >
+              Aviso de Privacidad
+            </Link>
+            <span className="hidden text-footer-foreground/40 md:inline-block">•</span>
+            <a
+              href="https://www.kytcode.lat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-row items-center gap-1.5 text-xs font-medium text-footer-foreground/80 transition-colors hover:text-white"
+            >
+              Desarrollado por K&T
+              <Heart className="h-3.5 w-3.5 fill-white text-white transition-transform duration-300 group-hover:scale-110" />
+            </a>
+          </div>
         </div>
       </div>
     </footer>

@@ -17,6 +17,7 @@ import {
   Users,
 } from "lucide-react"
 import { SubpageHero } from "@/components/subpage-hero"
+import { WhatsappIcon } from "@/components/whatsapp-icon"
 import { useState } from "react"
 
 
@@ -109,7 +110,7 @@ export default function ContactoPage() {
 
           {/* CTA informative text */}
           <div className="flex items-center gap-2 rounded-xl bg-white/60 px-6 py-3 text-sm font-medium text-slate-600 shadow-sm border border-slate-200/60">
-            <MessageCircle className="h-5 w-5 text-[#25d366]" />
+            <WhatsappIcon className="h-5 w-5 text-[#25d366]" />
             Comunícate por WhatsApp a cualquiera de nuestras 3 sedes abajo.
           </div>
         </div>
@@ -227,7 +228,7 @@ export default function ContactoPage() {
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 rounded-xl bg-[#25d366] px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90"
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <WhatsappIcon className="h-5 w-5" />
                       WhatsApp
                     </a>
                   </div>

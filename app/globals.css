@@ -10,7 +10,7 @@
   --card-foreground: #1e293b;
   --popover: #ffffff;
   --popover-foreground: #1e293b;
-  --primary: #3B82F6;
+  --primary: #006EAE;
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
   --secondary-foreground: #1E3A8A;
@@ -22,16 +22,16 @@
   --destructive-foreground: #ffffff;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #3B82F6;
-  --chart-1: #3B82F6;
+  --ring: #006EAE;
+  --chart-1: #006EAE;
   --chart-2: #60A5FA;
   --chart-3: #1E3A8A;
   --chart-4: #a7f3d0;
   --chart-5: #fef08a;
   --radius: 1rem;
   --heading: #1E3A8A;
-  --sea-blue: #3B82F6;
-  --sea-blue-light: #60A5FA;
+  --sea-blue: #006EAE;
+  --sea-blue-light: #2B89C6;
   --sea-dark: #1E3A8A;
   --mint: #a7f3d0;
   --yellow-soft: #fef9c3;
@@ -40,7 +40,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
+  --font-sans: var(--font-gotham), 'Inter', 'Inter Fallback', system-ui, sans-serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -84,6 +84,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

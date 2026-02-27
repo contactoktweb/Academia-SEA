@@ -1,11 +1,31 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import { Analytics } from '@vercel/analytics/next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const gotham = localFont({
+  src: [
+    {
+      path: '../public/gotham-book/gotham book/Gotham-Book.otf',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/gotham-bold/gotham bold/Gotham-Bold.ttf',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: '../public/gotham-black/gotham black/Gotham-Black.ttf',
+      weight: '900',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-gotham',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -50,7 +70,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${gotham.variable} font-sans antialiased`}>
         <Header />
         <main>{children}</main>
         <Footer />

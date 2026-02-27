@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Globe, Flag, ShieldCheck, CheckCircle, Award, ArrowRight, Sparkles, FileCheck, Star } from "lucide-react"
 import { SubpageHero } from "@/components/subpage-hero"
+import { WhatsappIcon } from "@/components/whatsapp-icon"
 
 export const metadata: Metadata = {
   title: "Certificaciones",
@@ -235,8 +236,8 @@ export default function CertificacionesPage() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-xl bg-sea-blue px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-sea-blue/25 transition-all hover:-translate-y-0.5 hover:bg-sea-blue-light"
               >
+                <WhatsappIcon className="h-4 w-4" />
                 Solicitar informacion
-                <ArrowRight className="h-4 w-4" />
               </a>
               <Link
                 href="/cursos"

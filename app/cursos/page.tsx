@@ -3,6 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { MessageCircle, GraduationCap, Users, Baby, BookOpen, Briefcase, ArrowRight, Sparkles } from "lucide-react"
 import { SubpageHero } from "@/components/subpage-hero"
+import { WhatsappIcon } from "@/components/whatsapp-icon"
 
 export const metadata: Metadata = {
   title: "Nuestros Cursos",
@@ -162,7 +163,7 @@ export default function CursosPage() {
                       rel="noopener noreferrer"
                       className="mt-2 flex w-fit items-center gap-2 rounded-xl bg-sea-blue px-6 py-3 text-sm font-bold text-white shadow-lg shadow-sea-blue/20 transition-all hover:-translate-y-0.5 hover:bg-sea-blue-light"
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <WhatsappIcon className="h-4 w-4" />
                       Solicitar informacion
                     </a>
                   </div>

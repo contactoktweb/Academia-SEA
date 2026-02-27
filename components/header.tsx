@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import Image from "next/image"
+import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
 
 const navLinks = [
@@ -9,68 +10,83 @@ const navLinks = [
   { href: "/nosotros", label: "Nuestra Escuela" },
   { href: "/cursos", label: "Cursos" },
   { href: "/certificaciones", label: "Certificaciones" },
+  { href: "/privacidad", label: "Privacidad" },
   { href: "/contacto", label: "Contacto" },
 ]
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   return (
-    <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sea-blue">
-            <span className="text-lg font-bold text-primary-foreground">S</span>
-          </div>
-          <span className="text-xl font-bold text-heading">
-            Academia <span className="text-sea-blue">SEA</span>
-          </span>
-        </Link>
-
-        {/* Desktop Nav */}
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Navegacion principal">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary hover:text-sea-blue"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* CTA */}
-        <div className="hidden items-center gap-3 lg:flex">
-          <Link
-            href="/contacto"
-            className="rounded-xl bg-sea-blue px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-sea-blue-light"
-          >
-            Inscribete
+    <div className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? "pt-2" : "pt-4"}`}>
+      <header className={`mx-auto max-w-7xl px-4 md:px-6 transition-all duration-300`}>
+        <div className={`relative flex items-center justify-between rounded-full bg-white/75 backdrop-blur-md border border-slate-200/50 shadow-sm transition-all duration-300 px-6 h-16 ${scrolled ? "shadow-md" : ""}`}>
+          {/* Logo */}
+          <Link href="/" className="relative z-50 flex flex-shrink-0 items-center gap-2 -ml-6 lg:-ml-10">
+            <Image
+              src="/images/SEA_LOGO-05.png"
+              alt="Academia SEA Logo"
+              width={250}
+              height={60}
+              className="w-40 md:w-52 h-auto object-contain transition-transform duration-300 hover:scale-[1.02]"
+              priority
+            />
           </Link>
+
+          {/* Desktop Nav */}
+          <nav className="hidden items-center gap-2 lg:flex" aria-label="Navegacion principal">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-full px-4 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-sea-blue"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* CTA */}
+          <div className="hidden items-center gap-3 lg:flex">
+            <Link
+              href="/contacto"
+              className="rounded-full bg-sea-blue px-6 py-1.5 text-sm font-bold text-white transition-all hover:bg-sea-blue-light hover:scale-105 shadow-md shadow-sea-blue/20"
+            >
+              Inscríbete
+            </Link>
+          </div>
+
+          {/* Mobile toggle */}
+          <button
+            className="rounded-full p-2 text-slate-700 hover:bg-slate-100 lg:hidden transition-colors"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+          >
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          className="rounded-lg p-2 text-foreground lg:hidden"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? "Cerrar menu" : "Abrir menu"}
+        {/* Mobile Menu */}
+        <div
+          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${mobileOpen ? "max-h-96 opacity-100 mt-2" : "max-h-0 opacity-0 mt-0"
+            }`}
         >
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="border-t border-border bg-card lg:hidden">
-          <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4" aria-label="Menu movil">
+          <div className="rounded-3xl bg-white/95 backdrop-blur-md border border-slate-200/50 shadow-xl p-3 flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                className="rounded-2xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-sea-blue"
               >
                 {link.label}
               </Link>
@@ -78,13 +94,13 @@ export function Header() {
             <Link
               href="/contacto"
               onClick={() => setMobileOpen(false)}
-              className="mt-2 rounded-xl bg-sea-blue px-5 py-3 text-center text-sm font-semibold text-primary-foreground"
+              className="mt-1 rounded-2xl bg-sea-blue px-4 py-3 text-center text-sm font-bold text-white shadow-md"
             >
-              Inscribete
+              Inscríbete
             </Link>
-          </nav>
+          </div>
         </div>
-      )}
-    </header>
+      </header>
+    </div>
   )
 }
