@@ -4,7 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import './globals.css'
-//
+
 const gotham = localFont({
   src: [
     {
