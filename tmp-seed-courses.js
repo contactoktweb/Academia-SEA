@@ -1,7 +1,7 @@
 const { createClient } = require('@sanity/client');
 const fs = require('fs');
 const path = require('path');
-//
+
 const client = createClient({
     projectId: 'dp7io9u0',
     dataset: 'production',
