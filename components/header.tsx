@@ -6,6 +6,8 @@ import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
 import { usePathname } from "next/navigation"
 
+import { urlFor } from "@/sanity/lib/image"
+
 const navLinks = [
   { href: "/", label: "Inicio" },
   { href: "/nosotros", label: "Nuestra Escuela" },
@@ -15,7 +17,7 @@ const navLinks = [
   { href: "/contacto", label: "Contacto" },
 ]
 
-export function Header() {
+export function Header({ data }: { data?: any }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
@@ -28,6 +30,9 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  const logoUrl = data?.logo?.asset ? urlFor(data.logo.asset).url() : "/images/SEA_LOGO-05.png"
+  const logoAlt = data?.logo?.alt || "Academia SEA Logo"
+
   return (
     <div className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? "pt-2" : "pt-4"}`}>
       <header className={`mx-auto max-w-[1440px] px-4 md:px-6 transition-all duration-300`}>
@@ -35,8 +40,8 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="relative z-50 flex flex-shrink-0 items-center gap-2 -ml-6 lg:-ml-10">
             <Image
-              src="/images/SEA_LOGO-05.png"
-              alt="Academia SEA Logo"
+              src={logoUrl}
+              alt={logoAlt}
               width={250}
               height={60}
               className="w-40 md:w-52 h-auto object-contain transition-transform duration-300 hover:scale-[1.02]"

@@ -1,7 +1,14 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
-export function CtaSection() {
+export function CtaSection({ data }: { data?: any }) {
+    const titleText = data?.titulo || "Impulsa tu carrera en Comercio Exterior hoy mismo"
+    const descriptionText = data?.descripcion || "Únete a la nueva generación de expertos logísticos. Inscríbete ahora y transforma tu futuro profesional con Academia SEA."
+    const primaryButtonText = data?.botonPrimarioTexto || "Inscribirme Ahora"
+    const primaryButtonLink = data?.botonPrimarioLink || "/inscripcion"
+    const secondaryButtonText = data?.botonSecundarioTexto || "Solicitar Información"
+    const secondaryButtonLink = data?.botonSecundarioLink || "/contacto"
+
     return (
         <section className="py-24 relative overflow-hidden bg-sea-blue">
             {/* Abstract Background Patterns */}
@@ -20,24 +27,24 @@ export function CtaSection() {
             <div className="mx-auto max-w-[1440px] relative z-10 px-4 md:px-6 text-center">
                 <div className="max-w-3xl mx-auto">
                     <h2 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight leading-tight">
-                        Impulsa tu carrera en Comercio Exterior hoy mismo
+                        {titleText}
                     </h2>
                     <p className="text-lg md:text-xl text-sky-100 mb-10 leading-relaxed font-medium">
-                        Únete a la nueva generación de expertos logísticos. Inscríbete ahora y transforma tu futuro profesional con Academia SEA.
+                        {descriptionText}
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link
-                            href="/inscripcion"
+                            href={primaryButtonLink}
                             className="w-full sm:w-auto px-8 py-4 bg-white text-sea-blue rounded-full font-bold hover:bg-slate-50 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-black/10 flex items-center justify-center"
                         >
-                            Inscribirme Ahora
+                            {primaryButtonText}
                             <ArrowRight className="w-5 h-5 ml-2" />
                         </Link>
                         <Link
-                            href="/contacto"
+                            href={secondaryButtonLink}
                             className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white/30 text-white rounded-full font-bold hover:bg-white/10 transition-all flex items-center justify-center"
                         >
-                            Solicitar Información
+                            {secondaryButtonText}
                         </Link>
                     </div>
                 </div>

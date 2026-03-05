@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import { Analytics } from '@vercel/analytics/next'
-import { Header } from '@/components/header'
-import { Footer } from '@/components/footer'
 import './globals.css'
 
 const gotham = localFont({
@@ -71,9 +69,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${gotham.variable} font-sans antialiased`}>
-        <Header />
-        <main>{children}</main>
-        <Footer />
+        {children}
         <Analytics />
       </body>
     </html>

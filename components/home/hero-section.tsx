@@ -4,7 +4,19 @@ import Image from "next/image"
 import Link from "next/link"
 import { Award, ChevronRight, Download, GraduationCap, Globe2, BookOpen } from "lucide-react"
 
-export function HeroSection() {
+import { urlFor } from "@/sanity/lib/image"
+
+export function HeroSection({ data }: { data?: any }) {
+  const badgeText = data?.badge || "Institución Certificada"
+  const titleText = data?.tituloPrincipal || "Excelencia académica en la enseñanza del inglés."
+  const subtitleText = data?.subtitulo || "Formando líderes bilingües en Jalisco por más de 15 años. Respaldados por la metodología Macmillan y certificaciones con validez oficial internacional."
+  const ctaTexto = data?.ctaTexto || "Iniciar Inscripción"
+  const ctaLink = data?.ctaLink || "/contacto"
+  const anosExp = data?.anhosExperiencia || "15+"
+
+  const imgSalonUrl = data?.imagenSalon?.asset ? urlFor(data.imagenSalon.asset).url() : "/images/hero-classroom.png"
+  const imgProfesorUrl = data?.imagenProfesor?.asset ? urlFor(data.imagenProfesor.asset).url() : "/images/hero-teacher.png"
+
   return (
     <section className="relative overflow-hidden bg-white">
       {/* Subtle grid pattern */}
@@ -28,53 +40,50 @@ export function HeroSection() {
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border border-amber-200/60 bg-amber-50 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-amber-700">
                 <Award className="h-3.5 w-3.5" />
-                Institución Certificada
+                {badgeText}
               </span>
             </div>
 
             {/* Headline H1 - serif style */}
             <h1 className="text-pretty text-4xl font-extrabold leading-[1.08] tracking-tight text-[#1a2b4a] sm:text-5xl lg:text-[3.4rem] xl:text-[3.8rem]">
-              Excelencia{" "}
-              <br className="hidden sm:block" />
-              académica en la{" "}
-              <br className="hidden sm:block" />
-              enseñanza del{" "}
-              <em className="not-italic font-extrabold italic text-[#1a2b4a]" style={{ fontStyle: "italic" }}>
-                inglés.
-              </em>
+              {titleText.includes("inglés.") ? (
+                <>
+                  {titleText.split("inglés.")[0]}
+                  <em className="not-italic font-extrabold italic text-[#1a2b4a]" style={{ fontStyle: "italic" }}>
+                    inglés.
+                  </em>
+                </>
+              ) : (
+                titleText
+              )}
             </h1>
 
             {/* Subtitle */}
             <p className="max-w-lg text-base leading-relaxed text-slate-500 md:text-[1.05rem]">
-              Formando líderes bilingües en Jalisco por más de 15 años.
-              Respaldados por la metodología Macmillan y certificaciones con
-              validez oficial internacional.
+              {subtitleText}
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
-                href="/contacto"
+                href={ctaLink}
                 className="group inline-flex items-center justify-center gap-2 rounded-lg bg-[#1a2b4a] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#1a2b4a]/10 transition-all hover:-translate-y-0.5 hover:bg-[#243a5e] hover:shadow-xl"
               >
-                Iniciar Inscripción
+                {ctaTexto}
                 <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
-
-
           </div>
 
           {/* ─── Right Column: Images ─── */}
           <div className="relative mx-auto w-full max-w-lg lg:mx-0 lg:max-w-none">
-
             {/* Images grid */}
             <div className="relative ml-auto grid w-full grid-cols-2 gap-3 pt-12 sm:pt-16 lg:pt-0">
               {/* Left image - classroom */}
               <div className="relative z-10 mt-16 overflow-hidden rounded-2xl shadow-2xl shadow-slate-300/30 sm:mt-20">
                 <Image
-                  src="/images/hero-classroom.png"
-                  alt="Clase de inglés en Academia SEA con estudiantes participando activamente"
+                  src={imgSalonUrl}
+                  alt="Clase de inglés en Academia SEA"
                   width={400}
                   height={500}
                   className="h-[280px] w-full object-cover sm:h-[340px] lg:h-[380px]"
@@ -85,8 +94,8 @@ export function HeroSection() {
               {/* Right image - teacher */}
               <div className="relative z-10 overflow-hidden rounded-2xl shadow-2xl shadow-slate-300/30">
                 <Image
-                  src="/images/hero-teacher.png"
-                  alt="Profesor de inglés certificado enseñando en Academia SEA"
+                  src={imgProfesorUrl}
+                  alt="Profesor de inglés certificado"
                   width={400}
                   height={500}
                   className="h-[280px] w-full object-cover sm:h-[340px] lg:h-[380px]"
@@ -105,7 +114,7 @@ export function HeroSection() {
                   {/* Badge body */}
                   <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-500 shadow-lg shadow-amber-500/30 sm:h-20 sm:w-20">
                     <span className="text-lg font-extrabold leading-none text-white sm:text-xl">
-                      15+
+                      {anosExp}
                     </span>
                     <span className="text-[9px] font-bold uppercase tracking-wider text-white/90 sm:text-[10px]">
                       Años

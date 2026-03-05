@@ -2,7 +2,18 @@ import Link from "next/link"
 import Image from "next/image"
 import { Facebook, Phone, MapPin, Clock, Heart } from "lucide-react"
 
-export function Footer() {
+import { urlFor } from "@/sanity/lib/image"
+
+export function Footer({ data }: { data?: any }) {
+  const logoFooterUrl = data?.logoFooter?.asset
+    ? urlFor(data.logoFooter.asset).url()
+    : data?.logo?.asset
+      ? urlFor(data.logo.asset).url()
+      : "/images/SEA_LOGO-02.png"
+
+  const logoAlt = data?.logoFooter?.alt || data?.logo?.alt || "Academia SEA Logo Blanco"
+  const facebookLink = data?.redesSociales?.find((r: any) => r.plataforma === "facebook")?.url || "https://www.facebook.com/AcademiaSEA"
+
   return (
     <footer className="bg-footer-bg text-footer-foreground">
       <div className="mx-auto max-w-[1440px] px-4 py-16 lg:px-8">
@@ -11,8 +22,8 @@ export function Footer() {
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/images/SEA_LOGO-02.png"
-                alt="Academia SEA Logo Blanco"
+                src={logoFooterUrl}
+                alt={logoAlt}
                 width={250}
                 height={60}
                 className="h-14 w-auto object-contain transition-transform duration-300 hover:scale-[1.02]"
@@ -22,7 +33,7 @@ export function Footer() {
               Centro de aprendizaje lider en Jalisco en la enseñanza del idioma ingles con mas de 15 años de experiencia.
             </p>
             <a
-              href="https://www.facebook.com/AcademiaSEA"
+              href={facebookLink}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm text-footer-foreground/80 transition-colors hover:text-sea-blue-light"
@@ -84,20 +95,20 @@ export function Footer() {
             <ul className="flex flex-col gap-3 text-sm text-footer-foreground/80">
               <li className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>El Grullo, Autlan y Union de Tula, Jalisco</span>
+                <span>{data?.direccion || "El Grullo, Autlan y Union de Tula, Jalisco"}</span>
               </li>
-              <li className="flex items-start gap-2">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>321 387 57 02 (El Grullo)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>317 382 30 60 (Autlan)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>321 387 57 02 (Union de Tula)</span>
-              </li>
+              {data?.telefonoContacto && (
+                <li className="flex items-start gap-2">
+                  <Phone className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{data.telefonoContacto}</span>
+                </li>
+              )}
+              {data?.emailContacto && (
+                <li className="flex items-start gap-2">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0 hidden" /> {/* dummy icon to maintain spacing if needed, or use Phone/Mail */}
+                  <span className="truncate">{data.emailContacto}</span>
+                </li>
+              )}
             </ul>
           </div>
         </div>
