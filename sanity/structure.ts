@@ -101,25 +101,41 @@ export const structure: StructureResolver = (S) =>
       S.divider(),
       // Contacto
       S.listItem()
-        .title('Página de Contacto')
-        .id('contactPage')
-        .child(
-          S.document()
-            .schemaType('contactPage')
-            .documentId('contactPage')
-        ),
-      S.listItem()
-        .title('Página de Cursos')
+        .title('Cursos')
         .id('coursesPage')
         .child(
           S.document()
             .schemaType('coursesPage')
             .documentId('coursesPage')
         ),
+      S.listItem()
+        .title('Certificaciones')
+        .id('certificationsPage')
+        .child(
+          S.document()
+            .schemaType('certificationsPage')
+            .documentId('certificationsPage')
+        ),
+      S.listItem()
+        .title('Privacidad')
+        .id('privacyPage')
+        .child(
+          S.document()
+            .schemaType('privacyPage')
+            .documentId('privacyPage')
+        ),
+      S.listItem()
+        .title('Contacto')
+        .id('contactPage')
+        .child(
+          S.document()
+            .schemaType('contactPage')
+            .documentId('contactPage')
+        ),
       // Divider
       S.divider(),
       // The rest of the document types
       ...S.documentTypeListItems().filter(
-        (listItem) => !['globalConfig', 'heroHome', 'whySection', 'coursesTeaser', 'certificationsTeaser', 'ctaSection', 'aboutHero', 'aboutTimeline', 'aboutPhilosophy', 'aboutValues', 'aboutModalities', 'contactPage', 'coursesPage'].includes(listItem.getId() || '')
+        (listItem) => !['globalConfig', 'heroHome', 'whySection', 'coursesTeaser', 'certificationsTeaser', 'ctaSection', 'aboutHero', 'aboutTimeline', 'aboutPhilosophy', 'aboutValues', 'aboutModalities', 'coursesPage', 'certificationsPage', 'contactPage', 'privacyPage'].includes(listItem.getId() || '')
       ),
     ])

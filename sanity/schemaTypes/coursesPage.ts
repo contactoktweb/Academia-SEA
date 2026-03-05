@@ -3,7 +3,7 @@ import { GraduationCap, BookOpen, Baby, Users, Briefcase, Sparkles } from 'lucid
 
 export const coursesPage = defineType({
     name: 'coursesPage',
-    title: 'Página de Cursos',
+    title: 'Cursos',
     type: 'document',
     icon: GraduationCap,
     fields: [
@@ -39,9 +39,6 @@ export const coursesPage = defineType({
                             type: 'string',
                             description: 'Nombre del icono (ej: Baby, BookOpen, Users, GraduationCap, Briefcase)'
                         }),
-                        defineField({ name: 'accentFrom', title: 'Color Gradiente Inicio (Tailwind)', type: 'string' }),
-                        defineField({ name: 'accentTo', title: 'Color Gradiente Fin (Tailwind)', type: 'string' }),
-                        defineField({ name: 'badgeBg', title: 'Color Fondo Etiqueta (Tailwind classes)', type: 'string' }),
                         defineField({ name: 'imagen', title: 'Imagen', type: 'image', options: { hotspot: true } }),
                         defineField({ name: 'descripcion', title: 'Descripción', type: 'text', rows: 4 }),
                         defineField({
@@ -77,7 +74,7 @@ export const coursesPage = defineType({
     preview: {
         prepare() {
             return {
-                title: 'Página de Cursos',
+                title: 'Cursos',
             }
         }
     }

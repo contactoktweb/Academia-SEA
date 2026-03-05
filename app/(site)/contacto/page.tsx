@@ -13,21 +13,30 @@ import {
 } from "lucide-react"
 import { SubpageHero } from "@/components/subpage-hero"
 import { WhatsappIcon } from "@/components/whatsapp-icon"
-import { client } from "@/sanity/lib/client"
+import { sanityFetch } from "@/sanity/lib/live"
 import { CONTACT_PAGE_QUERY } from "@/sanity/lib/queries"
-import { iconMap } from "@/lib/icons"
+
+export const metadata: Metadata = {
+  title: "Contacto | Academia SEA",
+  description: "Visítanos en cualquiera de nuestras 3 sedes en Jalisco o contáctanos por WhatsApp. Te guiamos en tu proceso de inscripción.",
+}
+
+// Static accent colors per location card (design-only, not editable from Sanity)
+const LOCATION_ACCENTS = [
+  "from-sea-blue to-sea-blue-light",
+  "from-[#059669] to-mint",
+  "from-amber-500 to-yellow-soft",
+]
 
 export default async function ContactoPage() {
-  const contact = await client.fetch(CONTACT_PAGE_QUERY)
+  const { data } = await sanityFetch({ query: CONTACT_PAGE_QUERY })
 
-  if (!contact) return null
-
-  const hero = contact.hero
-  const proceso = contact.proceso
-  const requisitos = contact.requisitos
-  const sedes = contact.sedes
-  const descargas = contact.descargas
-  const ctaFinal = contact.ctaFinal
+  const hero = data?.hero
+  const proceso = data?.proceso
+  const requisitos = data?.requisitos
+  const sedes = data?.sedes
+  const descargas = data?.descargas
+  const ctaFinal = data?.ctaFinal
 
   return (
     <>
@@ -36,17 +45,17 @@ export default async function ContactoPage() {
         badgeIcon={MapPin}
         title={hero?.titulo || "Estamos cerca de ti,"}
         titleHighlight={hero?.tituloResaltado || "inscríbete hoy."}
-        subtitle={hero?.subtitulo || "Visítanos en cualquiera de nuestras sucursales..."}
+        subtitle={hero?.subtitulo || "Visítanos en cualquiera de nuestras sucursales o contáctanos por WhatsApp. Te guiamos paso a paso en tu proceso de inscripción."}
       >
         <div className="flex flex-col items-center gap-6">
           <div className="flex flex-wrap items-center justify-center gap-4">
-            {sedes?.ubicaciones?.map((loc: any) => (
+            {(sedes?.ubicaciones || []).map((loc: any, i: number) => (
               <a
-                key={loc.nombre}
+                key={loc._key || loc.nombre}
                 href="#ubicaciones"
                 className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white py-2.5 pr-5 pl-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
               >
-                <div className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${loc.accent}`}>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${LOCATION_ACCENTS[i % LOCATION_ACCENTS.length]}`}>
                   <MapPin className="h-4 w-4 text-white" />
                 </div>
                 <div className="text-left">
@@ -80,16 +89,17 @@ export default async function ContactoPage() {
             <div className="absolute top-0 bottom-0 left-8 hidden w-0.5 bg-gradient-to-b from-sea-blue via-mint to-sea-blue-light lg:left-1/2 lg:block lg:-translate-x-px" />
 
             <div className="flex flex-col gap-8 lg:gap-12">
-              {proceso?.pasos?.map((item: any, i: number) => {
+              {(proceso?.pasos || []).map((item: any, i: number) => {
                 const isRight = i % 2 !== 0
-                const Icon = iconMap[item.icono] || ClipboardList
+                const STEP_ICONS = [Phone, ClipboardList, FileText, Users]
+                const Icon = STEP_ICONS[i] || ClipboardList
                 return (
                   <div key={item._key || i} className={`relative flex items-center gap-6 lg:gap-0 ${isRight ? "lg:flex-row-reverse" : ""}`}>
                     <div className="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-background bg-gradient-to-br from-sea-blue to-sea-blue-light shadow-lg shadow-sea-blue/20 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
                       <Icon className="h-7 w-7 text-white" />
                     </div>
 
-                    <div className={`flex-1 lg:w-[calc(50%-3rem)] ${isRight ? "lg:mr-auto lg:pr-12" : "lg:ml-auto lg:pl-12"}`}>
+                    <div className={`w-full lg:w-[calc(50%-3rem)] lg:flex-none ${isRight ? "lg:mr-auto lg:pr-12" : "lg:ml-auto lg:pl-12"}`}>
                       <div className="group rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-xl">
                         <span className="mb-2 inline-block text-xs font-bold text-sea-blue">Paso {item.paso}</span>
                         <h3 className="text-lg font-bold text-heading">{item.titulo}</h3>
@@ -107,7 +117,7 @@ export default async function ContactoPage() {
               <div className="rounded-3xl bg-card p-8 lg:p-10">
                 <h3 className="mb-6 text-xl font-extrabold text-heading">{requisitos?.titulo || "Requisitos de Inscripcion"}</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {requisitos?.lista?.map((req: string) => (
+                  {(requisitos?.lista || []).map((req: string) => (
                     <div key={req} className="flex items-start gap-3 rounded-xl bg-background p-4">
                       <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-sea-blue" />
                       <span className="text-sm text-foreground">{req}</span>
@@ -133,45 +143,48 @@ export default async function ContactoPage() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
-            {sedes?.ubicaciones?.map((loc: any) => (
-              <div
-                key={loc.nombre}
-                className="group relative overflow-hidden rounded-3xl bg-gradient-to-br p-px shadow-xl transition-all hover:-translate-y-1"
-                style={{
-                  backgroundImage: `linear-gradient(to bottom right, ${loc.accent.split(' ')[0].replace('from-', '')}, transparent)`,
-                }}
-              >
-                <div className="h-full rounded-3xl bg-background p-8">
-                  <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${loc.accent} shadow-lg`}>
-                    <MapPin className="h-8 w-8 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-extrabold text-heading">{loc.nombre}</h3>
-
-                  <div className="mt-4 flex flex-col gap-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone className="h-4 w-4" />
-                      <span>{loc.telefono}</span>
+            {(sedes?.ubicaciones || []).map((loc: any, i: number) => {
+              const accent = LOCATION_ACCENTS[i % LOCATION_ACCENTS.length]
+              return (
+                <div
+                  key={loc._key || loc.nombre}
+                  className="group relative overflow-hidden rounded-3xl bg-gradient-to-br p-px shadow-xl transition-all hover:-translate-y-1"
+                  style={{
+                    backgroundImage: `linear-gradient(to bottom right, var(--sea-blue), transparent)`,
+                  }}
+                >
+                  <div className="h-full rounded-3xl bg-background p-8">
+                    <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${accent} shadow-lg`}>
+                      <MapPin className="h-8 w-8 text-white" />
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>{loc.horarios}</span>
-                    </div>
-                  </div>
+                    <h3 className="text-2xl font-extrabold text-heading">{loc.nombre}</h3>
 
-                  <div className="mt-6 flex flex-col gap-2">
-                    <a
-                      href={`https://wa.me/${loc.whatsapp}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-xl bg-[#25d366] px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90"
-                    >
-                      <WhatsappIcon className="h-5 w-5" />
-                      WhatsApp
-                    </a>
+                    <div className="mt-4 flex flex-col gap-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Phone className="h-4 w-4" />
+                        <span>{loc.telefono}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>{loc.horarios}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex flex-col gap-2">
+                      <a
+                        href={`https://wa.me/${loc.whatsapp}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 rounded-xl bg-[#25d366] px-4 py-3 text-sm font-bold text-white transition-all hover:opacity-90"
+                      >
+                        <WhatsappIcon className="h-5 w-5" />
+                        WhatsApp
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           <div className="mt-12 flex justify-center">
@@ -250,7 +263,7 @@ export default async function ContactoPage() {
             className="mt-8 inline-flex items-center gap-2 rounded-xl bg-sea-blue px-10 py-4 text-base font-bold text-white shadow-lg shadow-sea-blue/25 transition-all hover:-translate-y-0.5 hover:bg-sea-blue-light"
           >
             <MessageCircle className="h-5 w-5" />
-            {ctaFinal?.textoBoton || "INSCRIBETE AHORA"}
+            {ctaFinal?.textoBoton || "INSCRÍBETE AHORA"}
           </a>
         </div>
       </section>

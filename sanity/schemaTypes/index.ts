@@ -10,9 +10,11 @@ import { aboutTimeline } from './aboutTimeline'
 import { aboutPhilosophy } from './aboutPhilosophy'
 import { aboutValues } from './aboutValues'
 import { aboutModalities } from './aboutModalities'
-import { contactPage } from './contactPage'
 import { coursesPage } from './coursesPage'
+import { certificationsPage } from './certificationsPage'
+import { contactPage } from './contactPage'
+import { privacyPage } from './privacyPage'
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [globalConfig, heroHome, whySection, coursesTeaser, certificationsTeaser, ctaSection, aboutHero, aboutTimeline, aboutPhilosophy, aboutValues, aboutModalities, contactPage, coursesPage],
+  types: [globalConfig, heroHome, whySection, coursesTeaser, certificationsTeaser, ctaSection, aboutHero, aboutTimeline, aboutPhilosophy, aboutValues, aboutModalities, coursesPage, certificationsPage, contactPage, privacyPage],
 }

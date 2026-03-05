@@ -52,13 +52,17 @@ export default async function CursosPage() {
         <div className="flex flex-wrap items-center justify-center gap-4">
           {courses.map((course: any, i: number) => {
             const Icon = iconMap[course.icono] || BookOpen
+            const isEven = i % 2 === 0
+            const accentFrom = isEven ? "from-sea-dark" : "from-coral"
+            const accentTo = isEven ? "to-sea-blue" : "to-coral-light"
+
             return (
               <a
                 key={course._key || i}
                 href="#cursos"
                 className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white px-6 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md md:px-7 md:py-3.5"
               >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${course.accentFrom} ${course.accentTo} md:h-11 md:w-11`}>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${accentFrom} ${accentTo} md:h-11 md:w-11`}>
                   <Icon className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-sm font-semibold text-[#1a2b4a] md:text-base">{course.titulo}</span>
@@ -73,14 +77,20 @@ export default async function CursosPage() {
           <div className="flex flex-col gap-20">
             {courses.map((course: any, i: number) => {
               const isReversed = i % 2 !== 0
+              const isEven = i % 2 === 0
+              const accentFrom = isEven ? "from-sea-dark" : "from-coral"
+              const accentTo = isEven ? "to-sea-blue" : "to-coral-light"
+              const badgeBg = isEven ? "bg-sea-blue/10" : "bg-coral/10"
+              const badgeText = isEven ? "text-sea-blue" : "text-coral"
               const Icon = iconMap[course.icono] || BookOpen
+
               return (
                 <article
                   key={course._key || i}
                   className={`grid items-center gap-8 lg:grid-cols-2 lg:gap-16 ${isReversed ? "lg:[direction:rtl]" : ""}`}
                 >
                   <div className={`relative ${isReversed ? "lg:[direction:ltr]" : ""}`}>
-                    <div className={`absolute -inset-3 rounded-3xl bg-gradient-to-br ${course.accentFrom} ${course.accentTo} opacity-10 blur-xl`} />
+                    <div className={`absolute -inset-3 rounded-3xl bg-gradient-to-br ${accentFrom} ${accentTo} opacity-10 blur-xl`} />
                     <div className="relative overflow-hidden rounded-2xl shadow-xl">
                       {course.imageUrl ? (
                         <Image
@@ -96,7 +106,7 @@ export default async function CursosPage() {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                      <span className={`absolute bottom-4 left-4 rounded-lg px-3 py-1.5 text-xs font-bold ${course.badgeBg} backdrop-blur-sm`}>
+                      <span className={`absolute bottom-4 left-4 rounded-lg px-3 py-1.5 text-xs font-bold ${badgeBg} ${badgeText} backdrop-blur-sm`}>
                         {course.badge}
                       </span>
                     </div>
@@ -104,7 +114,7 @@ export default async function CursosPage() {
 
                   <div className={`flex flex-col gap-5 ${isReversed ? "lg:[direction:ltr]" : ""}`}>
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${course.accentFrom} ${course.accentTo} shadow-lg`}>
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${accentFrom} ${accentTo} shadow-lg`}>
                         <Icon className="h-6 w-6 text-white" />
                       </div>
                       <h3 className="text-2xl font-extrabold text-heading lg:text-3xl">{course.titulo}</h3>
@@ -117,7 +127,7 @@ export default async function CursosPage() {
                     <div className="grid grid-cols-2 gap-3">
                       {course.highlights?.map((item: string) => (
                         <div key={item} className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5">
-                          <div className={`h-2 w-2 rounded-full bg-gradient-to-br ${course.accentFrom} ${course.accentTo}`} />
+                          <div className={`h-2 w-2 rounded-full bg-gradient-to-br ${accentFrom} ${accentTo}`} />
                           <span className="text-xs font-medium text-foreground">{item}</span>
                         </div>
                       ))}

@@ -1,64 +1,75 @@
 import { defineField, defineType } from 'sanity'
-import { Smartphone, ClipboardList, MapPin, Download, MessageSquare } from 'lucide-react'
+import { PhoneCall, MapPin, Download, CheckSquare } from 'lucide-react'
 
 export const contactPage = defineType({
     name: 'contactPage',
     title: 'Página de Contacto',
     type: 'document',
-    icon: Smartphone,
+    icon: PhoneCall,
+    groups: [
+        { name: 'hero', title: 'Banner Principal' },
+        { name: 'proceso', title: 'Proceso de Inscripción' },
+        { name: 'requisitos', title: 'Requisitos' },
+        { name: 'sedes', title: 'Nuestras Sedes' },
+        { name: 'descargas', title: 'Descargas' },
+        { name: 'cta', title: 'Llamado a la Acción' },
+    ],
     fields: [
         // Hero Section
         defineField({
             name: 'hero',
             title: 'Sección Hero',
             type: 'object',
+            group: 'hero',
             fields: [
                 defineField({ name: 'badge', title: 'Etiqueta (Badge)', type: 'string' }),
-                defineField({ name: 'titulo', title: 'Título', type: 'string' }),
-                defineField({ name: 'tituloResaltado', title: 'Título Resaltado', type: 'string' }),
+                defineField({ name: 'titulo', title: 'Título General', type: 'string' }),
+                defineField({ name: 'tituloResaltado', title: 'Parte del título a resaltar (Color coral)', type: 'string' }),
                 defineField({ name: 'subtitulo', title: 'Subtítulo', type: 'text', rows: 3 }),
-            ]
+            ],
         }),
 
-        // Enrollment Process
+        // Proceso Section
         defineField({
             name: 'proceso',
             title: 'Proceso de Inscripción',
             type: 'object',
-            icon: ClipboardList,
+            group: 'proceso',
             fields: [
-                defineField({ name: 'badge', title: 'Etiqueta (Badge)', type: 'string' }),
-                defineField({ name: 'titulo', title: 'Título', type: 'string' }),
+                defineField({ name: 'badge', title: 'Etiqueta Pequeña', type: 'string' }),
+                defineField({ name: 'titulo', title: 'Título de Sección', type: 'string' }),
                 defineField({
                     name: 'pasos',
-                    title: 'Pasos',
+                    title: 'Pasos del Proceso',
                     type: 'array',
                     of: [
                         {
                             type: 'object',
-                            icon: ClipboardList,
+                            title: 'Paso',
+                            icon: CheckSquare,
                             fields: [
-                                defineField({ name: 'paso', title: 'Número de Paso', type: 'string' }),
+                                defineField({ name: 'paso', title: 'Número o texto corto de paso (ej: 1, 2, 3)', type: 'string' }),
                                 defineField({ name: 'titulo', title: 'Título', type: 'string' }),
                                 defineField({ name: 'descripcion', title: 'Descripción', type: 'text', rows: 2 }),
-                                defineField({
-                                    name: 'icono',
-                                    title: 'Icono (Lucide)',
-                                    type: 'string',
-                                    description: 'Nombre del icono (ej: Phone, ClipboardList, FileText, Users)'
-                                }),
-                            ]
+                            ],
+                            preview: {
+                                select: {
+                                    title: 'titulo',
+                                    subtitle: 'descripcion',
+                                }
+                            }
                         }
                     ]
                 })
-            ]
+            ],
         }),
 
-        // Requirements
+        // Requisitos Section
         defineField({
             name: 'requisitos',
             title: 'Requisitos de Inscripción',
             type: 'object',
+            group: 'requisitos',
             fields: [
                 defineField({ name: 'titulo', title: 'Título', type: 'string' }),
                 defineField({
@@ -67,18 +78,18 @@ export const contactPage = defineType({
                     type: 'array',
                     of: [{ type: 'string' }]
                 })
-            ]
+            ],
         }),
 
-        // Locations
+        // Sedes Section
         defineField({
             name: 'sedes',
-            title: 'Sucursales / Ubicaciones',
+            title: 'Nuestras Sedes / Sucursales',
             type: 'object',
-            icon: MapPin,
+            group: 'sedes',
             fields: [
-                defineField({ name: 'badge', title: 'Etiqueta (Badge)', type: 'string' }),
-                defineField({ name: 'titulo', title: 'Título', type: 'string' }),
+                defineField({ name: 'badge', title: 'Etiqueta Pequeña', type: 'string' }),
+                defineField({ name: 'titulo', title: 'Título de Sección', type: 'string' }),
                 defineField({
                     name: 'ubicaciones',
                     title: 'Ubicaciones',
@@ -86,68 +97,86 @@ export const contactPage = defineType({
                     of: [
                         {
                             type: 'object',
+                            title: 'Ubicación',
                             icon: MapPin,
                             fields: [
                                 defineField({ name: 'nombre', title: 'Nombre de la Sede', type: 'string' }),
-                                defineField({ name: 'telefono', title: 'Teléfono', type: 'string' }),
-                                defineField({ name: 'whatsapp', title: 'WhatsApp (formato internacional ej: 52321...)', type: 'string' }),
-                                defineField({ name: 'horarios', title: 'Horarios', type: 'string' }),
+                                defineField({ name: 'telefono', title: 'Número Telefónico Público', type: 'string' }),
                                 defineField({
-                                    name: 'accent',
-                                    title: 'Clase de Acento (Tailwind)',
+                                    name: 'whatsapp',
+                                    title: 'Número de WhatsApp',
                                     type: 'string',
-                                    description: 'Ej: from-sea-blue to-sea-blue-light'
+                                    description: 'Solo números, incluyendo código de país (ej. 523213875702)',
                                 }),
-                            ]
+                                defineField({ name: 'horarios', title: 'Horarios de Atención', type: 'string' }),
+                            ],
+                            preview: {
+                                select: {
+                                    title: 'nombre',
+                                    subtitle: 'telefono'
+                                }
+                            }
                         }
                     ]
                 })
-            ]
+            ],
         }),
 
-        // Downloads
+        // Descargas Section
         defineField({
             name: 'descargas',
-            title: 'Documentos y Descargas',
+            title: 'Descargas (Calendario y Reglamento)',
             type: 'object',
-            icon: Download,
+            group: 'descargas',
             fields: [
                 defineField({
                     name: 'calendario',
                     title: 'Calendario Escolar',
                     type: 'object',
+                    options: { collapsible: true, collapsed: false },
                     fields: [
                         defineField({ name: 'titulo', title: 'Título', type: 'string' }),
                         defineField({ name: 'descripcion', title: 'Descripción', type: 'text', rows: 2 }),
-                        defineField({ name: 'archivo', title: 'Archivo (URL o File)', type: 'file' }),
                         defineField({ name: 'textoBoton', title: 'Texto del Botón', type: 'string' }),
+                        defineField({
+                            name: 'archivo',
+                            title: 'Archivo PDF (Opcional)',
+                            type: 'file',
+                            options: { accept: '.pdf' }
+                        }),
                     ]
                 }),
                 defineField({
                     name: 'reglamento',
                     title: 'Reglamento Escolar',
                     type: 'object',
+                    options: { collapsible: true, collapsed: false },
                     fields: [
                         defineField({ name: 'titulo', title: 'Título', type: 'string' }),
                         defineField({ name: 'descripcion', title: 'Descripción', type: 'text', rows: 2 }),
-                        defineField({ name: 'archivo', title: 'Archivo (URL o File)', type: 'file' }),
                         defineField({ name: 'textoBoton', title: 'Texto del Botón', type: 'string' }),
+                        defineField({
+                            name: 'archivo',
+                            title: 'Archivo PDF (Opcional)',
+                            type: 'file',
+                            options: { accept: '.pdf' }
+                        }),
                     ]
                 })
-            ]
+            ],
         }),
 
-        // Final CTA
+        // CTA Final
         defineField({
             name: 'ctaFinal',
-            title: 'CTA Final',
+            title: 'Call to Action Final',
             type: 'object',
-            icon: MessageSquare,
+            group: 'cta',
             fields: [
                 defineField({ name: 'titulo', title: 'Título', type: 'string' }),
-                defineField({ name: 'descripcion', title: 'Descripción', type: 'text', rows: 2 }),
-                defineField({ name: 'textoBoton', title: 'Texto del Botón', type: 'string' }),
-            ]
+                defineField({ name: 'descripcion', title: 'Descripción', type: 'text', rows: 3 }),
+                defineField({ name: 'textoBoton', title: 'Texto del botón de acción', type: 'string' }),
+            ],
         }),
     ],
     preview: {

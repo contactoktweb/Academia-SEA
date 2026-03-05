@@ -206,18 +206,20 @@ export default async function NosotrosPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {valores.map((valor: any, i: number) => {
               const Icon = iconMap[valor.icono] || Shield
+              const staticColor = i % 2 === 0 ? "from-sea-dark to-sea-blue" : "from-coral to-coral-light"
+
               return (
                 <div
                   key={valor._key || i}
                   className="group relative overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <div className={`absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r ${valor.color}`} />
+                  <div className={`absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r ${staticColor}`} />
                   <span className="pointer-events-none absolute -right-2 -bottom-4 text-[80px] font-black leading-none text-foreground/[0.02] transition-colors group-hover:text-sea-blue/[0.04]">
                     {String(i + 1).padStart(2, "0")}
                   </span>
 
                   <div className="relative flex flex-col gap-4">
-                    <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${valor.color} shadow-lg transition-transform group-hover:scale-110`}>
+                    <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${staticColor} shadow-lg transition-transform group-hover:scale-110`}>
                       <Icon className="h-7 w-7 text-white" />
                     </div>
                     <h3 className="text-lg font-bold text-heading">{valor.titulo}</h3>

@@ -38,12 +38,6 @@ export const aboutValues = defineType({
                         }),
                         defineField({ name: 'titulo', title: 'Título', type: 'string' }),
                         defineField({ name: 'descripcion', title: 'Descripción', type: 'text', rows: 3 }),
-                        defineField({
-                            name: 'color',
-                            title: 'Esquema de Color',
-                            type: 'string',
-                            description: 'Clases de gradiente de Tailwind (ej: from-blue-600 to-blue-400)',
-                        }),
                     ],
                     preview: {
                         select: {

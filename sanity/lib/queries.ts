@@ -139,8 +139,7 @@ export const ABOUT_VALUES_QUERY = defineQuery(`
       _key,
       icono,
       titulo,
-      descripcion,
-      color
+      descripcion
     }
   }
 `);
@@ -163,12 +162,94 @@ export const ABOUT_MODALITIES_QUERY = defineQuery(`
   }
 `);
 
+
+export const COURSES_PAGE_QUERY = defineQuery(`
+  *[_type == "coursesPage"][0] {
+    hero,
+    cursos[] {
+      _key,
+      titulo,
+      badge,
+      icono,
+      "imageUrl": imagen.asset->url,
+      descripcion,
+      highlights
+    },
+    ctaFinal
+  }
+`);
+
+export const CERTIFICATIONS_PAGE_QUERY = defineQuery(`
+  *[_type == "certificationsPage"][0] {
+    hero {
+      badge,
+      titulo,
+      tituloResaltado,
+      subtitulo,
+      tags[] {
+        _key,
+        label,
+        sub
+      }
+    },
+    internacionales {
+      titulo,
+      descripcion,
+      lista[] {
+        _key,
+        title,
+        description,
+        features,
+        tag
+      }
+    },
+    nacionales {
+      titulo,
+      descripcion,
+      lista[] {
+        _key,
+        title,
+        description,
+        features
+      }
+    },
+    ctaFinal
+  }
+`);
+
 export const CONTACT_PAGE_QUERY = defineQuery(`
   *[_type == "contactPage"][0] {
-    hero,
-    proceso,
-    requisitos,
-    sedes,
+    hero {
+      badge,
+      titulo,
+      tituloResaltado,
+      subtitulo
+    },
+    proceso {
+      badge,
+      titulo,
+      pasos[] {
+        _key,
+        paso,
+        titulo,
+        descripcion
+      }
+    },
+    requisitos {
+      titulo,
+      lista
+    },
+    sedes {
+      badge,
+      titulo,
+      ubicaciones[] {
+        _key,
+        nombre,
+        telefono,
+        whatsapp,
+        horarios
+      }
+    },
     descargas {
       calendario {
         titulo,
@@ -183,26 +264,32 @@ export const CONTACT_PAGE_QUERY = defineQuery(`
         "archivoUrl": archivo.asset->url
       }
     },
-    ctaFinal
+    ctaFinal {
+      titulo,
+      descripcion,
+      textoBoton
+    }
   }
 `);
 
-export const COURSES_PAGE_QUERY = defineQuery(`
-  *[_type == "coursesPage"][0] {
-    hero,
-    cursos[] {
-      _key,
-      titulo,
+export const PRIVACY_PAGE_QUERY = defineQuery(`
+  *[_type == "privacyPage"][0] {
+    hero {
       badge,
-      icono,
-      accentFrom,
-      accentTo,
-      badgeBg,
-      "imageUrl": imagen.asset->url,
-      descripcion,
-      highlights
+      titulo,
+      subtitulo
     },
-    ctaFinal
+    secciones[] {
+      _key,
+      id,
+      titulo,
+      contenido
+    },
+    notaFinal {
+      fechaActualizacion,
+      texto
+    }
   }
 `);
+
 
