@@ -17,6 +17,17 @@ import {
     Baby,
     GraduationCap,
     Briefcase,
+    Zap,
+    Globe,
+    Heart,
+    Star,
+    Lightbulb,
+    Rocket,
+    Smile,
+    School,
+    Building2,
+    Handshake,
+    MessageCircle,
     LucideIcon
 } from "lucide-react"
 
@@ -39,4 +50,15 @@ export const iconMap: Record<string, LucideIcon> = {
     Baby,
     GraduationCap,
     Briefcase,
+    Zap,
+    Globe,
+    Heart,
+    Star,
+    Lightbulb,
+    Rocket,
+    Smile,
+    School,
+    Building2,
+    Handshake,
+    MessageCircle,
 }

@@ -37,6 +37,8 @@
   --yellow-soft: #fef9c3;
   --footer-bg: #0f172a;
   --footer-foreground: #cbd5e1;
+  --coral: #E85D4A;
+  --coral-light: #F5846D;
 }
 
 @theme inline {
@@ -78,6 +80,8 @@
   --color-yellow-soft: var(--yellow-soft);
   --color-footer-bg: var(--footer-bg);
   --color-footer-foreground: var(--footer-foreground);
+  --color-coral: var(--coral);
+  --color-coral-light: var(--coral-light);
 }
 
 @layer base {

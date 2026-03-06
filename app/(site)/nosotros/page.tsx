@@ -140,8 +140,15 @@ export default async function NosotrosPage() {
       </section>
 
       {/* Mision & Vision */}
-      <section className="bg-card py-20 lg:py-28">
-        <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
+      <section className="relative overflow-hidden bg-card py-20 lg:py-28">
+        {/* Fondo decorativo */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-sea-blue/5 blur-3xl" />
+          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-mint/5 blur-3xl" />
+        </div>
+
+        <div className="relative mx-auto max-w-[1440px] px-4 lg:px-8">
+          {/* Header */}
           <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-mint/30 bg-mint/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
               {misionVision?.badge || "Filosofía"}
@@ -149,34 +156,86 @@ export default async function NosotrosPage() {
             <h2 className="text-pretty text-3xl font-extrabold text-heading md:text-4xl">
               {misionVision?.titulo || "Misión y Visión"}
             </h2>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Los principios que guían cada decisión, cada clase y cada logro de nuestros estudiantes.
+            </p>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2 lg:gap-0">
-            <div className="relative z-10 rounded-2xl border border-border bg-background p-10 shadow-xl lg:rounded-r-none lg:border-r-0">
-              <div className="pointer-events-none absolute -top-10 -left-10 h-32 w-32 rounded-full bg-sea-blue/5 blur-2xl" />
-              <div className="relative">
-                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sea-blue to-sea-blue-light shadow-lg shadow-sea-blue/20">
-                  <Target className="h-8 w-8 text-white" />
+          {/* Cards */}
+          <div className="mx-auto max-w-5xl flex flex-col gap-6">
+
+            {/* Misión */}
+            <div className="group relative overflow-hidden rounded-3xl border border-sea-blue/20 bg-background p-px shadow-xl shadow-sea-blue/5 transition-all hover:shadow-2xl hover:shadow-sea-blue/10">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-sea-blue/20 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+              <div className="relative rounded-3xl bg-background p-8 lg:p-10">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-10">
+                  {/* Icon + number */}
+                  <div className="flex shrink-0 flex-col items-center gap-3 lg:items-center">
+                    <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-sea-blue to-sea-blue-light shadow-xl shadow-sea-blue/30 transition-transform group-hover:scale-105">
+                      <Target className="h-9 w-9 text-white" />
+                      <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-sea-blue text-[10px] font-black text-white shadow">01</span>
+                    </div>
+                  </div>
+                  {/* Content */}
+                  <div className="flex-1">
+                    <div className="mb-1 flex items-center gap-3">
+                      <h3 className="text-2xl font-extrabold text-heading">
+                        {misionVision?.mision?.titulo || "Misión"}
+                      </h3>
+                      <div className="h-px flex-1 bg-gradient-to-r from-sea-blue/30 to-transparent" />
+                    </div>
+                    <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                      {misionVision?.mision?.contenido}
+                    </p>
+                    {/* Accent bar */}
+                    <div className="mt-6 h-1 w-16 rounded-full bg-gradient-to-r from-sea-blue to-sea-blue-light transition-all group-hover:w-32" />
+                  </div>
                 </div>
-                <h3 className="text-2xl font-extrabold text-heading">{misionVision?.mision?.titulo || "Misión"}</h3>
-                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                  {misionVision?.mision?.contenido}
-                </p>
               </div>
             </div>
 
-            <div className="relative rounded-2xl border border-border bg-[#0c1b3a] p-10 text-white shadow-xl lg:rounded-l-none lg:-ml-px">
-              <div className="pointer-events-none absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-mint/10 blur-2xl" />
-              <div className="relative">
-                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-mint to-[#059669] shadow-lg shadow-mint/20">
-                  <Eye className="h-8 w-8 text-white" />
+            {/* Separador central */}
+            <div className="flex items-center justify-center gap-4 py-2">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-sm">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent" />
+            </div>
+
+            {/* Visión */}
+            <div className="group relative overflow-hidden rounded-3xl bg-[#0b1e3d] p-px shadow-xl shadow-mint/5 transition-all hover:shadow-2xl hover:shadow-mint/10">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-mint/20 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+              {/* Orbs decorativos */}
+              <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-mint/10 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-sea-blue/10 blur-3xl" />
+              <div className="relative rounded-3xl bg-[#0b1e3d] p-8 lg:p-10">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-10">
+                  {/* Icon + number */}
+                  <div className="flex shrink-0 flex-col items-center gap-3 lg:items-center">
+                    <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-mint to-[#059669] shadow-xl shadow-mint/30 transition-transform group-hover:scale-105">
+                      <Eye className="h-9 w-9 text-white" />
+                      <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-mint text-[10px] font-black text-white shadow">02</span>
+                    </div>
+                  </div>
+                  {/* Content */}
+                  <div className="flex-1">
+                    <div className="mb-1 flex items-center gap-3">
+                      <h3 className="text-2xl font-extrabold text-white">
+                        {misionVision?.vision?.titulo || "Visión"}
+                      </h3>
+                      <div className="h-px flex-1 bg-gradient-to-r from-mint/30 to-transparent" />
+                    </div>
+                    <p className="mt-3 text-base leading-relaxed text-slate-300">
+                      {misionVision?.vision?.contenido}
+                    </p>
+                    {/* Accent bar */}
+                    <div className="mt-6 h-1 w-16 rounded-full bg-gradient-to-r from-mint to-[#059669] transition-all group-hover:w-32" />
+                  </div>
                 </div>
-                <h3 className="text-2xl font-extrabold text-white">{misionVision?.vision?.titulo || "Visión"}</h3>
-                <p className="mt-4 text-sm leading-relaxed text-slate-300">
-                  {misionVision?.vision?.contenido}
-                </p>
               </div>
             </div>
+
           </div>
         </div>
       </section>

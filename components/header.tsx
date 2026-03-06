@@ -38,13 +38,13 @@ export function Header({ data }: { data?: any }) {
       <header className={`mx-auto max-w-[1440px] px-4 md:px-6 transition-all duration-300`}>
         <div className={`relative flex items-center justify-between rounded-full bg-white/75 backdrop-blur-md border border-slate-200/50 shadow-sm transition-all duration-300 px-6 h-16 ${scrolled ? "shadow-md" : ""}`}>
           {/* Logo */}
-          <Link href="/" className="relative z-50 flex flex-shrink-0 items-center gap-2 -ml-6 lg:-ml-10">
+          <Link href="/" className="relative z-50 flex flex-shrink-0 items-center gap-2">
             <Image
               src={logoUrl}
               alt={logoAlt}
-              width={250}
-              height={60}
-              className="w-40 md:w-52 h-auto object-contain transition-transform duration-300 hover:scale-[1.02]"
+              width={160}
+              height={40}
+              className="w-28 md:w-36 h-auto object-contain transition-transform duration-300 hover:scale-[1.02]"
               priority
             />
           </Link>

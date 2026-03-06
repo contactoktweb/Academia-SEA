@@ -53,6 +53,15 @@ export const metadata: Metadata = {
     locale: 'es_MX',
     type: 'website',
   },
+  icons: {
+    icon: [
+      { url: '/images/SEA_LOGO-02.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/images/SEA_LOGO-02.png', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/images/SEA_LOGO-02.png',
+  },
 }
 
 export const viewport: Viewport = {
