@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Facebook, Phone, MapPin, Clock, Heart } from "lucide-react"
+import { Facebook, Mail, Phone, MapPin, AlarmClock, Heart } from "lucide-react"
 
 import { urlFor } from "@/sanity/lib/image"
 
@@ -9,9 +9,11 @@ export function Footer({ data }: { data?: any }) {
     ? urlFor(data.logoFooter.asset).url()
     : data?.logo?.asset
       ? urlFor(data.logo.asset).url()
-      : "/images/SEA_LOGO-02.png"
+      : "/images/SEA_LOGO-04.png"
 
-  const logoAlt = data?.logoFooter?.alt || data?.logo?.alt || "Academia SEA Logo Blanco"
+  const logoAlt = !data?.logoFooter?.alt || data.logoFooter.alt.toLowerCase().includes("logo")
+    ? "Academia SEA - Certificaciones TOEFL y TOEIC en El Grullo, Autlán y Unión de Tula"
+    : data.logoFooter.alt
   const facebookLink = data?.redesSociales?.find((r: any) => r.plataforma === "facebook")?.url || "https://www.facebook.com/AcademiaSEA"
 
   return (
@@ -77,11 +79,11 @@ export function Footer({ data }: { data?: any }) {
             </h3>
             <ul className="flex flex-col gap-3 text-sm text-footer-foreground/80">
               <li className="flex items-start gap-2">
-                <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                <AlarmClock className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>Lunes a Viernes: 4:00 PM - 8:00 PM</span>
               </li>
               <li className="flex items-start gap-2">
-                <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                <AlarmClock className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>Sabados: 10:00 AM - 2:00 PM</span>
               </li>
             </ul>
@@ -105,7 +107,7 @@ export function Footer({ data }: { data?: any }) {
               )}
               {data?.emailContacto && (
                 <li className="flex items-start gap-2">
-                  <Clock className="mt-0.5 h-4 w-4 shrink-0 hidden" /> {/* dummy icon to maintain spacing if needed, or use Phone/Mail */}
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0" />
                   <span className="truncate">{data.emailContacto}</span>
                 </li>
               )}

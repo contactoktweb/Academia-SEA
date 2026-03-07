@@ -16,14 +16,14 @@ export const heroHome = defineType({
             title: 'Título Principal (H1)',
             type: 'text',
             rows: 3,
-            description: 'El texto grande que define la página.',
+            description: 'El texto grande que define la página. Ej: "Excelencia académica en la enseñanza del inglés."',
         }),
         defineField({
             name: 'subtitulo',
             title: 'Subtítulo',
             type: 'text',
             rows: 2,
-            description: 'Breve párrafo debajo del título.',
+            description: 'Breve párrafo debajo del título. Ej: "Formando líderes bilingües en Jalisco por más de 15 años..."',
         }),
         defineField({
             name: 'ctaTexto',

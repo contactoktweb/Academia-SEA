@@ -53,14 +53,20 @@ export const metadata: Metadata = {
     locale: 'es_MX',
     type: 'website',
   },
-  icons: {
-    icon: [
-      { url: '/images/SEA_LOGO-02.png', sizes: '512x512', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/images/SEA_LOGO-02.png', sizes: '512x512', type: 'image/png' },
-    ],
-    shortcut: '/images/SEA_LOGO-02.png',
+  metadataBase: new URL('https://www.academiasea.mx'),
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 }
 

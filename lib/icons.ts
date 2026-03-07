@@ -28,6 +28,18 @@ import {
     Building2,
     Handshake,
     MessageCircle,
+    Trophy,
+    Scale,
+    HeartHandshake,
+    Telescope,
+    Compass,
+    Languages,
+    PencilRuler,
+    BookOpenCheck,
+    UserRound,
+    TrendingUp,
+    BadgeCheck,
+    BookMarked,
     LucideIcon
 } from "lucide-react"
 
@@ -61,4 +73,17 @@ export const iconMap: Record<string, LucideIcon> = {
     Building2,
     Handshake,
     MessageCircle,
+    // Nuevos iconos creativos temáticos
+    Trophy,
+    Scale,
+    HeartHandshake,
+    Telescope,
+    Compass,
+    Languages,
+    PencilRuler,
+    BookOpenCheck,
+    UserRound,
+    TrendingUp,
+    BadgeCheck,
+    BookMarked,
 }

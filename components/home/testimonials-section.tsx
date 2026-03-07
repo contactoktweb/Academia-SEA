@@ -1,4 +1,4 @@
-import { Star, Quote } from "lucide-react"
+import { Star, MessageSquareQuote } from "lucide-react"
 
 const testimonials = [
     {
@@ -40,7 +40,7 @@ export function TestimonialsSection() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {testimonials.map((testimonial, i) => (
                         <div key={i} className="bg-slate-800 rounded-2xl p-8 relative shadow-xl shadow-black/20 transform transition-transform duration-300 hover:-translate-y-2">
-                            <Quote className="absolute top-6 right-8 w-12 h-12 text-slate-700 opacity-50" />
+                            <MessageSquareQuote className="absolute top-6 right-8 w-10 h-10 text-slate-700 opacity-40" />
                             <div className="flex gap-1 mb-6">
                                 {[...Array(testimonial.rating)].map((_, idx) => (
                                     <Star key={idx} className="w-5 h-5 text-amber-400 fill-amber-400" />

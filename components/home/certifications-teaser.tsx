@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { CheckCircle2 } from "lucide-react"
+import { ShieldCheck, CircleCheck } from "lucide-react"
 
 import { urlFor } from "@/sanity/lib/image"
 
@@ -26,18 +26,6 @@ export function CertificationsTeaser({ data }: { data?: any }) {
               />
             </div>
 
-            {/* Floating badge */}
-            <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-2xl shadow-xl max-w-xs animate-bounce" style={{ animationDuration: '3s' }}>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-black text-slate-900">+500</p>
-                  <p className="text-sm text-slate-600 font-medium">Alumnos Certificados</p>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="order-1 lg:order-2">
@@ -54,7 +42,7 @@ export function CertificationsTeaser({ data }: { data?: any }) {
             <ul className="space-y-4 mb-10">
               {benefits.map((benefit: string, i: number) => (
                 <li key={i} className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-blue-600 shrink-0" />
+                  <CircleCheck className="w-6 h-6 text-blue-600 shrink-0" />
                   <span className="text-slate-700 font-medium">{benefit}</span>
                 </li>
               ))}

@@ -41,12 +41,18 @@ export function SubpageHero({
             <div className="pointer-events-none absolute -top-20 -left-20 h-72 w-72 rounded-full bg-[#1a2b4a]/[0.04] blur-[100px]" />
             <div className="pointer-events-none absolute -bottom-20 -right-20 h-60 w-60 rounded-full bg-[#1a2b4a]/[0.03] blur-[80px]" />
 
-            <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-4 py-20 text-center md:py-28 lg:py-32">
-                {/* Badge */}
-                <span className="inline-flex items-center gap-2 rounded-full border border-amber-200/60 bg-amber-50 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-amber-700">
-                    <BadgeIcon className="h-3.5 w-3.5" />
-                    {badge}
-                </span>
+            <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-4 pt-32 pb-20 text-center md:pt-40 md:pb-28 lg:pt-44">
+                {/* Badge - Estilo Etiqueta Académica (No-IA) */}
+                <div className="group flex items-center overflow-hidden rounded-sm border border-amber-200/50 bg-amber-50/50 shadow-sm transition-all hover:bg-amber-50">
+                    {/* Lateral accent */}
+                    <div className="h-8 w-1 bg-amber-500" />
+                    <div className="flex items-center gap-2 px-3 py-1.5">
+                        <BadgeIcon className="h-3.5 w-3.5 text-amber-600" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-amber-900/80">
+                            {badge}
+                        </span>
+                    </div>
+                </div>
 
                 {/* Heading */}
                 <h1 className="mt-7 text-pretty text-4xl font-extrabold leading-[1.1] tracking-tight text-[#1a2b4a] sm:text-5xl lg:text-[3.4rem] xl:text-[3.8rem]">

@@ -31,12 +31,14 @@ export function Header({ data }: { data?: any }) {
   }, [])
 
   const logoUrl = data?.logo?.asset ? urlFor(data.logo.asset).url() : "/images/SEA_LOGO-05.png"
-  const logoAlt = data?.logo?.alt || "Academia SEA Logo"
+  const logoAlt = !data?.logo?.alt || data.logo.alt.toLowerCase().includes("logo")
+    ? "Academia SEA - Escuela de Inglés con Excelencia Académica en Jalisco"
+    : data.logo.alt
 
   return (
     <div className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? "pt-2" : "pt-4"}`}>
       <header className={`mx-auto max-w-[1440px] px-4 md:px-6 transition-all duration-300`}>
-        <div className={`relative flex items-center justify-between rounded-full bg-white/75 backdrop-blur-md border border-slate-200/50 shadow-sm transition-all duration-300 px-6 h-16 ${scrolled ? "shadow-md" : ""}`}>
+        <div className={`relative flex items-center justify-between rounded-full bg-white backdrop-blur-md border border-slate-200/50 shadow-sm transition-all duration-300 px-6 h-16 ${scrolled ? "shadow-md" : ""}`}>
           {/* Logo */}
           <Link href="/" className="relative z-50 flex flex-shrink-0 items-center gap-2">
             <Image

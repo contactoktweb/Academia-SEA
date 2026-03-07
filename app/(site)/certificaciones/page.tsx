@@ -36,14 +36,32 @@ export default async function CertificacionesPage() {
         titleHighlight={hero?.tituloResaltado || "validez oficial."}
         subtitle={hero?.subtitulo || "Somos centro aplicador autorizado de exámenes TOEFL y TOEIC. Te preparamos y certificamos con reconocimiento internacional y nacional."}
       >
-        {/* Cert badges */}
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          {(hero?.tags || []).map((tag: any) => (
-            <div key={tag._key || tag.label} className="flex flex-col items-center rounded-2xl border border-slate-200 bg-white px-6 py-3.5 shadow-sm">
-              <span className="text-sm font-extrabold text-[#1a2b4a]">{tag.label}</span>
-              <span className="text-[10px] font-medium text-slate-400">{tag.sub}</span>
-            </div>
-          ))}
+        {/* Cert badges - Rediseño Premium */}
+        <div className="flex flex-wrap items-center justify-center gap-6">
+          {(hero?.tags || []).map((tag: any, i: number) => {
+            const isInternational = tag.sub?.toLowerCase().includes("internacional")
+            return (
+              <div
+                key={tag._key || tag.label}
+                className="group relative flex min-w-[140px] flex-col items-center gap-1 overflow-hidden rounded-3xl border border-slate-200/60 bg-white px-6 py-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-sea-blue/30 hover:shadow-xl hover:shadow-sea-blue/5"
+              >
+                {/* Sutil indicador de tipo */}
+                <div className={`absolute top-0 h-1 w-full ${isInternational ? 'bg-sea-blue' : 'bg-emerald-500'}`} />
+
+                <div className="flex flex-col items-center">
+                  <span className="text-lg font-black tracking-tight text-[#1a2b4a] transition-colors group-hover:text-sea-blue">
+                    {tag.label}
+                  </span>
+                  <span className={`text-[10px] font-bold uppercase tracking-[0.1em] ${isInternational ? 'text-sea-blue-light' : 'text-emerald-600'}`}>
+                    {tag.sub}
+                  </span>
+                </div>
+
+                {/* Micro-animación decorativa */}
+                <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-slate-50 transition-transform group-hover:scale-150" />
+              </div>
+            )
+          })}
         </div>
       </SubpageHero>
 
@@ -78,7 +96,7 @@ export default async function CertificacionesPage() {
                 </span>
 
                 <div className="flex items-center gap-3">
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${i % 2 === 0 ? "from-sea-dark to-sea-blue" : "from-coral to-coral-light"} shadow-lg`}>
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${i % 2 === 0 ? 'bg-sea-dark' : 'bg-coral'} shadow-lg`}>
                     <ShieldCheck className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="text-lg font-extrabold text-heading">{cert.title}</h3>
@@ -111,7 +129,7 @@ export default async function CertificacionesPage() {
       <section className="bg-card py-20 lg:py-28">
         <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
           <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-mint/30 bg-mint/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-600/30 bg-emerald-600/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700">
               <Flag className="h-3.5 w-3.5" />
               Nacionales
             </span>
@@ -129,13 +147,13 @@ export default async function CertificacionesPage() {
               return (
                 <div
                   key={cert._key || cert.title}
-                  className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-mint/30 to-[#059669]/10 p-px shadow-xl"
+                  className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600/30 to-[#059669]/10 p-px shadow-xl"
                 >
                   <div className="h-full rounded-3xl bg-background p-8 lg:p-10">
-                    <div className="pointer-events-none absolute -top-16 -right-16 h-32 w-32 rounded-full bg-mint/5 blur-2xl group-hover:bg-mint/10" />
+                    <div className="pointer-events-none absolute -top-16 -right-16 h-32 w-32 rounded-full bg-emerald-600/5 blur-2xl group-hover:bg-emerald-600/10" />
 
                     <div className="relative">
-                      <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-mint to-[#059669] shadow-lg shadow-mint/20">
+                      <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-600/20">
                         <Icon className="h-8 w-8 text-white" />
                       </div>
 
@@ -147,8 +165,8 @@ export default async function CertificacionesPage() {
 
                       <div className="mt-6 grid gap-2 sm:grid-cols-2">
                         {(cert.features || []).map((feature: string) => (
-                          <div key={feature} className="flex items-center gap-2 rounded-xl bg-mint/10 px-3 py-2.5">
-                            <CheckCircle className="h-3.5 w-3.5 shrink-0 text-accent-foreground" />
+                          <div key={feature} className="flex items-center gap-2 rounded-xl bg-emerald-600/10 px-3 py-2.5">
+                            <CheckCircle className="h-3.5 w-3.5 shrink-0 text-emerald-700" />
                             <span className="text-xs font-medium text-foreground">{feature}</span>
                           </div>
                         ))}

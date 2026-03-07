@@ -62,7 +62,7 @@ export default async function CursosPage() {
                 href="#cursos"
                 className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white px-6 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md md:px-7 md:py-3.5"
               >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${accentFrom} ${accentTo} md:h-11 md:w-11`}>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isEven ? 'bg-sea-dark' : 'bg-coral'} md:h-11 md:w-11`}>
                   <Icon className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-sm font-semibold text-[#1a2b4a] md:text-base">{course.titulo}</span>
@@ -95,7 +95,7 @@ export default async function CursosPage() {
                       {course.imageUrl ? (
                         <Image
                           src={course.imageUrl}
-                          alt={`Curso de ingles - ${course.titulo}`}
+                          alt={`Academia SEA - Curso de inglés especializado: ${course.titulo}`}
                           width={600}
                           height={400}
                           className="h-[320px] w-full object-cover"
@@ -114,7 +114,7 @@ export default async function CursosPage() {
 
                   <div className={`flex flex-col gap-5 ${isReversed ? "lg:[direction:ltr]" : ""}`}>
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${accentFrom} ${accentTo} shadow-lg`}>
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${isEven ? 'bg-sea-dark' : 'bg-coral'} shadow-lg`}>
                         <Icon className="h-6 w-6 text-white" />
                       </div>
                       <h3 className="text-2xl font-extrabold text-heading lg:text-3xl">{course.titulo}</h3>

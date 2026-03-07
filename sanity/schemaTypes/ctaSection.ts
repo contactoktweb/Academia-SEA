@@ -11,14 +11,14 @@ export const ctaSection = defineType({
             name: 'titulo',
             title: 'Título Llamativo',
             type: 'string',
-            description: 'Ej: Impulsa tu carrera en Comercio Exterior hoy mismo',
+            description: 'Ej: Excelencia académica en la enseñanza del inglés.',
         }),
         defineField({
             name: 'descripcion',
             title: 'Texto Descriptivo',
             type: 'text',
             rows: 3,
-            description: 'Ej: Únete a la nueva generación de expertos logísticos...',
+            description: 'Ej: Formando líderes bilingües en Jalisco por más de 15 años...',
         }),
         defineField({
             name: 'botonPrimarioTexto',

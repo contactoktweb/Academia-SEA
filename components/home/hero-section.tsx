@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Award, ChevronRight, Download, GraduationCap, Globe2, BookOpen } from "lucide-react"
+import { BadgeCheck, ChevronRight, GraduationCap, Languages, BookMarked } from "lucide-react"
 
 import { urlFor } from "@/sanity/lib/image"
 
@@ -32,16 +32,22 @@ export function HeroSection({ data }: { data?: any }) {
       />
 
       {/* Main hero content */}
-      <div className="relative z-10 mx-auto max-w-[1440px] px-4 pb-6 pt-14 md:pt-20 lg:px-8 lg:pb-10">
+      <div className="relative z-10 mx-auto max-w-[1440px] px-4 pb-6 pt-28 md:pt-36 lg:px-8 lg:pb-10">
         <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-0">
           {/* ─── Left Column: Text ─── */}
           <div className="flex flex-col gap-6 lg:gap-8 lg:pr-8 lg:pt-6">
-            {/* Certified Badge */}
+            {/* Certified Badge - Estilo Etiqueta Académica (No-IA) */}
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-amber-200/60 bg-amber-50 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-amber-700">
-                <Award className="h-3.5 w-3.5" />
-                {badgeText}
-              </span>
+              <div className="group flex items-center overflow-hidden rounded-sm border border-amber-200/50 bg-amber-50/50 shadow-sm transition-all hover:bg-amber-50">
+                {/* Lateral accent */}
+                <div className="h-8 w-1 bg-amber-500" />
+                <div className="flex items-center gap-2 px-3 py-1.5">
+                  <BadgeCheck className="h-3.5 w-3.5 text-amber-600" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-amber-900/80">
+                    {badgeText}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Headline H1 - serif style */}
@@ -83,7 +89,7 @@ export function HeroSection({ data }: { data?: any }) {
               <div className="relative z-10 mt-16 overflow-hidden rounded-2xl shadow-2xl shadow-slate-300/30 sm:mt-20">
                 <Image
                   src={imgSalonUrl}
-                  alt="Clase de inglés en Academia SEA"
+                  alt="Estudiantes en clase de inglés en Academia SEA - Jalisco"
                   width={400}
                   height={500}
                   className="h-[280px] w-full object-cover sm:h-[340px] lg:h-[380px]"
@@ -95,7 +101,7 @@ export function HeroSection({ data }: { data?: any }) {
               <div className="relative z-10 overflow-hidden rounded-2xl shadow-2xl shadow-slate-300/30">
                 <Image
                   src={imgProfesorUrl}
-                  alt="Profesor de inglés certificado"
+                  alt="Profesor de inglés certificado en Academia SEA - Enseñanza de calidad"
                   width={400}
                   height={500}
                   className="h-[280px] w-full object-cover sm:h-[340px] lg:h-[380px]"
@@ -112,7 +118,7 @@ export function HeroSection({ data }: { data?: any }) {
                     style={{ animation: "spin 20s linear infinite" }}
                   />
                   {/* Badge body */}
-                  <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-500 shadow-lg shadow-amber-500/30 sm:h-20 sm:w-20">
+                  <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full bg-amber-400 shadow-lg shadow-amber-500/30 sm:h-20 sm:w-20">
                     <span className="text-lg font-extrabold leading-none text-white sm:text-xl">
                       {anosExp}
                     </span>
@@ -141,17 +147,17 @@ export function HeroSection({ data }: { data?: any }) {
             </div>
             {/* TOEFL */}
             <div className="flex items-center gap-2 text-slate-500 transition-colors hover:text-[#1a2b4a]">
-              <Globe2 className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+              <Languages className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
               <span className="text-sm font-semibold">TOEFL</span>
             </div>
             {/* TOEIC */}
             <div className="flex items-center gap-2 text-slate-500 transition-colors hover:text-[#1a2b4a]">
-              <Award className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+              <BadgeCheck className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
               <span className="text-sm font-semibold">TOEIC</span>
             </div>
             {/* Macmillan */}
             <div className="flex items-center gap-2 text-slate-500 transition-colors hover:text-[#1a2b4a]">
-              <BookOpen className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+              <BookMarked className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
               <span className="text-sm font-semibold">Macmillan</span>
             </div>
           </div>

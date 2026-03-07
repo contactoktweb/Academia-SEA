@@ -2,17 +2,17 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
 export function CtaSection({ data }: { data?: any }) {
-    const titleText = data?.titulo || "Impulsa tu carrera en Comercio Exterior hoy mismo"
-    const descriptionText = data?.descripcion || "Únete a la nueva generación de expertos logísticos. Inscríbete ahora y transforma tu futuro profesional con Academia SEA."
-    const primaryButtonText = data?.botonPrimarioTexto || "Inscribirme Ahora"
-    const primaryButtonLink = data?.botonPrimarioLink || "/inscripcion"
-    const secondaryButtonText = data?.botonSecundarioTexto || "Solicitar Información"
+    const titleText = data?.titulo || "Excelencia académica en la enseñanza del inglés."
+    const descriptionText = data?.descripcion || "Formando líderes bilingües en Jalisco por más de 15 años. Respaldados por la metodología Macmillan y certificaciones con validez oficial internacional."
+    const primaryButtonText = data?.botonPrimarioTexto || "Iniciar Inscripción"
+    const primaryButtonLink = data?.botonPrimarioLink || "/contacto"
+    const secondaryButtonText = data?.botonSecundarioTexto || "Sedes y Horarios"
     const secondaryButtonLink = data?.botonSecundarioLink || "/contacto"
 
     return (
-        <section className="py-24 relative overflow-hidden bg-sea-blue">
-            {/* Abstract Background Patterns */}
-            <div className="absolute inset-0 opacity-10">
+        <section className="py-24 relative overflow-hidden bg-white md:bg-sea-blue">
+            {/* Abstract Background Patterns - Optimized for clarity */}
+            <div className="absolute inset-0 opacity-10 text-sea-blue md:text-white">
                 <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <pattern id="grid-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
                         <path d="M 8 0 L 0 0 0 8" fill="none" stroke="currentColor" strokeWidth="0.5" />
@@ -26,23 +26,23 @@ export function CtaSection({ data }: { data?: any }) {
 
             <div className="mx-auto max-w-[1440px] relative z-10 px-4 md:px-6 text-center">
                 <div className="max-w-3xl mx-auto">
-                    <h2 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight leading-tight">
+                    <h2 className="text-3xl md:text-5xl font-black text-sea-blue md:text-white mb-6 tracking-tight leading-tight">
                         {titleText}
                     </h2>
-                    <p className="text-lg md:text-xl text-sky-100 mb-10 leading-relaxed font-medium">
+                    <p className="text-lg md:text-xl text-slate-600 md:text-sky-100 mb-10 leading-relaxed font-medium">
                         {descriptionText}
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link
                             href={primaryButtonLink}
-                            className="w-full sm:w-auto px-8 py-4 bg-white text-sea-blue rounded-full font-bold hover:bg-slate-50 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-black/10 flex items-center justify-center"
+                            className="w-full sm:w-auto px-8 py-4 bg-sea-blue md:bg-white text-white md:text-sea-blue rounded-full font-bold hover:bg-sea-blue-light md:hover:bg-slate-50 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-black/10 flex items-center justify-center"
                         >
                             {primaryButtonText}
                             <ArrowRight className="w-5 h-5 ml-2" />
                         </Link>
                         <Link
                             href={secondaryButtonLink}
-                            className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white/30 text-white rounded-full font-bold hover:bg-white/10 transition-all flex items-center justify-center"
+                            className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-sea-blue/30 md:border-white/30 text-sea-blue md:text-white rounded-full font-bold hover:bg-sea-blue/5 md:hover:bg-white/10 transition-all flex items-center justify-center"
                         >
                             {secondaryButtonText}
                         </Link>

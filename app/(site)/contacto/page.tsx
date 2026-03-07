@@ -1,15 +1,17 @@
 import { Metadata } from "next"
 import {
-  Phone,
+  PhoneCall,
   MapPin,
   ClipboardList,
-  FileText,
+  ScrollText,
   CheckCircle,
-  Clock,
-  Users,
-  Calendar,
-  MessageCircle,
+  AlarmClock,
+  UserCheck,
+  CalendarCheck,
+  FileSignature,
+  FolderOpen,
   Facebook,
+  Send,
 } from "lucide-react"
 import { SubpageHero } from "@/components/subpage-hero"
 import { WhatsappIcon } from "@/components/whatsapp-icon"
@@ -55,7 +57,7 @@ export default async function ContactoPage() {
                 href="#ubicaciones"
                 className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white py-2.5 pr-5 pl-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
               >
-                <div className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${LOCATION_ACCENTS[i % LOCATION_ACCENTS.length]}`}>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-full ${['bg-sea-blue', 'bg-emerald-600', 'bg-amber-500'][i % 3]}`}>
                   <MapPin className="h-4 w-4 text-white" />
                 </div>
                 <div className="text-left">
@@ -86,16 +88,16 @@ export default async function ContactoPage() {
           </div>
 
           <div className="relative mx-auto max-w-4xl">
-            <div className="absolute top-0 bottom-0 left-8 hidden w-0.5 bg-gradient-to-b from-sea-blue via-mint to-sea-blue-light lg:left-1/2 lg:block lg:-translate-x-px" />
+            <div className="absolute top-0 bottom-0 left-8 hidden w-0.5 bg-gradient-to-b from-sea-blue via-emerald-600 to-sea-blue-light lg:left-1/2 lg:block lg:-translate-x-px" />
 
             <div className="flex flex-col gap-8 lg:gap-12">
               {(proceso?.pasos || []).map((item: any, i: number) => {
                 const isRight = i % 2 !== 0
-                const STEP_ICONS = [Phone, ClipboardList, FileText, Users]
+                const STEP_ICONS = [PhoneCall, FileSignature, FolderOpen, UserCheck]
                 const Icon = STEP_ICONS[i] || ClipboardList
                 return (
                   <div key={item._key || i} className={`relative flex items-center gap-6 lg:gap-0 ${isRight ? "lg:flex-row-reverse" : ""}`}>
-                    <div className="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-background bg-gradient-to-br from-sea-blue to-sea-blue-light shadow-lg shadow-sea-blue/20 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
+                    <div className="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-background bg-sea-blue shadow-lg shadow-sea-blue/20 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
                       <Icon className="h-7 w-7 text-white" />
                     </div>
 
@@ -113,7 +115,7 @@ export default async function ContactoPage() {
           </div>
 
           <div className="mx-auto mt-16 max-w-2xl">
-            <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-sea-blue/10 to-mint/10 p-px">
+            <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-sea-blue/10 to-emerald-600/10 p-px">
               <div className="rounded-3xl bg-card p-8 lg:p-10">
                 <h3 className="mb-6 text-xl font-extrabold text-heading">{requisitos?.titulo || "Requisitos de Inscripcion"}</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -133,7 +135,7 @@ export default async function ContactoPage() {
       <section id="ubicaciones" className="bg-card py-20 lg:py-28 scroll-mt-20">
         <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
           <div className="mx-auto mb-16 flex max-w-2xl flex-col items-center gap-4 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-mint/30 bg-mint/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-600/30 bg-emerald-600/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700">
               <MapPin className="h-3.5 w-3.5" />
               {sedes?.badge || "Ubicaciones"}
             </span>
@@ -154,18 +156,18 @@ export default async function ContactoPage() {
                   }}
                 >
                   <div className="h-full rounded-3xl bg-background p-8">
-                    <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${accent} shadow-lg`}>
+                    <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${['bg-sea-blue', 'bg-emerald-600', 'bg-amber-500'][i % 3]} shadow-lg`}>
                       <MapPin className="h-8 w-8 text-white" />
                     </div>
                     <h3 className="text-2xl font-extrabold text-heading">{loc.nombre}</h3>
 
                     <div className="mt-4 flex flex-col gap-3">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone className="h-4 w-4" />
+                        <PhoneCall className="h-4 w-4" />
                         <span>{loc.telefono}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
+                        <AlarmClock className="h-4 w-4" />
                         <span>{loc.horarios}</span>
                       </div>
                     </div>
@@ -205,8 +207,8 @@ export default async function ContactoPage() {
         <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="group rounded-3xl border border-border bg-card p-8 transition-all hover:shadow-xl lg:p-10">
-              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sea-blue to-sea-blue-light shadow-lg shadow-sea-blue/20">
-                <Calendar className="h-8 w-8 text-white" />
+              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-sea-blue shadow-lg shadow-sea-blue/20">
+                <CalendarCheck className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-extrabold text-heading">{descargas?.calendario?.titulo || "Calendario Escolar"}</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -218,14 +220,14 @@ export default async function ContactoPage() {
                 rel="noopener noreferrer"
                 className="mt-6 inline-flex items-center gap-2 rounded-xl bg-sea-blue px-6 py-3 text-sm font-bold text-white transition-all hover:bg-sea-blue-light"
               >
-                <Calendar className="h-4 w-4" />
+                <CalendarCheck className="h-4 w-4" />
                 {descargas?.calendario?.textoBoton || "Descargar Calendario"}
               </a>
             </div>
 
             <div className="group rounded-3xl border border-border bg-card p-8 transition-all hover:shadow-xl lg:p-10">
-              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#059669] to-mint shadow-lg shadow-mint/20">
-                <FileText className="h-8 w-8 text-white" />
+              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-600/20">
+                <ScrollText className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-extrabold text-heading">{descargas?.reglamento?.titulo || "Reglamento Escolar"}</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -237,7 +239,7 @@ export default async function ContactoPage() {
                 rel="noopener noreferrer"
                 className="mt-6 inline-flex items-center gap-2 rounded-xl border border-border bg-background px-6 py-3 text-sm font-bold text-foreground transition-all hover:bg-secondary"
               >
-                <FileText className="h-4 w-4" />
+                <ScrollText className="h-4 w-4" />
                 {descargas?.reglamento?.textoBoton || "Consultar Reglamento"}
               </a>
             </div>
@@ -249,7 +251,7 @@ export default async function ContactoPage() {
         <div className="mx-auto max-w-2xl px-4 text-center lg:px-8">
           <div className="mb-6 flex justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sea-blue/20">
-              <MessageCircle className="h-8 w-8 text-sea-blue-light" />
+              <Send className="h-8 w-8 text-sea-blue-light" />
             </div>
           </div>
           <h2 className="text-pretty text-3xl font-extrabold text-white md:text-4xl">
@@ -262,7 +264,7 @@ export default async function ContactoPage() {
             href="#ubicaciones"
             className="mt-8 inline-flex items-center gap-2 rounded-xl bg-sea-blue px-10 py-4 text-base font-bold text-white shadow-lg shadow-sea-blue/25 transition-all hover:-translate-y-0.5 hover:bg-sea-blue-light"
           >
-            <MessageCircle className="h-5 w-5" />
+            <Send className="h-5 w-5" />
             {ctaFinal?.textoBoton || "INSCRÍBETE AHORA"}
           </a>
         </div>
