@@ -27,7 +27,7 @@ const gotham = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Academia SEA | Escuela de Ingles en Jalisco',
+    default: 'Academia SEA | Escuela de Inglés',
     template: '%s | Academia SEA',
   },
   description:
