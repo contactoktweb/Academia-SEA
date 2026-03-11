@@ -5,6 +5,13 @@ import { CertificationsTeaser } from "@/components/home/certifications-teaser"
 import { CtaSection } from "@/components/home/cta-section"
 import { client } from "@/sanity/lib/client"
 import { HERO_HOME_QUERY, WHY_SECTION_QUERY, COURSES_TEASER_QUERY, CERTIFICATIONS_TEASER_QUERY, CTA_SECTION_QUERY } from "@/sanity/lib/queries"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/',
+  },
+}
 
 export default async function HomePage() {
   const [heroData, whyData, coursesData, certsData, ctaData] = await Promise.all([

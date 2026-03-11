@@ -16,6 +16,9 @@ export const metadata: Metadata = {
     title: "Nuestros Cursos | Academia SEA",
     description: "Cursos de ingles para todas las edades y niveles en Jalisco.",
   },
+  alternates: {
+    canonical: '/cursos',
+  },
 }
 
 export default async function CursosPage() {

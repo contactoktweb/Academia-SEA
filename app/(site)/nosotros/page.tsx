@@ -16,6 +16,15 @@ import { SubpageHero } from "@/components/subpage-hero"
 import { client } from "@/sanity/lib/client"
 import { ABOUT_HERO_QUERY, ABOUT_TIMELINE_QUERY, ABOUT_PHILOSOPHY_QUERY, ABOUT_VALUES_QUERY, ABOUT_MODALITIES_QUERY } from "@/sanity/lib/queries"
 import { iconMap } from "@/lib/icons"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Nosotros | Academia SEA",
+  description: "Conoce nuestra historia, misión, visión y los valores que nos definen como institución líder en enseñanza del idioma inglés.",
+  alternates: {
+    canonical: '/nosotros',
+  },
+}
 
 const misionVision = {
   mision: {

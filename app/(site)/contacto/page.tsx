@@ -21,6 +21,9 @@ import { CONTACT_PAGE_QUERY } from "@/sanity/lib/queries"
 export const metadata: Metadata = {
   title: "Contacto | Academia SEA",
   description: "Visítanos en cualquiera de nuestras 3 sedes en Jalisco o contáctanos por WhatsApp. Te guiamos en tu proceso de inscripción.",
+  alternates: {
+    canonical: '/contacto',
+  },
 }
 
 // Static accent colors per location card (design-only, not editable from Sanity)

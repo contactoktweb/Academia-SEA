@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     title: "Certificaciones | Academia SEA",
     description: "Certificaciones internacionales TOEFL, TOEIC y nacionales CENNI, ELeT en Academia SEA.",
   },
+  alternates: {
+    canonical: '/certificaciones',
+  },
 }
 
 export default async function CertificacionesPage() {

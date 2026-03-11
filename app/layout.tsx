@@ -54,9 +54,6 @@ export const metadata: Metadata = {
     type: 'website',
   },
   metadataBase: new URL('https://www.academiasea.mx'),
-  alternates: {
-    canonical: '/',
-  },
   robots: {
     index: true,
     follow: true,

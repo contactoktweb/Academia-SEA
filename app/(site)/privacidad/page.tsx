@@ -8,6 +8,9 @@ import { PRIVACY_PAGE_QUERY } from "@/sanity/lib/queries"
 export const metadata: Metadata = {
   title: "Aviso de Privacidad | Academia SEA",
   description: "Aviso de Privacidad Integral para clientes y alumnos de Academia SEA, conforme a la Ley Federal de Protección de Datos Personales.",
+  alternates: {
+    canonical: '/privacidad',
+  },
 }
 
 export default async function PrivacidadPage() {
