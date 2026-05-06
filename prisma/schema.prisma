@@ -1,0 +1,544 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== USUARIOS Y AUTENTICACIÓN =====
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String
+  phone       String?
+  photoUrl    String?
+  nationality String?
+  role        Role     @default(STUDENT)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  teacherProfile   TeacherProfile?
+  studentProfile   StudentProfile?
+  sentMessages     Message[]       @relation("SenderMessages")
+  receivedMessages Message[]       @relation("ReceiverMessages")
+  announcements    Announcement[]
+  notifications    Notification[]
+  activityLogs     ActivityLog[]
+
+  @@map("users")
+}
+
+// ===== PERFILES DE PROFESOR =====
+model TeacherProfile {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeId String?
+  specialty  String?
+  hireDate   DateTime?
+  salary     Decimal?  @db.Decimal(10, 2)
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  courses       CourseAssignment[]
+  announcements Announcement[]
+  grades        Grade[]
+  attendances   Attendance[]
+
+  @@map("teacher_profiles")
+}
+
+// ===== CICLOS ESCOLARES =====
+model SchoolCycle {
+  id        String   @id @default(cuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  courses            Course[]
+  payments           Payment[]
+  reports            Report[]
+  courseAssignments  CourseAssignment[]
+  studentEnrollments StudentEnrollment[]
+  chargeConcepts     ChargeConcept[]
+  paymentPlans       PaymentPlan[]
+  scholarships       Scholarship[]
+
+  @@map("school_cycles")
+}
+
+// ===== GRUPOS / CURSOS =====
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  level       String
+  schedule    String?
+  location    String?
+  maxStudents Int      @default(30)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignments CourseAssignment[]
+  enrollments StudentEnrollment[]
+
+  @@map("groups")
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  name        String
+  code        String
+  description String?
+  level       String
+  cycleId     String?
+  cycle       SchoolCycle? @relation(fields: [cycleId], references: [id])
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  assignments CourseAssignment[]
+  units       Unit[]
+  enrollments StudentEnrollment[]
+
+  @@map("courses")
+}
+
+model CourseAssignment {
+  id        String         @id @default(cuid())
+  courseId  String
+  course    Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  groupId   String?
+  group     Group?         @relation(fields: [groupId], references: [id])
+  teacherId String
+  teacher   TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  cycleId   String?
+  cycle     SchoolCycle?   @relation(fields: [cycleId], references: [id])
+  createdAt DateTime       @default(now())
+
+  grades      Grade[]
+  attendances Attendance[]
+
+  @@map("course_assignments")
+}
+
+// ===== UNIDADES Y EVALUACIONES =====
+model Unit {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name      String
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exams  Exam[]
+  grades Grade[]
+
+  @@map("units")
+}
+
+model Exam {
+  id        String    @id @default(cuid())
+  unitId    String
+  unit      Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  title     String
+  type      String    @default("EXAM") // EXAM, QUIZ, HOMEWORK, PROJECT
+  maxScore  Float     @default(100)
+  weight    Float     @default(1) // peso en el promedio
+  examDate  DateTime?
+  dueDate   DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  questions ExamQuestion[]
+  grades    Grade[]
+
+  @@map("exams")
+}
+
+model ExamQuestion {
+  id       String @id @default(cuid())
+  examId   String
+  exam     Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  question String
+  options  Json // [{text, isCorrect}]
+  order    Int    @default(0)
+
+  @@map("exam_questions")
+}
+
+// ===== PERFILES DE ESTUDIANTE =====
+model StudentProfile {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studentId        String? // ID externo de estudiante
+  birthDate        DateTime?
+  gender           String?
+  address          String?
+  city             String?
+  state            String?
+  emergencyContact String?
+  emergencyPhone   String?
+  medicalNotes     String?
+  bloodType        String?
+  enrollmentDate   DateTime  @default(now())
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  enrollments StudentEnrollment[]
+  grades      Grade[]
+  attendance  Attendance[]
+  documents   Document[]
+  familyLinks FamilyLink[]
+  payments    Payment[]
+
+  @@map("student_profiles")
+}
+
+// ===== FAMILIAS =====
+model Family {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  links FamilyLink[]
+
+  @@map("families")
+}
+
+model FamilyLink {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  familyId         String
+  family           Family         @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  relationship     String // PADRE, MADRE, TUTOR, HERMANO, etc.
+  isPrimary        Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+
+  @@map("family_links")
+}
+
+// ===== DOCUMENTOS =====
+enum DocumentType {
+  ACTA_NACIMIENTO
+  CURP
+  COMPROBANTE_DOMICILIO
+  FOTO
+  CREDENCIAL
+  CERTIFICADO
+  OTRO
+}
+
+model Document {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  type             DocumentType
+  name             String
+  url              String
+  verified         Boolean        @default(false)
+  verifiedBy       String?
+  verifiedAt       DateTime?
+  notes            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("documents")
+}
+
+// ===== INSCRIPCIONES =====
+model StudentEnrollment {
+  id         String         @id @default(cuid())
+  studentId  String
+  student    StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId   String
+  course     Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  groupId    String?
+  group      Group?         @relation(fields: [groupId], references: [id])
+  cycleId    String?
+  cycle      SchoolCycle?   @relation(fields: [cycleId], references: [id])
+  status     String         @default("ACTIVE") // ACTIVE, COMPLETED, DROPPED
+  enrolledAt DateTime       @default(now())
+  droppedAt  DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([studentId, courseId, cycleId])
+  @@map("student_enrollments")
+}
+
+// ===== CALIFICACIONES =====
+model Grade {
+  id                 String            @id @default(cuid())
+  studentId          String
+  student            StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseAssignmentId String?
+  courseAssignment   CourseAssignment? @relation(fields: [courseAssignmentId], references: [id])
+  examId             String?
+  exam               Exam?             @relation(fields: [examId], references: [id])
+  unitId             String?
+  unit               Unit?             @relation(fields: [unitId], references: [id])
+  teacherId          String?
+  teacher            TeacherProfile?   @relation(fields: [teacherId], references: [id])
+  value              Float
+  comment            String?
+  gradedAt           DateTime          @default(now())
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@map("grades")
+}
+
+// ===== ASISTENCIA =====
+model Attendance {
+  id                 String            @id @default(cuid())
+  studentId          String
+  student            StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  date               DateTime          @db.Date
+  status             String // PRESENT, ABSENT, LATE, EXCUSED
+  courseAssignmentId String?
+  courseAssignment   CourseAssignment? @relation(fields: [courseAssignmentId], references: [id])
+  teacherId          String?
+  teacher            TeacherProfile?   @relation(fields: [teacherId], references: [id])
+  notes              String?
+  createdAt          DateTime          @default(now())
+
+  @@unique([studentId, date, courseAssignmentId])
+  @@map("attendance")
+}
+
+// ===== CONCEPTOS DE COBRO =====
+model ChargeConcept {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  amount      Decimal      @db.Decimal(10, 2)
+  type        String // TUITION, ENROLLMENT, BOOKS, EXAM_FEE, OTHER
+  cycleId     String?
+  cycle       SchoolCycle? @relation(fields: [cycleId], references: [id])
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  paymentPlans        PaymentPlan[]
+  payments            Payment[]
+  studentPaymentPlans StudentPaymentPlan[]
+
+  @@map("charge_concepts")
+}
+
+// ===== PLANES DE PAGO =====
+model PaymentPlan {
+  id           String       @id @default(cuid())
+  name         String
+  description  String?
+  cycleId      String?
+  cycle        SchoolCycle? @relation(fields: [cycleId], references: [id])
+  frequency    String // WEEKLY, BIWEEKLY, MONTHLY, SEMESTER, ONCE
+  installments Int          @default(1)
+  amount       Decimal      @db.Decimal(10, 2)
+  startDate    DateTime?
+  endDate      DateTime?
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  conceptId    String?
+  concept      ChargeConcept?       @relation(fields: [conceptId], references: [id])
+  studentPlans StudentPaymentPlan[]
+
+  @@map("payment_plans")
+}
+
+model StudentPaymentPlan {
+  id             String         @id @default(cuid())
+  studentId      String
+  planId         String
+  plan           PaymentPlan    @relation(fields: [planId], references: [id])
+  conceptId      String?
+  concept        ChargeConcept? @relation(fields: [conceptId], references: [id])
+  customAmount   Decimal?       @db.Decimal(10, 2)
+  discount       Decimal?       @db.Decimal(10, 2) // porcentaje de beca
+  discountReason String?
+  startDate      DateTime       @default(now())
+  status         String         @default("ACTIVE")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  payments      Payment[]
+  scholarship   Scholarship? @relation(fields: [scholarshipId], references: [id])
+  scholarshipId String?
+
+  @@map("student_payment_plans")
+}
+
+// ===== BECAS Y SUBSIDIOS =====
+enum ScholarshipType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+model Scholarship {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+  type        ScholarshipType @default(PERCENTAGE)
+  value       Decimal         @db.Decimal(10, 2)
+  isActive    Boolean         @default(true)
+  cycleId     String?
+  cycle       SchoolCycle?    @relation(fields: [cycleId], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  studentPlans StudentPaymentPlan[]
+
+  @@map("scholarships")
+}
+
+// ===== PAGOS =====
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CARD
+  ONLINE
+  CHECK
+  OTHER
+}
+
+model Payment {
+  id             String              @id @default(cuid())
+  studentId      String
+  student        StudentProfile      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  cycleId        String?
+  cycle          SchoolCycle?        @relation(fields: [cycleId], references: [id])
+  conceptId      String?
+  concept        ChargeConcept?      @relation(fields: [conceptId], references: [id])
+  studentPlanId  String?
+  studentPlan    StudentPaymentPlan? @relation(fields: [studentPlanId], references: [id])
+  amount         Decimal             @db.Decimal(10, 2)
+  amountPaid     Decimal?            @db.Decimal(10, 2)
+  status         PaymentStatus       @default(PENDING)
+  method         PaymentMethod       @default(CASH)
+  dueDate        DateTime
+  paidAt         DateTime?
+  reference      String?
+  notes          String?
+  reminderSent   Boolean             @default(false)
+  reminderSentAt DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@map("payments")
+}
+
+// ===== COMUNICACIÓN =====
+model Announcement {
+  id        String          @id @default(cuid())
+  title     String
+  content   String
+  authorId  String
+  author    User            @relation(fields: [authorId], references: [id])
+  teacherId String?
+  teacher   TeacherProfile? @relation(fields: [teacherId], references: [id])
+  type      String          @default("GENERAL") // GENERAL, ACADEMIC, FINANCIAL, EVENT
+  audience  String          @default("ALL") // ALL, STUDENTS, TEACHERS, PARENTS
+  isPinned  Boolean         @default(false)
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@map("announcements")
+}
+
+model Message {
+  id         String    @id @default(cuid())
+  senderId   String
+  sender     User      @relation("SenderMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User      @relation("ReceiverMessages", fields: [receiverId], references: [id])
+  subject    String?
+  content    String
+  isRead     Boolean   @default(false)
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@map("messages")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String   @default("INFO") // INFO, WARNING, ERROR, SUCCESS
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+// ===== REPORTES Y BOLETAS =====
+model Report {
+  id          String       @id @default(cuid())
+  cycleId     String?
+  cycle       SchoolCycle? @relation(fields: [cycleId], references: [id])
+  type        String // REPORT_CARD, AVERAGE_REPORT, FAILURE_REPORT, ATTENDANCE_REPORT, FINANCIAL_REPORT
+  title       String
+  data        Json
+  generatedBy String
+  createdAt   DateTime     @default(now())
+
+  @@map("reports")
+}
+
+// ===== LOG DE ACTIVIDADES =====
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String?
+  entityId  String?
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@map("activity_logs")
+}

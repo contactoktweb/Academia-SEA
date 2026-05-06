@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, User } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 import { urlFor } from "@/sanity/lib/image"
@@ -68,8 +68,15 @@ export function Header({ data }: { data?: any }) {
             })}
           </nav>
 
-          {/* CTA */}
+          {/* CTA & Login */}
           <div className="hidden items-center gap-3 lg:flex">
+            <Link
+              href="/login"
+              className="flex items-center justify-center rounded-full border border-slate-200 p-2 text-slate-700 transition-all hover:bg-slate-100 hover:text-sea-blue"
+              title="Acceso Usuarios"
+            >
+              <User className="h-5 w-5" />
+            </Link>
             <Link
               href="/contacto"
               className="rounded-full bg-sea-blue px-6 py-1.5 text-sm font-bold text-white transition-all hover:bg-sea-blue-light hover:scale-105 shadow-md shadow-sea-blue/20"
@@ -79,13 +86,22 @@ export function Header({ data }: { data?: any }) {
           </div>
 
           {/* Mobile toggle */}
-          <button
-            className="rounded-full p-2 text-slate-700 hover:bg-slate-100 lg:hidden transition-colors"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
-          >
-            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <div className="flex items-center gap-2 lg:hidden">
+            <Link
+              href="/login"
+              className="flex items-center justify-center rounded-full border border-slate-200 p-2 text-slate-700"
+              aria-label="Acceso Usuarios"
+            >
+              <User className="h-5 w-5" />
+            </Link>
+            <button
+              className="rounded-full p-2 text-slate-700 hover:bg-slate-100 transition-colors"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+            >
+              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
