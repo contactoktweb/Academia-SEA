@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { getSedeCondition } from "@/lib/multi-tenancy"
 import {
   Card,
   CardContent,
@@ -22,15 +23,38 @@ import { TeacherDialog } from "./teacher-dialogs"
 import { AssignTeacherDialog } from "./assign-teacher-dialog"
 
 export async function TeachersTable() {
+  const sedeCondition = await getSedeCondition();
+
   const rawTeachers = await db.user.findMany({
-    where: { role: "TEACHER" },
-    include: {
+    where: { role: "TEACHER", ...sedeCondition },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      photoUrl: true,
+      isActive: true,
+      role: true,
+      sede: true,
+      createdAt: true,
+      updatedAt: true,
       teacherProfile: {
-        include: {
+        select: {
+          id: true,
+          employeeId: true,
+          specialty: true,
+          hireDate: true,
+          salary: true,
+          isActive: true,
+          sede: true,
+          createdAt: true,
+          updatedAt: true,
           courses: {
-            include: {
-              course: true,
-              group: true,
+            select: {
+              id: true,
+              customMonthlyFee: true,
+              course: { select: { name: true } },
+              group: { select: { name: true } },
             },
           },
         },
@@ -45,6 +69,10 @@ export async function TeachersTable() {
     teacherProfile: teacher.teacherProfile ? {
       ...teacher.teacherProfile,
       salary: teacher.teacherProfile.salary ? Number(teacher.teacherProfile.salary) : null,
+      courses: teacher.teacherProfile.courses.map(c => ({
+        ...c,
+        customMonthlyFee: c.customMonthlyFee ? Number(c.customMonthlyFee) : null,
+      })),
     } : null,
   })) as any;
 

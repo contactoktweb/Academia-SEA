@@ -35,22 +35,39 @@ export async function StudentsTable({ query }: { query?: string }) {
         ]
       } : {})
     },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      photoUrl: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+      role: true,
+      sede: true,
       studentProfile: {
-        include: {
-          enrollments: {
-            include: {
-              course: true,
-              group: true,
-            },
-          },
-          familyLinks: {
-            include: {
-              family: true,
-            },
-          },
-        },
-      },
+        select: {
+          id: true,
+          studentId: true,
+          gender: true,
+          address: true,
+          city: true,
+          state: true,
+          emergencyContact: true,
+          emergencyPhone: true,
+          contractUrl: true,
+          isActive: true,
+          sede: true,
+          birthDate: true,
+          enrollmentDate: true,
+          createdAt: true,
+          updatedAt: true,
+          _count: {
+            select: { enrollments: true }
+          }
+        }
+      }
     },
     orderBy: { name: "asc" },
   })
@@ -103,7 +120,7 @@ export async function StudentsTable({ query }: { query?: string }) {
                     <TableCell>{student.phone || "-"}</TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {student.studentProfile?.enrollments?.length || 0} cursos
+                        {student.studentProfile?._count?.enrollments || 0} cursos
                       </div>
                     </TableCell>
                     <TableCell>

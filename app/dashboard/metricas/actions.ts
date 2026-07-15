@@ -7,42 +7,59 @@ export async function getDashboardMetrics() {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-    // 1. Total de Alumnos Activos
-    const activeStudents = await db.user.count({
-      where: { role: "STUDENT", isActive: true },
-    });
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
-    // 2. Ingresos del Mes (Pagos PAID en el mes actual)
-    const monthlyPayments = await db.payment.findMany({
-      where: {
-        status: "PAID",
-        paidAt: { gte: firstDayOfMonth },
-      },
-      select: { amountPaid: true },
-    });
+    // Fetch all required data concurrently
+    const [
+      activeStudents,
+      monthlyPayments,
+      pendingPayments,
+      totalAttendances,
+      presentAttendances,
+      last6MonthsPayments,
+      groups,
+      allPaymentsCount
+    ] = await Promise.all([
+      db.user.count({
+        where: { role: "STUDENT", isActive: true },
+      }),
+      db.payment.findMany({
+        where: {
+          status: "PAID",
+          paidAt: { gte: firstDayOfMonth },
+        },
+        select: { amountPaid: true },
+      }),
+      db.payment.findMany({
+        where: { status: { in: ["PENDING", "OVERDUE"] } },
+        select: { amount: true },
+      }),
+      db.attendance.count(),
+      db.attendance.count({ where: { status: "PRESENT" } }),
+      db.payment.findMany({
+        where: { status: "PAID", paidAt: { gte: sixMonthsAgo } },
+        select: { paidAt: true, amountPaid: true },
+      }),
+      db.group.findMany({
+        include: {
+          _count: {
+            select: { enrollments: true }
+          }
+        }
+      }),
+      db.payment.groupBy({
+        by: ['status'],
+        _count: true
+      })
+    ]);
+
+    // Compute KPIs
     const monthlyRevenue = monthlyPayments.reduce((sum, p) => sum + Number(p.amountPaid || 0), 0);
-
-    // 3. Cuentas por Cobrar (PENDING o OVERDUE)
-    const pendingPayments = await db.payment.findMany({
-      where: { status: { in: ["PENDING", "OVERDUE"] } },
-      select: { amount: true },
-    });
     const totalPending = pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-
-    // 4. Asistencia
-    const totalAttendances = await db.attendance.count();
-    const presentAttendances = await db.attendance.count({ where: { status: "PRESENT" } });
     const attendanceRate = totalAttendances > 0 ? (presentAttendances / totalAttendances) * 100 : 0;
 
     // --- GRÁFICOS ---
     
-    // Gráfico 1: Evolución de Ingresos (Últimos 6 meses)
-    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-    const last6MonthsPayments = await db.payment.findMany({
-      where: { status: "PAID", paidAt: { gte: sixMonthsAgo } },
-      select: { paidAt: true, amountPaid: true },
-    });
-
     // Agrupar por mes
     const revenueByMonthMap = new Map();
     // Iniciar el mapa con los últimos 6 meses en orden
@@ -66,15 +83,6 @@ export async function getDashboardMetrics() {
 
     const revenueChartData = Array.from(revenueByMonthMap, ([name, value]) => ({ name, value }));
 
-    // Gráfico 2: Estudiantes por Nivel (Beginner, Intermediate, Advanced)
-    const groups = await db.group.findMany({
-      include: {
-        _count: {
-          select: { enrollments: true }
-        }
-      }
-    });
-
     let beginner = 0, intermediate = 0, advanced = 0;
     groups.forEach(g => {
       if (g.level === "Beginner") beginner += g._count.enrollments;
@@ -87,12 +95,6 @@ export async function getDashboardMetrics() {
       { name: "Intermedios", value: intermediate, fill: "#eab308" },
       { name: "Avanzados", value: advanced, fill: "#ef4444" },
     ].filter(item => item.value > 0);
-
-    // Gráfico 3: Estado de Pagos General
-    const allPaymentsCount = await db.payment.groupBy({
-      by: ['status'],
-      _count: true
-    });
 
     let paidCount = 0, pendingCount = 0, overdueCount = 0;
     allPaymentsCount.forEach(p => {

@@ -4,8 +4,6 @@ import { ConfigTabsClient } from "@/components/dashboard/config-tabs"
 import { Suspense } from "react"
 import { Loader2 } from "lucide-react"
 
-export const dynamic = "force-dynamic"
-
 export default async function Page() {
   const result = await getSystemConfig();
 
