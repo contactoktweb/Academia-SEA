@@ -45,7 +45,6 @@ export async function StudentsTable({ query }: { query?: string }) {
       createdAt: true,
       updatedAt: true,
       role: true,
-      sede: true,
       studentProfile: {
         select: {
           id: true,
@@ -58,7 +57,6 @@ export async function StudentsTable({ query }: { query?: string }) {
           emergencyPhone: true,
           contractUrl: true,
           isActive: true,
-          sede: true,
           birthDate: true,
           enrollmentDate: true,
           createdAt: true,

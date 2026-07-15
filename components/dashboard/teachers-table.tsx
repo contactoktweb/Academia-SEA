@@ -35,7 +35,6 @@ export async function TeachersTable() {
       photoUrl: true,
       isActive: true,
       role: true,
-      sede: true,
       createdAt: true,
       updatedAt: true,
       teacherProfile: {
@@ -46,7 +45,6 @@ export async function TeachersTable() {
           hireDate: true,
           salary: true,
           isActive: true,
-          sede: true,
           createdAt: true,
           updatedAt: true,
           courses: {
