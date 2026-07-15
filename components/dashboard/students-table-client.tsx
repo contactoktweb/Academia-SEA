@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+
 import { useTableData } from "@/hooks/use-table-data"
 import {
   Card,
@@ -18,7 +20,8 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { PlusCircle, Edit2, Trash2 } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { PlusCircle, Edit2, Trash2, Search } from "lucide-react"
 import Link from "next/link"
 import { TableSkeleton } from "./table-skeleton"
 
@@ -38,6 +41,7 @@ export function StudentsTableClient() {
   const { data: students, loading, error } = useTableData<Student>({
     endpoint: "/api/dashboard/students",
   })
+  const [searchQuery, setSearchQuery] = useState("")
 
   if (error) {
     return (
@@ -50,6 +54,11 @@ export function StudentsTableClient() {
   if (loading || !students) {
     return <TableSkeleton rows={5} columns={6} />
   }
+
+  const filteredStudents = students.filter(student => 
+    student.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    student.email.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <>
@@ -69,9 +78,21 @@ export function StudentsTableClient() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Estudiantes Registrados</CardTitle>
-          <CardDescription>Total de alumnos: {students.length}</CardDescription>
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <CardTitle>Estudiantes Registrados</CardTitle>
+            <CardDescription>Mostrando {filteredStudents.length} alumnos</CardDescription>
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar por nombre o correo..."
+              className="pl-8 bg-white"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -86,14 +107,14 @@ export function StudentsTableClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.length === 0 ? (
+              {filteredStudents.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center">
-                    No hay alumnos registrados aún.
+                    No se encontraron alumnos con esa búsqueda.
                   </TableCell>
                 </TableRow>
               ) : (
-                students.map((student) => (
+                filteredStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">

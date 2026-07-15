@@ -14,16 +14,29 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useTransition } from "react";
-import { createCourse, updateCourse } from "@/app/dashboard/cursos/actions";
+import { useTransition, useState, useEffect } from "react";
+import { createCourse, updateCourse, getTeachersForSelect } from "@/app/dashboard/cursos/actions";
+import { getStudentsForSelect } from "@/app/dashboard/boletas/actions";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { ScheduleSelector } from "./schedule-selector";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MultiSelectStudents } from "./multi-select-students";
 
 const courseSchema = z.object({
   name: z.string().min(2, "El nombre es muy corto"),
   code: z.string().min(2, "El código es obligatorio"),
   description: z.string().optional(),
   level: z.string().min(1, "El nivel es obligatorio"),
+  schedule: z.string().optional(),
+  teacherId: z.string().optional(),
+  studentIds: z.array(z.string()).optional(),
 });
 
 type CourseFormValues = z.infer<typeof courseSchema>;
@@ -35,6 +48,21 @@ interface CourseFormProps {
 
 export function CourseForm({ initialData, onSuccess }: CourseFormProps) {
   const [isPending, startTransition] = useTransition();
+  const [teachers, setTeachers] = useState<Array<{id: string, name: string}>>([]);
+  const [students, setStudents] = useState<Array<{id: string, name: string}>>([]);
+
+  useEffect(() => {
+    getTeachersForSelect().then(res => {
+      if (res.success && res.data) {
+        setTeachers(res.data);
+      }
+    });
+    getStudentsForSelect().then(res => {
+      if (res.success && res.data) {
+        setStudents(res.data);
+      }
+    });
+  }, []);
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -43,10 +71,16 @@ export function CourseForm({ initialData, onSuccess }: CourseFormProps) {
       code: initialData?.code || "",
       description: initialData?.description || "",
       level: initialData?.level || "",
+      schedule: initialData?.schedule || "",
+      teacherId: initialData?.assignments?.[0]?.teacherId || "",
+      studentIds: initialData?.enrollments?.map((e: any) => e.studentId) || [],
     },
   });
 
   function onSubmit(values: CourseFormValues) {
+    if (values.teacherId === "none") {
+      values.teacherId = undefined;
+    }
     startTransition(async () => {
       const promise = initialData 
         ? updateCourse(initialData.id, values) 
@@ -110,6 +144,59 @@ export function CourseForm({ initialData, onSuccess }: CourseFormProps) {
             )}
           />
         </div>
+        <FormField
+          control={form.control}
+          name="schedule"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Horario</FormLabel>
+              <FormControl>
+                <ScheduleSelector value={field.value} onChange={field.onChange} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="teacherId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Profesor Asignado (Opcional)</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar un profesor..." />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="none">Sin profesor asignado</SelectItem>
+                  {teachers.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="studentIds"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Estudiantes Matriculados</FormLabel>
+              <FormControl>
+                <MultiSelectStudents 
+                  students={students} 
+                  value={field.value || []} 
+                  onChange={field.onChange} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="description"

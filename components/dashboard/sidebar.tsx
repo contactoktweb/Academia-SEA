@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, createContext, useContext } from 'react'
+import { useState, createContext, useContext, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -14,7 +14,6 @@ import {
   CreditCard,
   Calendar,
   MessageSquare,
-  Bell,
   Settings,
   LogOut,
   ChevronLeft,
@@ -72,12 +71,6 @@ const navItems: NavItem[] = [
     roles: ['ADMIN', 'TEACHER'],
   },
   {
-    label: 'Familias',
-    href: '/dashboard/familias',
-    icon: <Users className="size-5" />,
-    roles: ['ADMIN'],
-  },
-  {
     label: 'Profesores',
     href: '/dashboard/profesores',
     icon: <UserCheck className="size-5" />,
@@ -100,7 +93,7 @@ const navItems: NavItem[] = [
     label: 'Evaluaciones',
     href: '/dashboard/evaluaciones',
     icon: <ClipboardList className="size-5" />,
-    roles: ['ADMIN', 'TEACHER'],
+    roles: ['TEACHER'],
   },
   {
     label: 'Asistencia',
@@ -112,7 +105,7 @@ const navItems: NavItem[] = [
     label: 'Boletas PDF',
     href: '/dashboard/boletas',
     icon: <FileText className="size-5" />,
-    roles: ['ADMIN', 'TEACHER'],
+    roles: ['TEACHER'],
   },
   // Financial
   {
@@ -399,28 +392,104 @@ export function DashboardSidebar({
 
 export function DashboardTopBar({ title }: { title: string }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const pathname = usePathname()
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
 
   return (
-    <header className="sticky top-0 z-30 -mt-4 md:-mt-8 lg:-mt-10 -mx-4 md:-mx-8 lg:-mx-10 mb-2 flex h-16 items-center gap-4 border-b border-slate-200 bg-white/80 backdrop-blur-md px-6 md:px-10">
-      <button
-        className="lg:hidden rounded-lg p-2 text-slate-500 hover:bg-slate-100"
-        onClick={() => setMobileOpen(!mobileOpen)}
-      >
-        <Menu className="size-5" />
-      </button>
-      <h1 className="text-lg font-bold text-heading">{title}</h1>
-      <div className="ml-auto flex items-center gap-3">
-        <button className="relative rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
-          <Bell className="size-5" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-coral" />
-        </button>
-        <Link
-          href="/"
-          className="hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors"
+    <>
+      <header className="sticky top-0 z-30 -mt-4 md:-mt-8 lg:-mt-10 -mx-4 md:-mx-8 lg:-mx-10 mb-2 flex h-16 items-center gap-4 border-b border-slate-200 bg-white/80 backdrop-blur-md px-6 md:px-10">
+        <button
+          className="md:hidden rounded-lg p-2 text-slate-500 hover:bg-slate-100 transition-colors"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Abrir menú"
         >
-          Ver sitio
-        </Link>
-      </div>
-    </header>
+          <Menu className="size-5" />
+        </button>
+        <h1 className="text-lg font-bold text-heading">{title}</h1>
+        <div className="ml-auto flex items-center gap-3">
+          <Link
+            href="/"
+            className="hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors"
+          >
+            Ver sitio
+          </Link>
+        </div>
+      </header>
+
+      {/* Mobile Drawer Overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-50 md:hidden"
+          aria-modal="true"
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setMobileOpen(false)}
+          />
+          {/* Drawer */}
+          <aside className="absolute left-0 top-0 h-full w-72 bg-white shadow-2xl flex flex-col overflow-y-auto">
+            {/* Drawer header */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sea-blue">
+                  <Shield className="size-4 text-white" />
+                </div>
+                <span className="text-sm font-bold text-heading">Academia SEA</span>
+              </div>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                aria-label="Cerrar menú"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            {/* Nav items */}
+            <nav className="flex-1 py-4 px-3 space-y-0.5">
+              {navItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== '/dashboard' && pathname.startsWith(item.href))
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
+                      isActive
+                        ? 'bg-sea-blue text-white shadow-md'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-sea-blue'
+                    )}
+                  >
+                    <span className={cn('flex-shrink-0', isActive ? 'text-white' : 'text-slate-400')}>
+                      {item.icon}
+                    </span>
+                    <span className="flex-1 truncate">{item.label}</span>
+                  </Link>
+                )
+              })}
+            </nav>
+
+            {/* Sign out */}
+            <div className="border-t border-slate-100 p-4">
+              <button
+                onClick={() => signOut({ callbackUrl: '/login' })}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <LogOut className="size-4" />
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+    </>
   )
 }

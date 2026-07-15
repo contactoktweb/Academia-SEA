@@ -3,8 +3,15 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Sede {
+  SEAGRULLO
+  SEAAUTLAN
+  SEAUNION
 }
 
 // ===== USUARIOS Y AUTENTICACIÓN =====
@@ -24,6 +31,7 @@ model User {
   photoUrl    String?
   nationality String?
   role        Role     @default(STUDENT)
+  sede        Sede     @default(SEAAUTLAN)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -49,6 +57,7 @@ model TeacherProfile {
   specialty  String?
   hireDate   DateTime?
   salary     Decimal?  @db.Decimal(10, 2)
+  sede       Sede      @default(SEAAUTLAN)
   isActive   Boolean   @default(true)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -67,6 +76,7 @@ model SchoolCycle {
   name      String
   startDate DateTime
   endDate   DateTime
+  sede      Sede     @default(SEAAUTLAN)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -91,6 +101,7 @@ model Group {
   schedule    String?
   location    String?
   maxStudents Int      @default(30)
+  sede        Sede     @default(SEAAUTLAN)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -107,8 +118,10 @@ model Course {
   code        String
   description String?
   level       String
+  schedule    String?
   cycleId     String?
   cycle       SchoolCycle? @relation(fields: [cycleId], references: [id])
+  sede        Sede         @default(SEAAUTLAN)
   isActive    Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -130,6 +143,8 @@ model CourseAssignment {
   teacher   TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   cycleId   String?
   cycle     SchoolCycle?   @relation(fields: [cycleId], references: [id])
+  sede      Sede           @default(SEAAUTLAN)
+  customMonthlyFee Decimal? @db.Decimal(10, 2)
   createdAt DateTime       @default(now())
 
   grades      Grade[]
@@ -201,6 +216,8 @@ model StudentProfile {
   emergencyPhone   String?
   medicalNotes     String?
   bloodType        String?
+  contractUrl      String? // PDF del contrato subido
+  sede             Sede      @default(SEAAUTLAN)
   enrollmentDate   DateTime  @default(now())
   isActive         Boolean   @default(true)
   createdAt        DateTime  @default(now())
@@ -284,7 +301,17 @@ model StudentEnrollment {
   group      Group?         @relation(fields: [groupId], references: [id])
   cycleId    String?
   cycle      SchoolCycle?   @relation(fields: [cycleId], references: [id])
+  sede       Sede           @default(SEAAUTLAN)
   status     String         @default("ACTIVE") // ACTIVE, COMPLETED, DROPPED
+  
+  // Payment configurations
+  monthlyConcept      String?
+  paymentDate         Int?      // Día de pago mensual (1-31)
+  monthlyValue        Decimal?  @db.Decimal(10, 2)
+  totalInstallments   Int?      // Cantidad de mensualidades a cobrar
+  isScholarship       Boolean   @default(false)
+  scholarshipDiscount Decimal?  @db.Decimal(10, 2)
+
   enrolledAt DateTime       @default(now())
   droppedAt  DateTime?
   createdAt  DateTime       @default(now())
@@ -307,6 +334,9 @@ model Grade {
   unit               Unit?             @relation(fields: [unitId], references: [id])
   teacherId          String?
   teacher            TeacherProfile?   @relation(fields: [teacherId], references: [id])
+  examScore          Float?
+  participationScore Float?
+  attendanceScore    Float?
   value              Float
   comment            String?
   gradedAt           DateTime          @default(now())
@@ -343,6 +373,7 @@ model ChargeConcept {
   type        String // TUITION, ENROLLMENT, BOOKS, EXAM_FEE, OTHER
   cycleId     String?
   cycle       SchoolCycle? @relation(fields: [cycleId], references: [id])
+  sede        Sede         @default(SEAAUTLAN)
   isActive    Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -366,6 +397,7 @@ model PaymentPlan {
   amount       Decimal      @db.Decimal(10, 2)
   startDate    DateTime?
   endDate      DateTime?
+  sede         Sede         @default(SEAAUTLAN)
   isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -387,6 +419,7 @@ model StudentPaymentPlan {
   customAmount   Decimal?       @db.Decimal(10, 2)
   discount       Decimal?       @db.Decimal(10, 2) // porcentaje de beca
   discountReason String?
+  sede           Sede           @default(SEAAUTLAN)
   startDate      DateTime       @default(now())
   status         String         @default("ACTIVE")
   createdAt      DateTime       @default(now())
@@ -411,6 +444,7 @@ model Scholarship {
   description String?
   type        ScholarshipType @default(PERCENTAGE)
   value       Decimal         @db.Decimal(10, 2)
+  sede        Sede            @default(SEAAUTLAN)
   isActive    Boolean         @default(true)
   cycleId     String?
   cycle       SchoolCycle?    @relation(fields: [cycleId], references: [id])
@@ -452,6 +486,7 @@ model Payment {
   studentPlan    StudentPaymentPlan? @relation(fields: [studentPlanId], references: [id])
   amount         Decimal             @db.Decimal(10, 2)
   amountPaid     Decimal?            @db.Decimal(10, 2)
+  sede           Sede                @default(SEAAUTLAN)
   status         PaymentStatus       @default(PENDING)
   method         PaymentMethod       @default(CASH)
   dueDate        DateTime
@@ -477,12 +512,29 @@ model Announcement {
   teacher   TeacherProfile? @relation(fields: [teacherId], references: [id])
   type      String          @default("GENERAL") // GENERAL, ACADEMIC, FINANCIAL, EVENT
   audience  String          @default("ALL") // ALL, STUDENTS, TEACHERS, PARENTS
+  pdfUrl    String?
+  sede      Sede            @default(SEAAUTLAN)
   isPinned  Boolean         @default(false)
   isActive  Boolean         @default(true)
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
   @@map("announcements")
+}
+
+// ===== CALENDARIO =====
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  sede        Sede     @default(SEAAUTLAN)
+  type        String   @default("EVENTO") // INICIO_CURSO, FIN_CURSO, EVENTO, EXAMEN
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("calendar_events")
 }
 
 model Message {
@@ -519,6 +571,7 @@ model Report {
   id          String       @id @default(cuid())
   cycleId     String?
   cycle       SchoolCycle? @relation(fields: [cycleId], references: [id])
+  sede        Sede         @default(SEAAUTLAN)
   type        String // REPORT_CARD, AVERAGE_REPORT, FAILURE_REPORT, ATTENDANCE_REPORT, FINANCIAL_REPORT
   title       String
   data        Json

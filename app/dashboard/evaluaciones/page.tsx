@@ -1,13 +1,18 @@
-import { DashboardTopBar } from "@/components/dashboard/sidebar"
+import { DashboardTopBar } from "@/components/dashboard/sidebar";
+import { Suspense } from "react";
+import { ExamsTable } from "@/components/dashboard/exams-table";
+import { TableLoadingState } from "@/components/dashboard/table-skeleton";
 
-export default function Page() {
+export default async function EvaluacionesPage({ searchParams }: { searchParams: Promise<{ query?: string }> }) {
+  const params = await searchParams;
+  const query = params?.query || "";
+
   return (
     <div className="flex flex-col gap-6">
       <DashboardTopBar title="Exámenes y Evaluaciones" />
-      <div className="flex flex-col rounded-lg border bg-card p-6 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">Exámenes y Evaluaciones</h2>
-        <p className="text-muted-foreground">Esta sección está lista para su desarrollo.</p>
-      </div>
+      <Suspense fallback={<TableLoadingState />}>
+        <ExamsTable query={query} />
+      </Suspense>
     </div>
-  )
+  );
 }

@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Shield, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export function LoginForm({ logoUrl }: { logoUrl?: string }) {
   const router = useRouter()
@@ -16,6 +17,7 @@ export function LoginForm({ logoUrl }: { logoUrl?: string }) {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [sede, setSede] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,12 +46,19 @@ export function LoginForm({ logoUrl }: { logoUrl?: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    
+    if (!sede) {
+      setError('Por favor selecciona una sede para ingresar.')
+      return
+    }
+
     setIsLoading(true)
 
     try {
       const result = await signIn('credentials', {
         email,
         password,
+        sede,
         redirect: false,
       })
 
@@ -154,6 +163,26 @@ export function LoginForm({ logoUrl }: { logoUrl?: string }) {
                 disabled={isLoading}
                 className="h-11"
               />
+            </div>
+
+            {/* Sede field */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="sede"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Sede
+              </label>
+              <Select value={sede} onValueChange={setSede} disabled={isLoading}>
+                <SelectTrigger className="h-11 bg-white">
+                  <SelectValue placeholder="Selecciona tu sede" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SEAGRULLO">SEA El Grullo</SelectItem>
+                  <SelectItem value="SEAAUTLAN">SEA Autlán</SelectItem>
+                  <SelectItem value="SEAUNION">SEA Unión de Tula</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Password field */}

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { getSedeCondition } from "@/lib/multi-tenancy"
 import {
   Card,
   CardContent,
@@ -16,13 +17,24 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { PlusCircle, Edit2, Trash2 } from "lucide-react"
+import { PlusCircle, Edit2, Trash2, FileText } from "lucide-react"
 import Link from "next/link"
 import { StudentDialog } from "./student-dialogs"
 
-export async function StudentsTable() {
+export async function StudentsTable({ query }: { query?: string }) {
+  const sedeCondition = await getSedeCondition();
+  
   const students = await db.user.findMany({
-    where: { role: "STUDENT" },
+    where: { 
+      role: "STUDENT",
+      ...sedeCondition,
+      ...(query ? {
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } }
+        ]
+      } : {})
+    },
     include: {
       studentProfile: {
         include: {
@@ -45,20 +57,12 @@ export async function StudentsTable() {
 
   return (
     <>
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Alumnos</h2>
-          <p className="text-muted-foreground">
-            Administra los datos y matrícula de estudiantes.
-          </p>
-        </div>
-        <StudentDialog mode="add" />
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Estudiantes Registrados</CardTitle>
-          <CardDescription>Total de alumnos: {students.length}</CardDescription>
+          <CardDescription>
+            {query ? `Mostrando resultados para "${query}" (${students.length})` : `Total de alumnos: ${students.length}`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -67,7 +71,6 @@ export async function StudentsTable() {
                 <TableHead>Alumno</TableHead>
                 <TableHead>Contacto</TableHead>
                 <TableHead>Cursos</TableHead>
-                <TableHead>Familia</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -75,8 +78,8 @@ export async function StudentsTable() {
             <TableBody>
               {students.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    No hay alumnos registrados aún.
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    {query ? "No se encontraron alumnos con esa búsqueda." : "No hay alumnos registrados aún."}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -104,18 +107,19 @@ export async function StudentsTable() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        {student.studentProfile?.familyLinks?.length || 0}{" "}
-                        miembros
-                      </div>
-                    </TableCell>
-                    <TableCell>
                       <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
                         Activo
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {student.studentProfile && (
+                          <a href={`/api/reports/boleta/${student.studentProfile.id}`} target="_blank" rel="noopener noreferrer">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Descargar Boleta">
+                              <FileText className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          </a>
+                        )}
                         <StudentDialog mode="edit" student={student} />
                         <StudentDialog mode="delete" student={student} />
                       </div>

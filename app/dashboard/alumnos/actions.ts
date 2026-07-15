@@ -3,6 +3,8 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
+import { createClient } from "@/utils/supabase/server";
+import { auth } from "@/lib/auth";
 
 export async function createStudent(data: {
   name: string;
@@ -16,8 +18,11 @@ export async function createStudent(data: {
   state?: string;
   emergencyContact?: string;
   emergencyPhone?: string;
+  contractUrl?: string;
 }) {
   try {
+    const session = await auth();
+    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const student = await db.user.create({
@@ -27,8 +32,10 @@ export async function createStudent(data: {
         name: data.name,
         phone: data.phone,
         role: "STUDENT",
+        sede,
         studentProfile: {
           create: {
+            sede,
             birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
             gender: data.gender,
             address: data.address,
@@ -36,6 +43,7 @@ export async function createStudent(data: {
             state: data.state,
             emergencyContact: data.emergencyContact,
             emergencyPhone: data.emergencyPhone,
+            contractUrl: data.contractUrl,
           },
         },
       },
@@ -62,6 +70,7 @@ export async function updateStudent(
     address?: string;
     city?: string;
     state?: string;
+    contractUrl?: string;
   }
 ) {
   try {
@@ -71,12 +80,13 @@ export async function updateStudent(
         name: data.name,
         email: data.email,
         phone: data.phone,
-        studentProfile: data.gender || data.address || data.city || data.state ? {
+        studentProfile: data.gender || data.address || data.city || data.state || data.contractUrl ? {
           update: {
             gender: data.gender,
             address: data.address,
             city: data.city,
             state: data.state,
+            ...(data.contractUrl ? { contractUrl: data.contractUrl } : {}),
           },
         } : undefined,
       },
@@ -144,16 +154,35 @@ export async function enrollStudentInCourse(
   studentId: string,
   courseId: string,
   groupId: string,
-  cycleId: string
+  cycleId: string,
+  paymentConfig?: {
+    monthlyConcept?: string;
+    paymentDate?: number;
+    monthlyValue?: number;
+    totalInstallments?: number;
+    isScholarship?: boolean;
+    scholarshipDiscount?: number;
+  }
 ) {
   try {
+    const session = await auth();
+    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
     const enrollment = await db.studentEnrollment.create({
       data: {
         studentId,
         courseId,
         groupId,
         cycleId,
+        sede,
         status: "ACTIVE",
+        ...(paymentConfig ? {
+          monthlyConcept: paymentConfig.monthlyConcept,
+          paymentDate: paymentConfig.paymentDate,
+          monthlyValue: paymentConfig.monthlyValue,
+          totalInstallments: paymentConfig.totalInstallments,
+          isScholarship: paymentConfig.isScholarship,
+          scholarshipDiscount: paymentConfig.scholarshipDiscount,
+        } : {})
       },
     });
 
@@ -162,5 +191,58 @@ export async function enrollStudentInCourse(
   } catch (error) {
     console.error("Error enrolling student:", error);
     return { success: false, error: "Error al inscribir el alumno" };
+  }
+}
+
+export async function getCoursesForEnrollment() {
+  try {
+    const courses = await db.course.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, level: true },
+      orderBy: { name: "asc" }
+    });
+    return { success: true, data: courses };
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    return { success: false, error: "Error al obtener cursos" };
+  }
+}
+
+export async function getGroupsForEnrollment() {
+  try {
+    const groups = await db.group.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, level: true },
+      orderBy: { name: "asc" }
+    });
+    return { success: true, data: groups };
+  } catch (error) {
+    console.error("Error fetching groups:", error);
+    return { success: false, error: "Error al obtener grupos" };
+  }
+}
+
+export async function uploadContract(formData: FormData) {
+  try {
+    const file = formData.get("file") as File;
+    if (!file) return { success: false, error: "No se proporcionó archivo" };
+    
+    // We expect the user to have supabase connected
+    const supabase = createClient();
+    const fileName = `contracts/${Date.now()}-${file.name.replace(/\\s+/g, "_")}`;
+    
+    // Suponemos que existe un bucket llamado "documents"
+    const { data, error } = await supabase.storage.from("documents").upload(fileName, file);
+    
+    if (error) {
+      console.error("Supabase upload error:", error);
+      return { success: false, error: "Error al subir a Storage" };
+    }
+    
+    const { data: publicData } = supabase.storage.from("documents").getPublicUrl(fileName);
+    return { success: true, url: publicData.publicUrl };
+  } catch (error) {
+    console.error("Error uploading contract:", error);
+    return { success: false, error: "Error interno al subir el contrato" };
   }
 }

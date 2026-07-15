@@ -27,7 +27,9 @@ import {
 import { createGrade, updateGrade } from "@/app/dashboard/calificaciones/actions";
 
 const gradeSchema = z.object({
-  value: z.coerce.number().min(0).max(100),
+  examScore: z.coerce.number().min(0).max(100).optional(),
+  participationScore: z.coerce.number().min(0).max(100).optional(),
+  attendanceScore: z.coerce.number().min(0).max(100).optional(),
   comment: z.string().optional(),
   studentId: z.string().min(1, "Selecciona un estudiante"),
   examId: z.string().optional(),
@@ -56,7 +58,9 @@ export function GradeForm({
   const form = useForm<GradeFormValues>({
     resolver: zodResolver(gradeSchema),
     defaultValues: {
-      value: grade?.value || 0,
+      examScore: grade?.examScore || 0,
+      participationScore: grade?.participationScore || 0,
+      attendanceScore: grade?.attendanceScore || 0,
       comment: grade?.comment || "",
       studentId: grade?.studentId || "",
       examId: grade?.examId || "",
@@ -163,19 +167,47 @@ export function GradeForm({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="value"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Calificación (0-100)</FormLabel>
-              <FormControl>
-                <Input type="number" step="0.1" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="examScore"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Examen (70%)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.1" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="participationScore"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Participación (20%)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.1" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="attendanceScore"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Asistencia (10%)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.1" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

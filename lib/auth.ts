@@ -12,14 +12,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { label: 'Correo electrónico', type: 'email' },
         password: { label: 'Contraseña', type: 'password' },
+        sede: { label: 'Sede', type: 'text' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.email || !credentials?.password || !credentials?.sede) {
           return null
         }
 
         const email = credentials.email as string
         const password = credentials.password as string
+        const sede = credentials.sede as string
 
         const user = await db.user.findUnique({
           where: { email },
@@ -28,6 +30,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!user || !user.isActive) {
           return null
+        }
+
+        // Verify Sede: ADMIN can access any sede, otherwise user must belong to the selected sede
+        if (user.role !== 'ADMIN' && user.sede !== sede) {
+          throw new Error("AccessDenied")
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.password)
@@ -43,6 +50,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             action: 'LOGIN',
             entity: 'User',
             entityId: user.id,
+            details: { sede },
           },
         })
 
@@ -52,6 +60,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           role: user.role,
           image: user.photoUrl,
+          sede: sede,
         }
       },
     }),

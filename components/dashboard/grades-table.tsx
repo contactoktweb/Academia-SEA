@@ -15,9 +15,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { GradeDialog } from "./grade-dialogs";
+import { auth } from "@/lib/auth";
+import { SearchInput } from "./search-input";
 
-export async function GradesTable() {
-  const [grades, students, exams, courseAssignments] = await Promise.all([
+export async function GradesTable({ query = "" }: { query?: string }) {
+  const [grades, students, exams, courseAssignments, session] = await Promise.all([
     db.grade.findMany({
       include: {
         student: { include: { user: true } },
@@ -40,7 +42,10 @@ export async function GradesTable() {
         teacher: { include: { user: true } },
       },
     }),
+    auth(),
   ]);
+
+  const userRole = session?.user?.role || "STUDENT";
 
   // Serializar campos Decimal para componentes de cliente
   const serializedAssignments = courseAssignments.map(ca => ({
@@ -58,6 +63,13 @@ export async function GradesTable() {
       // Aunque no incluimos teacher explícitamente, nos aseguramos de que sea un objeto plano
     } : null,
   }));
+
+  const filteredGrades = query 
+    ? serializedGrades.filter(grade => 
+        grade.student.user.name.toLowerCase().includes(query.toLowerCase()) ||
+        grade.student.user.email?.toLowerCase().includes(query.toLowerCase())
+      )
+    : serializedGrades;
 
   const serializedStudents = students.map(student => ({
     ...student,
@@ -142,18 +154,25 @@ export async function GradesTable() {
             Registra y gestiona las calificaciones de estudiantes.
           </p>
         </div>
-        <GradeDialog 
-          mode="add" 
-          students={serializedStudents} 
-          exams={serializedExams} 
-          courseAssignments={serializedAssignments} 
-        />
+        {userRole !== "ADMIN" && (
+          <GradeDialog 
+            mode="add" 
+            students={serializedStudents} 
+            exams={serializedExams} 
+            courseAssignments={serializedAssignments} 
+          />
+        )}
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Registro de Calificaciones</CardTitle>
-          <CardDescription>Todas las calificaciones registradas</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Registro de Calificaciones</CardTitle>
+            <CardDescription>Todas las calificaciones registradas</CardDescription>
+          </div>
+          <div className="w-full max-w-sm">
+            <SearchInput placeholder="Buscar alumno por nombre o correo..." />
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -165,18 +184,20 @@ export async function GradesTable() {
                 <TableHead>Calificación</TableHead>
                 <TableHead>Comentario</TableHead>
                 <TableHead>Fecha</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+                {userRole !== "ADMIN" && (
+                  <TableHead className="text-right">Acciones</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {serializedGrades.length === 0 ? (
+              {filteredGrades.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center">
-                    No hay calificaciones registradas aún.
+                    {query ? "No se encontraron calificaciones para esa búsqueda." : "No hay calificaciones registradas aún."}
                   </TableCell>
                 </TableRow>
               ) : (
-                serializedGrades.map((grade) => (
+                filteredGrades.map((grade) => (
                   <TableRow key={grade.id}>
                     <TableCell className="font-medium">
                       {grade.student.user.name}
@@ -204,21 +225,23 @@ export async function GradesTable() {
                     <TableCell className="text-sm">
                       {grade.createdAt.toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <GradeDialog 
-                          mode="edit" 
-                          grade={grade}
-                          students={serializedStudents} 
-                          exams={serializedExams} 
-                          courseAssignments={serializedAssignments} 
-                        />
-                        <GradeDialog 
-                          mode="delete" 
-                          grade={grade} 
-                        />
-                      </div>
-                    </TableCell>
+                    {userRole !== "ADMIN" && (
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <GradeDialog 
+                            mode="edit" 
+                            grade={grade}
+                            students={serializedStudents} 
+                            exams={serializedExams} 
+                            courseAssignments={serializedAssignments} 
+                          />
+                          <GradeDialog 
+                            mode="delete" 
+                            grade={grade} 
+                          />
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}

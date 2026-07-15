@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PlusCircle, Edit2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { TeacherDialog } from "./teacher-dialogs"
+import { AssignTeacherDialog } from "./assign-teacher-dialog"
 
 export async function TeachersTable() {
   const rawTeachers = await db.user.findMany({
@@ -106,8 +107,19 @@ export async function TeachersTable() {
                     </TableCell>
                     <TableCell>{teacher.phone || "-"}</TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        {teacher.teacherProfile?.courses?.length || 0} asignados
+                      <div className="flex flex-wrap gap-1">
+                        {teacher.teacherProfile?.courses?.length ? (
+                          teacher.teacherProfile.courses.map((assignment: any) => (
+                            <span key={assignment.id} className="inline-flex flex-col items-start rounded-md bg-slate-100 px-2 py-1 text-xs">
+                              <span className="font-medium">{assignment.course?.name} ({assignment.group?.name || "Sin grupo"})</span>
+                              {assignment.customMonthlyFee && (
+                                <span className="text-green-600 font-semibold">Precio Personalizado: ${Number(assignment.customMonthlyFee).toFixed(2)}</span>
+                              )}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-sm text-muted-foreground">0 asignados</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -117,6 +129,12 @@ export async function TeachersTable() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {teacher.teacherProfile && (
+                          <AssignTeacherDialog 
+                            teacherProfileId={teacher.teacherProfile.id} 
+                            teacherName={teacher.name} 
+                          />
+                        )}
                         <TeacherDialog mode="edit" teacher={teacher} />
                         <TeacherDialog mode="delete" teacher={teacher} />
                       </div>

@@ -212,9 +212,66 @@ export async function getPaymentMetadata() {
       select: { id: String, name: true, studentProfile: { select: { id: true } } },
     });
     const concepts = await db.chargeConcept.findMany();
-    const cycles = await db.academicCycle.findMany({ where: { status: "ACTIVE" } });
-    return { success: true, data: { students, concepts, cycles } };
+    const serializedConcepts = concepts.map(c => ({
+      ...c,
+      amount: Number(c.amount)
+    }));
+    const cycles = await db.schoolCycle.findMany({ where: { isActive: true } });
+    return { success: true, data: { students, concepts: serializedConcepts, cycles } };
   } catch (error) {
     return { success: false, error: "Error al cargar metadatos" };
+  }
+}
+
+export async function getStudentFinancialSummary(studentProfileId: string) {
+  try {
+    const pendingPayments = await db.payment.findMany({
+      where: {
+        studentId: studentProfileId,
+        status: { in: ["PENDING", "OVERDUE"] },
+      },
+      include: {
+        concept: true,
+      },
+      orderBy: { dueDate: "asc" },
+    });
+
+    const activePlans = await db.studentPaymentPlan.findMany({
+      where: {
+        studentId: studentProfileId,
+        status: "ACTIVE",
+      },
+      include: {
+        plan: true,
+        concept: true,
+      },
+    });
+
+    // Serialize Decimals
+    const serializedPending = pendingPayments.map(p => ({
+      ...p,
+      amount: Number(p.amount),
+      amountPaid: p.amountPaid ? Number(p.amountPaid) : 0,
+      concept: p.concept ? { ...p.concept, amount: Number(p.concept.amount) } : null,
+    }));
+
+    const serializedPlans = activePlans.map(p => ({
+      ...p,
+      customAmount: p.customAmount ? Number(p.customAmount) : null,
+      discount: p.discount ? Number(p.discount) : null,
+      plan: { ...p.plan, amount: Number(p.plan.amount) },
+      concept: p.concept ? { ...p.concept, amount: Number(p.concept.amount) } : null,
+    }));
+
+    return {
+      success: true,
+      data: {
+        pendingPayments: serializedPending,
+        activePlans: serializedPlans,
+      }
+    };
+  } catch (error) {
+    console.error("Error getting financial summary:", error);
+    return { success: false, error: "Error al cargar resumen financiero" };
   }
 }

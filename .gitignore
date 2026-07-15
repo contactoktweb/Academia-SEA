@@ -73,3 +73,4 @@ tmp-seed-*.js
 tmp-upload-images.js
 seed-users.ts
 seed-test-data.ts
+migration.sql

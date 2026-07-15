@@ -42,9 +42,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Edit2, Trash2, Loader2, Check } from "lucide-react";
-import { createPayment, recordPayment, deletePayment, getPaymentMetadata } from "@/app/dashboard/pagos/actions";
+import { PlusCircle, Edit2, Trash2, Loader2, Check, ChevronsUpDown } from "lucide-react";
+import { createPayment, recordPayment, deletePayment, getPaymentMetadata, getStudentFinancialSummary } from "@/app/dashboard/pagos/actions";
 import { toast } from "sonner";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 const paymentSchema = z.object({
   studentId: z.string().min(1, "Seleccione un estudiante"),
@@ -81,6 +95,8 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
     });
   }
   const [metadata, setMetadata] = useState<any>({ students: [], concepts: [], cycles: [] });
+  const [financialSummary, setFinancialSummary] = useState<any>(null);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   useEffect(() => {
     if (open && (mode === "add" || mode === "edit")) {
@@ -119,6 +135,8 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
       } else if (mode === "add") {
         promise = createPayment({
           ...values,
+          cycleId: values.cycleId || undefined,
+          conceptId: values.conceptId || undefined,
           amount: parseFloat(values.amount),
         });
       } else {
@@ -222,34 +240,131 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                   control={form.control}
                   name="studentId"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel>Estudiante</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccione un estudiante" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {metadata.students.map((student: any) => (
-                            <SelectItem key={student.id} value={student.studentProfile?.id || ""}>
-                              {student.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? metadata.students.find(
+                                    (student: any) => student.studentProfile?.id === field.value
+                                  )?.name
+                                : "Seleccione un estudiante"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Buscar estudiante..." />
+                            <CommandList>
+                              <CommandEmpty>No se encontró ningún estudiante.</CommandEmpty>
+                              <CommandGroup>
+                                {metadata.students.map((student: any) => (
+                                  <CommandItem
+                                    key={student.id}
+                                    value={student.name} // CommandItem matches against value
+                                    onSelect={() => {
+                                      const profileId = student.studentProfile?.id;
+                                      field.onChange(profileId);
+                                      setIsPopoverOpen(false);
+                                      if (profileId) {
+                                        getStudentFinancialSummary(profileId).then(res => {
+                                          if (res.success) {
+                                            setFinancialSummary(res.data);
+                                            // Prefill amount and concept if possible
+                                            if (res.data.activePlans?.length > 0) {
+                                              const plan = res.data.activePlans[0];
+                                              const amountToPay = plan.customAmount || plan.plan?.amount;
+                                              if (amountToPay) form.setValue("amount", String(amountToPay));
+                                              if (plan.conceptId) form.setValue("conceptId", plan.conceptId);
+                                              else if (plan.plan?.conceptId) form.setValue("conceptId", plan.plan.conceptId);
+                                            }
+                                          }
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        field.value === student.studentProfile?.id ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {student.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {/* Resumen Financiero */}
+                {financialSummary && (
+                  <div className="bg-slate-50 border rounded-lg p-3 text-sm space-y-3">
+                    <div>
+                      <h4 className="font-semibold mb-1">Plan de Pago Actual</h4>
+                      {financialSummary.activePlans?.length > 0 ? (
+                        financialSummary.activePlans.map((p: any) => (
+                          <div key={p.id} className="flex justify-between items-center text-slate-600">
+                            <span>{p.plan?.name}</span>
+                            <span className="font-medium text-slate-900">${p.customAmount || p.plan?.amount}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground italic">Sin plan de pago activo.</p>
+                      )}
+                    </div>
+                    
+                    {financialSummary.pendingPayments?.length > 0 && (
+                      <div className="pt-2 border-t">
+                        <h4 className="font-semibold mb-1 text-amber-700">Deudas Pendientes</h4>
+                        {financialSummary.pendingPayments.slice(0, 3).map((debt: any) => (
+                          <div key={debt.id} className="flex justify-between items-center text-amber-600">
+                            <span>{debt.concept?.name || "Cobro"} ({new Date(debt.dueDate).toLocaleDateString()})</span>
+                            <span className="font-medium">${debt.amount}</span>
+                          </div>
+                        ))}
+                        {financialSummary.pendingPayments.length > 3 && (
+                          <p className="text-xs text-amber-700/80 mt-1">
+                            + {financialSummary.pendingPayments.length - 3} cobros más pendientes.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField
+                    <FormField
                     control={form.control}
                     name="conceptId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Concepto</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select 
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            // Auto-fill amount based on selected concept
+                            const selectedConcept = metadata.concepts.find((c: any) => c.id === val);
+                            if (selectedConcept && selectedConcept.amount !== undefined) {
+                              form.setValue("amount", String(selectedConcept.amount));
+                            }
+                          }} 
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Seleccione concepto" />
