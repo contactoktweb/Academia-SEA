@@ -1,17 +1,21 @@
 import { db } from "@/lib/db";
+import { getSedeCondition } from "@/lib/multi-tenancy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, BookOpen, CreditCard, Users } from "lucide-react";
 
 export async function DashboardOverviewStats() {
-  // En una implementación real, estas consultas tendrían filtros de fechas, etc.
+  const sedeCondition = await getSedeCondition();
+
   const [studentCount, courseCount, teacherCount, payments] = await Promise.all([
-    db.studentProfile.count({ where: { isActive: true } }),
-    db.course.count({ where: { isActive: true } }),
-    db.teacherProfile.count({ where: { isActive: true } }),
+    db.studentProfile.count({ where: { isActive: true, ...sedeCondition } }),
+    db.course.count({ where: { isActive: true, ...sedeCondition } }),
+    db.teacherProfile.count({ where: { isActive: true, ...sedeCondition } }),
     db.payment.findMany({
+      where: { ...sedeCondition },
       select: { amount: true, amountPaid: true, status: true }
     })
   ]);
+
 
   const totalAmount = payments.reduce((sum, p) => sum + parseFloat(String(p.amount)), 0);
   const paidAmount = payments.filter((p) => p.status === "PAID").reduce((sum, p) => sum + parseFloat(String(p.amountPaid || 0)), 0);

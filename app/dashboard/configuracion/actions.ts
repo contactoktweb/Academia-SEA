@@ -1,18 +1,23 @@
 "use server";
 import { db } from "@/lib/db";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { auth } from "@/lib/auth";
+import { getSedeCondition } from "@/lib/multi-tenancy";
 
 // Cache the config data for 30 seconds — these tables are rarely written to.
-// The cache tag "system-config" is busted by any mutating action below.
+// We pass the sedeCondition as a string to the cache to maintain separation.
 const getCachedSystemConfig = unstable_cache(
-  async () => {
+  async (sedeConditionStr: string) => {
+    const sedeCondition = JSON.parse(sedeConditionStr);
     const [cycles, rawConcepts, rawPlans] = await Promise.all([
-      db.schoolCycle.findMany({ orderBy: { startDate: "desc" } }),
+      db.schoolCycle.findMany({ where: sedeCondition, orderBy: { startDate: "desc" } }),
       db.chargeConcept.findMany({
+        where: sedeCondition,
         orderBy: { createdAt: "desc" },
         include: { cycle: true },
       }),
       db.paymentPlan.findMany({
+        where: sedeCondition,
         orderBy: { createdAt: "desc" },
         include: { concept: true, cycle: true },
       }),
@@ -33,13 +38,14 @@ const getCachedSystemConfig = unstable_cache(
 
     return { cycles, concepts, plans };
   },
-  ["system-config"],
+  ["system-config-sede"],
   { revalidate: 30, tags: ["system-config"] }
 );
 
 export async function getSystemConfig() {
   try {
-    const data = await getCachedSystemConfig();
+    const sedeCondition = await getSedeCondition();
+    const data = await getCachedSystemConfig(JSON.stringify(sedeCondition));
     return { success: true, data };
   } catch (error) {
     console.error("Error loading config:", error);
@@ -55,12 +61,16 @@ function invalidateConfigCache() {
 
 export async function createSchoolCycle(data: { name: string; startDate: string; endDate: string }) {
   try {
+    const session = await auth();
+    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
+
     await db.schoolCycle.create({
       data: {
         name: data.name,
         startDate: new Date(data.startDate),
         endDate: new Date(data.endDate),
         isActive: true,
+        sede: sede as any,
       },
     });
     invalidateConfigCache();

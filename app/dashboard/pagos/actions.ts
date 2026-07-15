@@ -2,6 +2,8 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+import { getSedeCondition } from "@/lib/multi-tenancy";
 
 export async function createPayment(data: {
   studentId: string;
@@ -23,6 +25,7 @@ export async function createPayment(data: {
         method: data.method || "CASH",
         status: "PENDING",
         notes: data.notes,
+        sede: ((await auth())?.user as any)?.sede || "SEAAUTLAN",
       },
       include: {
         student: true,
@@ -105,6 +108,7 @@ export async function createChargeConcept(data: {
         amount: parseFloat(String(data.amount)),
         type: data.type,
         cycleId: data.cycleId,
+        sede: ((await auth())?.user as any)?.sede || "SEAAUTLAN",
       },
     });
 
@@ -144,6 +148,7 @@ export async function createPaymentPlan(data: {
         conceptId: data.conceptId,
         startDate: data.startDate ? new Date(data.startDate) : undefined,
         endDate: data.endDate ? new Date(data.endDate) : undefined,
+        sede: ((await auth())?.user as any)?.sede || "SEAAUTLAN",
       },
     });
 
@@ -176,6 +181,7 @@ export async function createScholarship(data: {
         type: data.type as any,
         value: parseFloat(String(data.value)),
         cycleId: data.cycleId,
+        sede: ((await auth())?.user as any)?.sede || "SEAAUTLAN",
       },
     });
 
@@ -207,16 +213,17 @@ export async function deletePayment(id: string) {
 
 export async function getPaymentMetadata() {
   try {
+    const sedeCondition = await getSedeCondition();
     const students = await db.user.findMany({
-      where: { role: "STUDENT", isActive: true },
+      where: { role: "STUDENT", isActive: true, ...sedeCondition },
       select: { id: String, name: true, studentProfile: { select: { id: true } } },
     });
-    const concepts = await db.chargeConcept.findMany();
+    const concepts = await db.chargeConcept.findMany({ where: sedeCondition });
     const serializedConcepts = concepts.map(c => ({
       ...c,
       amount: Number(c.amount)
     }));
-    const cycles = await db.schoolCycle.findMany({ where: { isActive: true } });
+    const cycles = await db.schoolCycle.findMany({ where: { isActive: true, ...sedeCondition } });
     return { success: true, data: { students, concepts: serializedConcepts, cycles } };
   } catch (error) {
     return { success: false, error: "Error al cargar metadatos" };

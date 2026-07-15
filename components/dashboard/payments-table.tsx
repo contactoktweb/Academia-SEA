@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getSedeCondition } from "@/lib/multi-tenancy";
 import {
   Card,
   CardContent,
@@ -20,7 +21,9 @@ import Link from "next/link";
 import { PaymentDialog } from "./payment-dialogs";
 
 export async function PaymentsTable() {
+  const sedeCondition = await getSedeCondition();
   const rawPayments = await db.payment.findMany({
+    where: sedeCondition,
     include: {
       student: { include: { user: true } },
       concept: true,

@@ -1,9 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { getSedeCondition } from "@/lib/multi-tenancy";
 
 export async function getDashboardMetrics() {
   try {
+    const sedeCondition = await getSedeCondition();
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
@@ -21,26 +23,41 @@ export async function getDashboardMetrics() {
       allPaymentsCount
     ] = await Promise.all([
       db.user.count({
-        where: { role: "STUDENT", isActive: true },
+        where: { role: "STUDENT", isActive: true, ...sedeCondition },
       }),
       db.payment.findMany({
         where: {
           status: "PAID",
           paidAt: { gte: firstDayOfMonth },
+          ...sedeCondition
         },
         select: { amountPaid: true },
       }),
       db.payment.findMany({
-        where: { status: { in: ["PENDING", "OVERDUE"] } },
+        where: { status: { in: ["PENDING", "OVERDUE"] }, ...sedeCondition },
         select: { amount: true },
       }),
-      db.attendance.count(),
-      db.attendance.count({ where: { status: "PRESENT" } }),
+      // We don't have sede directly on attendance, but attendance is linked to courseAssignment which has sede.
+      // For now, if sede is on Attendance model we use it. Let's check:
+      // Actually, sede is NOT on Attendance model in schema. It's on courseAssignment. 
+      // It's safer to fetch attendances by joining courseAssignment if needed, but for simplicity we will
+      // filter attendance by student Profile sede. Let's look at schema: student Profile has sede.
+      // So we can do student: { sede: session.user.sede }
+      db.attendance.count({
+        where: { student: sedeCondition.sede ? { sede: sedeCondition.sede } : undefined }
+      }),
+      db.attendance.count({ 
+        where: { 
+          status: "PRESENT",
+          student: sedeCondition.sede ? { sede: sedeCondition.sede } : undefined 
+        } 
+      }),
       db.payment.findMany({
-        where: { status: "PAID", paidAt: { gte: sixMonthsAgo } },
+        where: { status: "PAID", paidAt: { gte: sixMonthsAgo }, ...sedeCondition },
         select: { paidAt: true, amountPaid: true },
       }),
       db.group.findMany({
+        where: sedeCondition,
         include: {
           _count: {
             select: { enrollments: true }
@@ -49,6 +66,7 @@ export async function getDashboardMetrics() {
       }),
       db.payment.groupBy({
         by: ['status'],
+        where: sedeCondition,
         _count: true
       })
     ]);
