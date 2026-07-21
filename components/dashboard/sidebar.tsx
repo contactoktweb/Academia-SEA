@@ -26,6 +26,7 @@ import {
   UserCheck,
   Shield,
   Megaphone,
+  Video,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -144,6 +145,13 @@ const navItems: NavItem[] = [
     label: 'Calendario',
     href: '/dashboard/calendario',
     icon: <Calendar className="size-5" />,
+    roles: ['ADMIN', 'TEACHER', 'STUDENT'],
+  },
+  // Virtual Classes
+  {
+    label: 'Clases Virtuales',
+    href: '/dashboard/clases-virtuales',
+    icon: <Video className="size-5" />,
     roles: ['ADMIN', 'TEACHER', 'STUDENT'],
   },
   // Student
@@ -275,7 +283,7 @@ export function DashboardSidebar({
       } else if (['/dashboard/anuncios', '/dashboard/mensajes'].includes(item.href)) {
         if (!acc['Comunicación']) acc['Comunicación'] = []
         acc['Comunicación'].push(item)
-      } else if (['/dashboard/calendario'].includes(item.href)) {
+      } else if (['/dashboard/calendario', '/dashboard/clases-virtuales'].includes(item.href)) {
         if (!acc['Herramientas']) acc['Herramientas'] = []
         acc['Herramientas'].push(item)
       } else if (['/dashboard/mis-calificaciones', '/dashboard/mi-asistencia', '/dashboard/mis-pagos'].includes(item.href)) {
