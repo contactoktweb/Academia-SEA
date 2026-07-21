@@ -9,8 +9,17 @@ import {
 import '@livekit/components-styles'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { TeacherControls } from './TeacherControls'
 
-export function LiveKitRoomWrapper({ roomName }: { roomName: string }) {
+export function LiveKitRoomWrapper({ 
+  roomName, 
+  isTeacher,
+  courseAssignmentId
+}: { 
+  roomName: string,
+  isTeacher?: boolean,
+  courseAssignmentId?: string
+}) {
   const [token, setToken] = useState("")
   const [error, setError] = useState("")
   const router = useRouter()
@@ -67,11 +76,17 @@ export function LiveKitRoomWrapper({ roomName }: { roomName: string }) {
       token={token}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
       data-lk-theme="default"
-      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}
       onDisconnected={() => {
         router.push('/dashboard/clases-virtuales')
       }}
     >
+      {isTeacher && (
+        <TeacherControls 
+          groupId={roomName} 
+          courseAssignmentId={courseAssignmentId} 
+        />
+      )}
       <VideoConference />
       <RoomAudioRenderer />
     </LiveKitRoom>

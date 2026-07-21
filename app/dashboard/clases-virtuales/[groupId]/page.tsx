@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth"
 import { notFound, redirect } from "next/navigation"
-import prisma from "@/lib/prisma"
+import { db as prisma } from "@/lib/db"
 import { LiveKitRoomWrapper } from "./LiveKitRoomWrapper"
 import { DashboardTopBar } from "@/components/dashboard/sidebar"
 import { Role } from "@prisma/client"
@@ -8,8 +8,9 @@ import { Role } from "@prisma/client"
 export default async function VirtualClassRoomPage({
   params
 }: {
-  params: { groupId: string }
+  params: Promise<{ groupId: string }>
 }) {
+  const resolvedParams = await params
   const session = await auth()
   
   if (!session || !session.user) {
@@ -18,7 +19,7 @@ export default async function VirtualClassRoomPage({
 
   // Validate group exists and user has access
   const group = await prisma.group.findUnique({
-    where: { id: params.groupId, modality: 'VIRTUAL', isActive: true }
+    where: { id: resolvedParams.groupId, modality: 'VIRTUAL', isActive: true }
   })
 
   if (!group) {
@@ -31,6 +32,8 @@ export default async function VirtualClassRoomPage({
   // A student can enter if they are enrolled.
   const role = session.user.role as Role
   let hasAccess = false
+  let isTeacher = false
+  let courseAssignmentId = undefined
 
   if (role === Role.ADMIN) {
     hasAccess = true
@@ -40,7 +43,11 @@ export default async function VirtualClassRoomPage({
       const assignment = await prisma.courseAssignment.findFirst({
         where: { groupId: group.id, teacherId: profile.id }
       })
-      if (assignment) hasAccess = true
+      if (assignment) {
+        hasAccess = true
+        isTeacher = true
+        courseAssignmentId = assignment.id
+      }
     }
   } else if (role === Role.STUDENT) {
     const profile = await prisma.studentProfile.findUnique({ where: { userId: session.user.id } })
@@ -77,7 +84,11 @@ export default async function VirtualClassRoomPage({
         <div className="text-xs text-slate-400">LiveKit</div>
       </div>
       <main className="flex-1 overflow-hidden relative">
-        <LiveKitRoomWrapper roomName={group.id} />
+        <LiveKitRoomWrapper 
+          roomName={group.id} 
+          isTeacher={isTeacher || role === Role.ADMIN}
+          courseAssignmentId={courseAssignmentId}
+        />
       </main>
     </div>
   )
