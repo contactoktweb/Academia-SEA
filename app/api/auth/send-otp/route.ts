@@ -46,18 +46,74 @@ export async function POST(req: NextRequest) {
           to: email,
           subject: "Código de Verificación - Academia SEA",
           html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 8px;">
-              <h2 style="color: #0f172a; margin-top: 0;">Verifica tu correo electrónico</h2>
-              <p style="color: #475569; font-size: 16px;">
-                Ingresa el siguiente código de 6 dígitos en la pantalla de registro para verificar tu cuenta en Academia SEA:
-              </p>
-              <div style="background-color: #f1f5f9; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
-                <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #0284c7;">${code}</span>
-              </div>
-              <p style="color: #64748b; font-size: 14px;">
-                Este código expira en 15 minutos. Si no solicitaste este código, puedes ignorar este correo.
-              </p>
-            </div>
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Código de Verificación</title>
+              <!--[if mso]>
+              <noscript>
+              <xml>
+              <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+              </o:OfficeDocumentSettings>
+              </xml>
+              </noscript>
+              <![endif]-->
+            </head>
+            <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; -webkit-font-smoothing: antialiased;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#f4f7f6" style="padding: 40px 20px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+                      
+                      <!-- Header -->
+                      <tr>
+                        <td bgcolor="#0284c7" align="center" style="padding: 40px 0; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+                          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Academia SEA</h1>
+                          <p style="color: #e0f2fe; margin: 10px 0 0 0; font-size: 15px;">Seguridad de la cuenta</p>
+                        </td>
+                      </tr>
+                      
+                      <!-- Body -->
+                      <tr>
+                        <td align="center" style="padding: 40px 40px;">
+                          <h2 style="color: #0f172a; margin: 0 0 20px 0; font-size: 22px; font-weight: 700;">Confirma tu correo electrónico</h2>
+                          <p style="color: #475569; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0; text-align: center;">
+                            ¡Hola! Estás a un paso de completar tu registro. Usa el siguiente código de seguridad para verificar tu cuenta y acceder a tu panel.
+                          </p>
+                          
+                          <!-- OTP Box -->
+                          <div style="background-color: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+                            <span style="font-family: monospace; font-size: 38px; font-weight: 800; letter-spacing: 8px; color: #0284c7; display: block; text-align: center;">
+                              ${code}
+                            </span>
+                          </div>
+                          
+                          <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
+                            Este código expirará en <strong>15 minutos</strong>.<br>
+                            Si no solicitaste este registro, puedes ignorar este correo de forma segura.
+                          </p>
+                        </td>
+                      </tr>
+                      
+                      <!-- Footer -->
+                      <tr>
+                        <td align="center" style="padding: 24px 40px; background-color: #f8fafc; border-top: 1px solid #f1f5f9;">
+                          <p style="color: #94a3b8; font-size: 12px; line-height: 1.5; margin: 0;">
+                            © ${new Date().getFullYear()} Academia SEA. Todos los derechos reservados.<br>
+                            Desarrollado por K&T ❤️
+                          </p>
+                        </td>
+                      </tr>
+                      
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
           `,
         });
       } catch (emailErr) {
