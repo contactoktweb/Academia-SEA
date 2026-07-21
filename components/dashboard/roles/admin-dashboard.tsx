@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Suspense } from "react"
 import { DashboardOverviewStats } from "@/components/dashboard/overview-stats"
 import { Skeleton } from "@/components/ui/skeleton"
-
+import { RecentActivityLog } from "@/components/dashboard/recent-activity"
 function StatsSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -38,19 +38,10 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle>Actividad Reciente</CardTitle>
           </CardHeader>
-          <CardContent className="pl-2">
-            <div className="h-[300px] flex items-center justify-center border-dashed border-2 rounded-xl mx-4 mt-2 bg-slate-50/50 dark:bg-slate-900/50">
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex gap-1 items-end h-20">
-                  <div className="w-3 bg-sea-blue/40 rounded-t h-8" />
-                  <div className="w-3 bg-sea-blue/60 rounded-t h-12" />
-                  <div className="w-3 bg-sea-blue/80 rounded-t h-16" />
-                  <div className="w-3 bg-sea-blue rounded-t h-20" />
-                  <div className="w-3 bg-sea-blue/70 rounded-t h-14" />
-                </div>
-                <span className="text-sm font-medium text-muted-foreground">Gráfico de Actividad Académica</span>
-              </div>
-            </div>
+          <CardContent className="pt-4">
+            <Suspense fallback={<div className="h-[300px] flex items-center justify-center text-sm text-slate-500">Cargando actividad...</div>}>
+              <RecentActivityLog />
+            </Suspense>
           </CardContent>
         </Card>
         

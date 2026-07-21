@@ -5,6 +5,7 @@ declare module 'next-auth' {
     id: string
     role: Role
     sede?: string
+    isApproved?: boolean
   }
 
   interface Session {
@@ -15,6 +16,7 @@ declare module 'next-auth' {
       role: Role
       image?: string | null
       sede?: string
+      isApproved?: boolean
     }
   }
 }
@@ -24,5 +26,6 @@ declare module 'next-auth/jwt' {
     id: string
     role: Role
     sede?: string
+    isApproved?: boolean
   }
 }

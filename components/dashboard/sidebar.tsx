@@ -241,17 +241,22 @@ export function DashboardSidebar({
   userRole,
   userName,
   logoUrl,
+  isApproved = true,
 }: {
   userRole: Role
   userName: string
   logoUrl?: string
+  isApproved?: boolean
 }) {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
 
-  const filteredItems = navItems.filter((item) =>
-    item.roles.includes(userRole)
-  )
+  const filteredItems = navItems.filter((item) => {
+    if (!isApproved) {
+      return item.label === 'Configuración'
+    }
+    return item.roles.includes(userRole)
+  })
 
   const sections = filteredItems.reduce<Record<string, NavItem[]>>(
     (acc, item) => {

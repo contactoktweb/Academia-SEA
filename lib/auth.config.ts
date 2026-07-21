@@ -12,6 +12,7 @@ export const authConfig = {
         token.id = user.id
         token.role = (user as any).role
         token.sede = (user as any).sede
+        token.isApproved = (user as any).isApproved
       }
       return token
     },
@@ -20,6 +21,7 @@ export const authConfig = {
         session.user.id = token.id as string
         session.user.role = token.role as Role
         session.user.sede = token.sede as string
+        session.user.isApproved = token.isApproved as boolean
       }
       return session
     },

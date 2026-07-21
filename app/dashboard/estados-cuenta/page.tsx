@@ -1,13 +1,24 @@
 import { DashboardTopBar } from "@/components/dashboard/sidebar"
+import { AccountStatement } from "@/components/dashboard/account-statement"
+import { getPaymentMetadata } from "@/app/dashboard/pagos/actions"
 
-export default function Page() {
+export const dynamic = "force-dynamic"
+
+export default async function EstadosCuentaPage() {
+  const metadata = await getPaymentMetadata()
+  const studentsData = metadata.success ? metadata.data.students.map((s: any) => ({
+    id: s.id,
+    name: s.name,
+    studentProfileId: s.studentProfile?.id || null
+  })) : []
+
   return (
-    <div className="flex flex-col gap-6">
-      <DashboardTopBar title="Estados de Cuenta" />
-      <div className="flex flex-col rounded-lg border bg-card p-6 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">Estados de Cuenta</h2>
-        <p className="text-muted-foreground">Esta sección está lista para su desarrollo.</p>
+    <div className="flex flex-col gap-6" id="account-statement-print-zone">
+      <div className="print:hidden">
+        <DashboardTopBar title="Estados de Cuenta" />
       </div>
+      
+      <AccountStatement students={studentsData} />
     </div>
   )
 }

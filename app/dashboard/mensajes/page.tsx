@@ -1,13 +1,21 @@
 import { DashboardTopBar } from "@/components/dashboard/sidebar"
+import { MessagesClient } from "@/components/dashboard/messages-client"
+import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
-export default function Page() {
+export const dynamic = "force-dynamic"
+
+export default async function MensajesPage() {
+  const session = await auth()
+  
+  if (!session?.user?.id) {
+    redirect("/login")
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <DashboardTopBar title="Mensajería Interna" />
-      <div className="flex flex-col rounded-lg border bg-card p-6 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">Mensajería Interna</h2>
-        <p className="text-muted-foreground">Esta sección está lista para su desarrollo.</p>
-      </div>
+      <MessagesClient currentUserId={session.user.id} />
     </div>
   )
 }

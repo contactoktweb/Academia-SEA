@@ -18,6 +18,17 @@ export default auth((req) => {
     return NextResponse.redirect(new URL('/dashboard', nextUrl))
   }
 
+  // Restrict unapproved users
+  const isApproved = req.auth?.user?.isApproved;
+  if (
+    isLoggedIn && 
+    isApproved === false && 
+    nextUrl.pathname.startsWith('/dashboard') && 
+    !nextUrl.pathname.startsWith('/dashboard/configuracion')
+  ) {
+    return NextResponse.redirect(new URL('/dashboard/configuracion', nextUrl))
+  }
+
   return NextResponse.next()
 })
 

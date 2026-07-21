@@ -24,6 +24,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         userRole={session.user.role as any} 
         userName={session.user.name || "Usuario"} 
         logoUrl={logoUrl}
+        isApproved={session.user.isApproved}
       />
       <main className="flex-1 min-w-0 flex flex-col overflow-y-auto">
         <div className="flex-1 flex flex-col p-4 md:p-8 lg:p-10 gap-6">
