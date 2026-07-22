@@ -51,6 +51,7 @@ export default async function CursosPage() {
         title={hero?.titulo || "Un curso para cada"}
         titleHighlight={hero?.tituloResaltado || "etapa de tu vida."}
         subtitle={hero?.subtitulo || "Desde preescolar hasta nivel empresarial..."}
+        showOnlineBadge={true}
       >
         <div className="flex flex-wrap items-center justify-center gap-4">
           {courses.map((course: any, i: number) => {

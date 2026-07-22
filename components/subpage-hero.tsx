@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react"
+import { MonitorPlay, type LucideIcon } from "lucide-react"
 
 interface SubpageHeroProps {
     /** Badge text shown above the heading */
@@ -13,6 +13,8 @@ interface SubpageHeroProps {
     subtitle: string
     /** Optional children rendered below the subtitle (e.g. pills, buttons, stats) */
     children?: React.ReactNode
+    /** Whether to show the Presencial y En Linea badge */
+    showOnlineBadge?: boolean
 }
 
 export function SubpageHero({
@@ -22,6 +24,7 @@ export function SubpageHero({
     titleHighlight,
     subtitle,
     children,
+    showOnlineBadge,
 }: SubpageHeroProps) {
     return (
         <section className="relative overflow-hidden bg-white">
@@ -42,16 +45,32 @@ export function SubpageHero({
             <div className="pointer-events-none absolute -bottom-20 -right-20 h-60 w-60 rounded-full bg-[#1a2b4a]/[0.03] blur-[80px]" />
 
             <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-4 pt-32 pb-20 text-center md:pt-40 md:pb-28 lg:pt-44">
-                {/* Badge - Estilo Etiqueta Académica (No-IA) */}
-                <div className="group flex items-center overflow-hidden rounded-sm border border-amber-200/50 bg-amber-50/50 shadow-sm transition-all hover:bg-amber-50">
-                    {/* Lateral accent */}
-                    <div className="h-8 w-1 bg-amber-500" />
-                    <div className="flex items-center gap-2 px-3 py-1.5">
-                        <BadgeIcon className="h-3.5 w-3.5 text-amber-600" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-amber-900/80">
-                            {badge}
-                        </span>
+                {/* Badges Row */}
+                <div className="flex flex-wrap justify-center items-center gap-3">
+                    {/* Badge - Estilo Etiqueta Académica (No-IA) */}
+                    <div className="group flex items-center overflow-hidden rounded-sm border border-amber-200/50 bg-amber-50/50 shadow-sm transition-all hover:bg-amber-50">
+                        {/* Lateral accent */}
+                        <div className="h-8 w-1 bg-amber-500" />
+                        <div className="flex items-center gap-2 px-3 py-1.5">
+                            <BadgeIcon className="h-3.5 w-3.5 text-amber-600" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-amber-900/80">
+                                {badge}
+                            </span>
+                        </div>
                     </div>
+
+                    {/* Online Badge */}
+                    {showOnlineBadge && (
+                        <div className="group flex items-center overflow-hidden rounded-sm border border-emerald-200/50 bg-emerald-50/50 shadow-sm transition-all hover:bg-emerald-50">
+                            <div className="h-8 w-1 bg-emerald-500" />
+                            <div className="flex items-center gap-2 px-3 py-1.5">
+                                <MonitorPlay className="h-3.5 w-3.5 text-emerald-600" />
+                                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-900/80">
+                                    Presencial y En Línea
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Heading */}

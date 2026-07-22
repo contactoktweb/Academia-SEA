@@ -134,6 +134,7 @@ export async function StudentsTable({ query, isAdmin = true }: { query?: string,
                               <FileText className="h-4 w-4 text-blue-600" />
                             </Button>
                           </a>
+                        )}
                         {isAdmin && (
                           <>
                             <StudentDialog mode="edit" student={student} />

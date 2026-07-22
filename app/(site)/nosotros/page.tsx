@@ -112,6 +112,7 @@ export default async function NosotrosPage() {
         title={hero?.titulo || "Donde aprender inglés"}
         titleHighlight={hero?.tituloResaltado || "transforma vidas."}
         subtitle={hero?.subtitulo || "Más de 15 años formando estudiantes exitosos..."}
+        showOnlineBadge={true}
       />
 
       {/* Timeline */}

@@ -1,6 +1,7 @@
 import { HeroSection } from "@/components/home/hero-section"
 import { WhySection } from "@/components/home/why-section"
 import { CoursesTeaser } from "@/components/home/courses-teaser"
+import { OnlineSection } from "@/components/home/online-section"
 import { CertificationsTeaser } from "@/components/home/certifications-teaser"
 import { CtaSection } from "@/components/home/cta-section"
 import { client } from "@/sanity/lib/client"
@@ -27,6 +28,7 @@ export default async function HomePage() {
       <HeroSection data={heroData} />
       <WhySection data={whyData} />
       <CoursesTeaser data={coursesData} />
+      <OnlineSection />
       <CertificationsTeaser data={certsData} />
       <CtaSection data={ctaData} />
     </>

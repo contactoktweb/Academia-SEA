@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { BadgeCheck, ChevronRight, GraduationCap, Languages, BookMarked } from "lucide-react"
+import { BadgeCheck, ChevronRight, GraduationCap, Languages, BookMarked, MonitorPlay } from "lucide-react"
 
 import { urlFor } from "@/sanity/lib/image"
 
@@ -36,8 +36,9 @@ export function HeroSection({ data }: { data?: any }) {
         <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-0">
           {/* ─── Left Column: Text ─── */}
           <div className="flex flex-col gap-6 lg:gap-8 lg:pr-8 lg:pt-6">
-            {/* Certified Badge - Estilo Etiqueta Académica (No-IA) */}
-            <div className="flex items-center gap-2">
+            {/* Badges Row */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Certified Badge - Estilo Etiqueta Académica (No-IA) */}
               <div className="group flex items-center overflow-hidden rounded-sm border border-amber-200/50 bg-amber-50/50 shadow-sm transition-all hover:bg-amber-50">
                 {/* Lateral accent */}
                 <div className="h-8 w-1 bg-amber-500" />
@@ -45,6 +46,17 @@ export function HeroSection({ data }: { data?: any }) {
                   <BadgeCheck className="h-3.5 w-3.5 text-amber-600" />
                   <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-amber-900/80">
                     {badgeText}
+                  </span>
+                </div>
+              </div>
+
+              {/* Online Courses Badge */}
+              <div className="group flex items-center overflow-hidden rounded-sm border border-emerald-200/50 bg-emerald-50/50 shadow-sm transition-all hover:bg-emerald-50">
+                <div className="h-8 w-1 bg-emerald-500" />
+                <div className="flex items-center gap-2 px-3 py-1.5">
+                  <MonitorPlay className="h-3.5 w-3.5 text-emerald-600" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-900/80">
+                    Cursos en Línea Disponibles
                   </span>
                 </div>
               </div>
