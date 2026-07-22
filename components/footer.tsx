@@ -12,7 +12,7 @@ export function Footer({ data }: { data?: any }) {
       : "/images/SEA_LOGO-04.png"
 
   const logoAlt = !data?.logoFooter?.alt || data.logoFooter.alt.toLowerCase().includes("logo")
-    ? "Academia SEA - Certificaciones TOEFL y TOEIC en El Grullo, Autlán y Unión de Tula"
+    ? "Academia SEA - Certificaciones TOEFL y TOEIC en El Grullo, Autlán y Online"
     : data.logoFooter.alt
   const facebookLink = data?.redesSociales?.find((r: any) => r.plataforma === "facebook")?.url || "https://www.facebook.com/AcademiaSEA"
 
@@ -97,7 +97,7 @@ export function Footer({ data }: { data?: any }) {
             <ul className="flex flex-col gap-3 text-sm text-footer-foreground/80">
               <li className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{data?.direccion || "El Grullo, Autlan y Union de Tula, Jalisco"}</span>
+                <span>{data?.direccion || "El Grullo, Autlan y Online"}</span>
               </li>
               {data?.telefonoContacto && (
                 <li className="flex items-start gap-2">

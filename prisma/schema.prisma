@@ -11,7 +11,7 @@ datasource db {
 enum Sede {
   SEAGRULLO
   SEAAUTLAN
-  SEAUNION
+  EN_LINEA
 }
 
 enum Modality {

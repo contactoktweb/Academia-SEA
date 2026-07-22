@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const sedes = ["SEAAUTLAN", "SEAGRULLO", "SEAUNION"] as const;
+    const sedes = ["SEAAUTLAN", "SEAGRULLO", "EN_LINEA"] as const;
     const defaultPassword = await bcrypt.hash("Password123!", 10);
 
     for (const sede of sedes) {

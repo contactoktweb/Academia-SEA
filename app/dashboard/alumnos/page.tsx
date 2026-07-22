@@ -4,12 +4,15 @@ import { StudentsTable } from "@/components/dashboard/students-table";
 import { TableLoadingState } from "@/components/dashboard/table-skeleton";
 import { SearchInput } from "@/components/dashboard/search-input";
 import { StudentDialog } from "@/components/dashboard/student-dialogs";
+import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function AlumnosPage(props: { searchParams: Promise<{ query?: string }> }) {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
+  const session = await auth();
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,12 +27,12 @@ export default async function AlumnosPage(props: { searchParams: Promise<{ query
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <SearchInput placeholder="Buscar por nombre o correo..." />
-          <StudentDialog mode="add" />
+          {isAdmin && <StudentDialog mode="add" />}
         </div>
       </div>
 
       <Suspense fallback={<TableLoadingState />} key={query}>
-        <StudentsTable query={query} />
+        <StudentsTable query={query} isAdmin={isAdmin} />
       </Suspense>
     </div>
   );

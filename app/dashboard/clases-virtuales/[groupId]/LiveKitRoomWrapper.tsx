@@ -42,6 +42,41 @@ export function LiveKitRoomWrapper({
     })()
   }, [roomName])
 
+  // Hook for translating the default LiveKit VideoConference UI
+  useEffect(() => {
+    const translations: Record<string, string> = {
+      'Unmute Microphone': 'Activar Micrófono',
+      'Mute Microphone': 'Silenciar Micrófono',
+      'Share Screen': 'Compartir Pantalla',
+      'Stop Screen Share': 'Dejar de Compartir Pantalla',
+      'Enable Camera': 'Encender Cámara',
+      'Disable Camera': 'Apagar Cámara',
+      'Leave': 'Salir de la Clase',
+      'Chat': 'Chat',
+      'Settings': 'Ajustes',
+      'Toggle Screen Share': 'Compartir Pantalla',
+    }
+
+    const interval = setInterval(() => {
+      const buttons = document.querySelectorAll('button[title]');
+      buttons.forEach(btn => {
+        const title = btn.getAttribute('title');
+        if (title && translations[title]) {
+          btn.setAttribute('title', translations[title]);
+        }
+      });
+      
+      const texts = document.querySelectorAll('.lk-button-text');
+      texts.forEach(txt => {
+        if (txt.textContent && translations[txt.textContent]) {
+          txt.textContent = translations[txt.textContent];
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   if (error) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-6 text-center">
@@ -72,7 +107,7 @@ export function LiveKitRoomWrapper({
   return (
     <LiveKitRoom
       video={true}
-      audio={true}
+      audio={{ echoCancellation: true, noiseSuppression: true, autoGainControl: true }}
       token={token}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
       data-lk-theme="default"

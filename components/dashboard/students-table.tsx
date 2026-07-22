@@ -21,7 +21,7 @@ import { PlusCircle, Edit2, Trash2, FileText } from "lucide-react"
 import Link from "next/link"
 import { StudentDialog } from "./student-dialogs"
 
-export async function StudentsTable({ query }: { query?: string }) {
+export async function StudentsTable({ query, isAdmin = true }: { query?: string, isAdmin?: boolean }) {
   const sedeCondition = await getSedeCondition();
   
   const students = await db.user.findMany({
@@ -134,9 +134,12 @@ export async function StudentsTable({ query }: { query?: string }) {
                               <FileText className="h-4 w-4 text-blue-600" />
                             </Button>
                           </a>
+                        {isAdmin && (
+                          <>
+                            <StudentDialog mode="edit" student={student} />
+                            <StudentDialog mode="delete" student={student} />
+                          </>
                         )}
-                        <StudentDialog mode="edit" student={student} />
-                        <StudentDialog mode="delete" student={student} />
                       </div>
                     </TableCell>
                   </TableRow>

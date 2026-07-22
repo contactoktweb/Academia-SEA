@@ -72,10 +72,11 @@ export function Header({ data }: { data?: any }) {
           <div className="hidden items-center gap-3 lg:flex">
             <Link
               href="/login"
-              className="flex items-center justify-center rounded-full border border-slate-200 p-2 text-slate-700 transition-all hover:bg-slate-100 hover:text-sea-blue"
+              className="flex items-center justify-center gap-2 rounded-full border border-slate-200 px-4 py-1.5 text-sm font-bold text-slate-700 transition-all hover:bg-slate-100 hover:text-sea-blue"
               title="Acceso Usuarios"
             >
-              <User className="h-5 w-5" />
+              <User className="h-4 w-4" />
+              <span>Ingresar</span>
             </Link>
             <Link
               href="/contacto"

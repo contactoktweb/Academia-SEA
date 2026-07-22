@@ -19,7 +19,7 @@ import { PlusCircle, Edit2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { CourseDialog } from "./course-dialogs"
 
-export async function CoursesTable() {
+export async function CoursesTable({ isAdmin = true }: { isAdmin?: boolean }) {
   const rawCourses = await db.course.findMany({
     include: {
       cycle: true,
@@ -56,7 +56,7 @@ export async function CoursesTable() {
             Administra los cursos, asignaturas y su contenido académico.
           </p>
         </div>
-        <CourseDialog mode="add" />
+        {isAdmin && <CourseDialog mode="add" />}
       </div>
 
       <Card>
@@ -111,8 +111,12 @@ export async function CoursesTable() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <CourseDialog mode="edit" course={course} />
-                        <CourseDialog mode="delete" course={course} />
+                        {isAdmin && (
+                          <>
+                            <CourseDialog mode="edit" course={course} />
+                            <CourseDialog mode="delete" course={course} />
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

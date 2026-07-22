@@ -39,7 +39,7 @@ export default async function VirtualClassesPage() {
                     Calendario Semanal
                   </TabsTrigger>
                   <TabsTrigger value="cards">
-                    Vista de Tarjetas
+                    Clases
                   </TabsTrigger>
                 </TabsList>
                 {isTeacherOrAdmin && (

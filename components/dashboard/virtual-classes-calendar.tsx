@@ -46,6 +46,38 @@ export function VirtualClassesCalendar({ groups, isTeacherOrAdmin }: VirtualClas
     });
   }
 
+  const getSuggestedEventsForSlot = (day: Date, hour: number) => {
+    return groups.filter(g => {
+      if (!g.schedule) return false;
+      // If there's already an actual scheduled class for this group today, don't show suggestion
+      const hasActualClassToday = g.nextClassAt && isSameDay(new Date(g.nextClassAt), day);
+      if (hasActualClassToday) return false;
+
+      const s = g.schedule.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // remove accents
+      const dayIndex = day.getDay();
+      const days = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+      const dayName = days[dayIndex];
+
+      let hasDay = s.includes(dayName);
+      if (s.includes('lunes a viernes') && dayIndex >= 1 && dayIndex <= 5) hasDay = true;
+      if (s.includes('fines de semana') && (dayIndex === 0 || dayIndex === 6)) hasDay = true;
+      
+      if (!hasDay) return false;
+
+      const hour12 = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+      const ampm = hour >= 12 ? 'pm' : 'am';
+      
+      const v1 = `${hour}:`;
+      const v2 = `${hour12}:`;
+      const v3 = `${hour12}${ampm}`;
+      const v4 = `${hour12} ${ampm}`;
+      const v5 = `${hour12} a`; // e.g. "10 a 11"
+      const v6 = ` ${hour} `;
+      
+      return s.includes(v1) || s.includes(v2) || s.includes(v3) || s.includes(v4) || s.includes(v5) || s.includes(v6);
+    });
+  }
+
   return (
     <div className="bg-white dark:bg-slate-950 rounded-lg border shadow-sm overflow-hidden">
       <div className="grid grid-cols-8 gap-[1px] bg-slate-200 dark:bg-slate-800 border-b">
@@ -72,6 +104,8 @@ export function VirtualClassesCalendar({ groups, isTeacherOrAdmin }: VirtualClas
             </div>
             {weekDays.map(day => {
               const slotEvents = getEventsForSlot(day, hour);
+              const suggestedEvents = getSuggestedEventsForSlot(day, hour);
+              
               return (
                 <div 
                   key={`${day.toISOString()}-${hour}`} 
@@ -79,30 +113,48 @@ export function VirtualClassesCalendar({ groups, isTeacherOrAdmin }: VirtualClas
                   onDoubleClick={() => handleCellDoubleClick(day, hour)}
                   title={isTeacherOrAdmin ? "Doble clic para agendar clase" : undefined}
                 >
-                  {slotEvents.map(event => (
+                  {/* Render Suggested Events (Ghost blocks) */}
+                  {suggestedEvents.map((event, i) => (
+                    <div 
+                      key={`suggested-${event.id}`}
+                      className="block absolute left-1 right-1 bg-slate-100 dark:bg-slate-800/50 border border-dashed border-slate-300 dark:border-slate-700 rounded-md p-1.5 overflow-hidden transition-colors z-0"
+                      style={{ top: `${(i * 30) + 4}px`, height: '28px' }}
+                    >
+                      <div className="flex items-center justify-between font-semibold text-slate-500 dark:text-slate-400 text-[9px] leading-tight opacity-70">
+                        <span className="truncate flex items-center gap-1"><Video className="w-2.5 h-2.5 flex-shrink-0" /> {event.name}</span>
+                        <span>(Sugerido)</span>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Render Actual Events */}
+                  {slotEvents.map((event, i) => (
                     <Link 
                       href={`/dashboard/clases-virtuales/${event.id}`} 
                       key={event.id}
-                      className="block absolute top-1 left-1 right-1 bottom-1 bg-blue-100/80 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800/60 border border-blue-200 dark:border-blue-800 rounded-md p-1.5 overflow-hidden transition-colors z-10"
+                      className="block absolute left-1 right-1 bg-blue-100/80 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800/60 border border-blue-200 dark:border-blue-800 rounded-md p-1.5 overflow-hidden transition-colors z-10"
+                      style={{ top: `${(i * 30) + 4}px`, bottom: slotEvents.length === 1 ? '4px' : 'auto', height: slotEvents.length === 1 ? 'auto' : '28px' }}
                     >
                       <div className="flex items-center gap-1 font-semibold text-blue-800 dark:text-blue-300 text-[10px] leading-tight">
                         <Video className="w-3 h-3 flex-shrink-0" />
                         <span className="truncate">{event.name}</span>
                       </div>
-                      {event.nextClassTopic && (
+                      {slotEvents.length === 1 && event.nextClassTopic && (
                         <div className="text-[9px] font-medium text-blue-700 dark:text-blue-300 mt-0.5 truncate italic">
                           {event.nextClassTopic}
                         </div>
                       )}
-                      <div className="text-[8px] text-blue-600 dark:text-blue-400 mt-0.5 truncate">
-                        {event.level} - {event.modality}
-                      </div>
+                      {slotEvents.length === 1 && (
+                        <div className="text-[8px] text-blue-600 dark:text-blue-400 mt-0.5 truncate">
+                          {event.level} - {event.modality}
+                        </div>
+                      )}
                     </Link>
                   ))}
                   
                   {/* Invisible plus icon on hover for teachers */}
-                  {isTeacherOrAdmin && slotEvents.length === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {isTeacherOrAdmin && slotEvents.length === 0 && suggestedEvents.length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
                       <span className="text-2xl text-slate-300 font-light">+</span>
                     </div>
                   )}

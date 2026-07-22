@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     'Academia SEA',
     'ingles Autlan',
     'ingles El Grullo',
-    'ingles Union de Tula',
+    'ingles Online',
   ],
   openGraph: {
     title: 'Academia SEA | Escuela de Ingles en Jalisco',

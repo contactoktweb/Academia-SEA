@@ -159,31 +159,52 @@ export function TeacherControls({ groupId, courseAssignmentId }: TeacherControls
                       <TableCell className="font-medium">{student.name}</TableCell>
                       <TableCell>{student.email}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className={`border-green-200 hover:bg-green-100 hover:text-green-800 transition-colors ${
-                              student.attendanceStatus === 'PRESENT' 
-                                ? 'bg-green-500 text-white hover:bg-green-600 hover:text-white border-green-600' 
-                                : 'bg-green-50 text-green-700'
-                            }`}
-                            onClick={() => handleMarkAttendance(student.profileId, 'PRESENT')}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className={`border-red-200 hover:bg-red-100 hover:text-red-800 transition-colors ${
-                              student.attendanceStatus === 'ABSENT' 
-                                ? 'bg-red-500 text-white hover:bg-red-600 hover:text-white border-red-600' 
-                                : 'bg-red-50 text-red-700'
-                            }`}
-                            onClick={() => handleMarkAttendance(student.profileId, 'ABSENT')}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                        <div className="flex justify-end items-center gap-2">
+                          {student.attendanceStatus ? (
+                            <>
+                              <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                                student.attendanceStatus === 'PRESENT' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {student.attendanceStatus === 'PRESENT' ? 'Asistió' : 'Faltó'}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-slate-500 hover:text-slate-700 h-8 px-2 text-xs"
+                                onClick={() => {
+                                  // Clear local state to show buttons again
+                                  setStudents(prev => prev.map(s => 
+                                    s.profileId === student.profileId ? { ...s, attendanceStatus: null } : s
+                                  ))
+                                }}
+                              >
+                                Editar
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-green-200 hover:bg-green-100 hover:text-green-800 transition-colors bg-green-50 text-green-700"
+                                onClick={() => handleMarkAttendance(student.profileId, 'PRESENT')}
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                Asistió
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-red-200 hover:bg-red-100 hover:text-red-800 transition-colors bg-red-50 text-red-700"
+                                onClick={() => handleMarkAttendance(student.profileId, 'ABSENT')}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Faltó
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

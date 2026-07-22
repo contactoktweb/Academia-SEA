@@ -20,7 +20,7 @@ import { CONTACT_PAGE_QUERY } from "@/sanity/lib/queries"
 
 export const metadata: Metadata = {
   title: "Contacto | Academia SEA",
-  description: "Visítanos en cualquiera de nuestras 3 sedes en Jalisco o contáctanos por WhatsApp. Te guiamos en tu proceso de inscripción.",
+  description: "Visítanos en cualquiera de nuestras sedes en Jalisco o contáctanos por WhatsApp. Te guiamos en tu proceso de inscripción.",
   alternates: {
     canonical: '/contacto',
   },
@@ -46,7 +46,7 @@ export default async function ContactoPage() {
   return (
     <>
       <SubpageHero
-        badge={hero?.badge || "3 Sedes en Jalisco"}
+        badge={hero?.badge || "Nos ubicamos en Jalisco"}
         badgeIcon={MapPin}
         title={hero?.titulo || "Estamos cerca de ti,"}
         titleHighlight={hero?.tituloResaltado || "inscríbete hoy."}
@@ -64,7 +64,7 @@ export default async function ContactoPage() {
                   <MapPin className="h-4 w-4 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="text-xs font-bold text-[#1a2b4a]">{loc.nombre}</p>
+                  <p className="text-xs font-bold text-[#1a2b4a]">{loc.nombre?.includes("Tula") ? "Online" : loc.nombre}</p>
                   <p className="text-[10px] text-slate-400">{loc.telefono}</p>
                 </div>
               </a>
@@ -162,7 +162,7 @@ export default async function ContactoPage() {
                     <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${['bg-sea-blue', 'bg-emerald-600', 'bg-amber-500'][i % 3]} shadow-lg`}>
                       <MapPin className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-extrabold text-heading">{loc.nombre}</h3>
+                    <h3 className="text-2xl font-extrabold text-heading">{loc.nombre?.includes("Tula") ? "Online" : loc.nombre}</h3>
 
                     <div className="mt-4 flex flex-col gap-3">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
