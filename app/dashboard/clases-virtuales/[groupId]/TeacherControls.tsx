@@ -91,6 +91,9 @@ export function TeacherControls({ groupId, courseAssignmentId }: TeacherControls
 
       if (result.success) {
         toast.success(`Asistencia (${status}) registrada`)
+        setStudents(prev => prev.map(s => 
+          s.profileId === studentId ? { ...s, attendanceStatus: status } : s
+        ))
       } else {
         toast.error(result.error || "Error al registrar asistencia")
       }
@@ -160,7 +163,11 @@ export function TeacherControls({ groupId, courseAssignmentId }: TeacherControls
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200"
+                            className={`border-green-200 hover:bg-green-100 hover:text-green-800 transition-colors ${
+                              student.attendanceStatus === 'PRESENT' 
+                                ? 'bg-green-500 text-white hover:bg-green-600 hover:text-white border-green-600' 
+                                : 'bg-green-50 text-green-700'
+                            }`}
                             onClick={() => handleMarkAttendance(student.profileId, 'PRESENT')}
                           >
                             <Check className="h-4 w-4" />
@@ -168,7 +175,11 @@ export function TeacherControls({ groupId, courseAssignmentId }: TeacherControls
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800 border-red-200"
+                            className={`border-red-200 hover:bg-red-100 hover:text-red-800 transition-colors ${
+                              student.attendanceStatus === 'ABSENT' 
+                                ? 'bg-red-500 text-white hover:bg-red-600 hover:text-white border-red-600' 
+                                : 'bg-red-50 text-red-700'
+                            }`}
                             onClick={() => handleMarkAttendance(student.profileId, 'ABSENT')}
                           >
                             <X className="h-4 w-4" />

@@ -63,21 +63,20 @@ export function TeacherForm({ initialData, onSuccess }: TeacherFormProps) {
         salary: values.salary ? parseFloat(values.salary) : undefined,
       };
 
-      const promise = initialData
-        ? updateTeacher(initialData.id, formattedValues as any)
-        : createTeacher(formattedValues as any);
+      try {
+        const result = initialData
+          ? await updateTeacher(initialData.id, formattedValues as any)
+          : await createTeacher(formattedValues as any);
 
-      await toast.promise(promise, {
-        loading: initialData ? "Actualizando profesor..." : "Creando profesor...",
-        success: (result: any) => {
-          if (result.success) {
-            onSuccess();
-            return initialData ? "Profesor actualizado" : "Profesor creado";
-          }
-          throw new Error(result.error);
-        },
-        error: (err) => err.message || "Error en la operación",
-      });
+        if (result.success) {
+          onSuccess();
+          toast.success(initialData ? "Profesor actualizado" : "Profesor creado");
+        } else {
+          toast.error(result.error || "Error en la operación");
+        }
+      } catch (error: any) {
+        toast.error(error.message || "Error inesperado");
+      }
     });
   }
 

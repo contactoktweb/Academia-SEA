@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { EgressClient } from 'livekit-server-sdk';
+import { EgressClient, EncodedFileOutput, EncodedFileType } from 'livekit-server-sdk';
 import { auth } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
@@ -30,9 +30,10 @@ export async function POST(req: NextRequest) {
 
     if (action === 'start') {
       // Start recording
-      const fileOutput = {
+      const fileOutput = new EncodedFileOutput({
+        fileType: EncodedFileType.MP4,
         filepath: `recordings/${roomName}-${Date.now()}.mp4`,
-      };
+      });
 
       const options = {
         layout: 'grid',
@@ -40,7 +41,9 @@ export async function POST(req: NextRequest) {
 
       const info = await egressClient.startRoomCompositeEgress(
         roomName,
-        { file: fileOutput },
+        {
+          file: fileOutput
+        },
         options
       );
 
@@ -58,8 +61,15 @@ export async function POST(req: NextRequest) {
     }
   } catch (error: any) {
     console.error('Error with LiveKit Egress:', error);
+    
+    // Check if it's the specific output error related to missing S3 credentials in LiveKit Cloud
+    let errorMessage = error.message || 'Failed to process egress request';
+    if (errorMessage.includes('request has missing or invalid field: output') || errorMessage.includes('invalid_argument')) {
+      errorMessage = 'Error de Configuración de Grabación. Si usas LiveKit Cloud, debes configurar un bucket de S3 o Google Cloud Storage en tu proyecto de LiveKit para poder grabar clases, ya que no permite almacenamiento local directo.';
+    }
+
     return NextResponse.json(
-      { error: error.message || 'Failed to process egress request' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

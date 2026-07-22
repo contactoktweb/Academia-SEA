@@ -127,17 +127,73 @@ export async function getGroupStudents(groupId: string) {
       }
     })
 
-    const students = enrollments.map(e => ({
-      profileId: e.student.id,
-      userId: e.student.user.id,
-      name: e.student.user.name,
-      email: e.student.user.email,
-      photoUrl: e.student.user.photoUrl
-    }))
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+    
+    const todayEnd = new Date()
+    todayEnd.setHours(23, 59, 59, 999)
+
+    // Fetch attendance for these students today
+    const studentIds = enrollments.map(e => e.student.id)
+    const attendances = await prisma.attendance.findMany({
+      where: {
+        studentId: { in: studentIds },
+        date: {
+          gte: todayStart,
+          lte: todayEnd
+        }
+      }
+    })
+
+    const students = enrollments.map(e => {
+      const attendance = attendances.find(a => a.studentId === e.student.id)
+      return {
+        profileId: e.student.id,
+        userId: e.student.user.id,
+        name: e.student.user.name,
+        email: e.student.user.email,
+        photoUrl: e.student.user.photoUrl,
+        attendanceStatus: attendance?.status || null
+      }
+    })
 
     return { success: true, students }
   } catch (error) {
     console.error("Error fetching group students:", error)
     return { success: false, error: "Error al cargar alumnos del grupo" }
+  }
+}
+
+export async function scheduleNextClass(groupId: string, nextClassAt: Date, topic?: string) {
+  try {
+    const session = await auth()
+    if (!session || !session.user || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+      return { success: false, error: "No autorizado" }
+    }
+
+    if (session.user.role === 'TEACHER') {
+      const teacherProfile = await prisma.teacherProfile.findUnique({
+        where: { userId: session.user.id }
+      })
+      if (!teacherProfile) return { success: false, error: "Perfil de profesor no encontrado" }
+
+      const assignment = await prisma.courseAssignment.findFirst({
+        where: { groupId, teacherId: teacherProfile.id }
+      })
+      if (!assignment) return { success: false, error: "No estás asignado a este grupo" }
+    }
+
+    const group = await prisma.group.update({
+      where: { id: groupId },
+      data: { 
+        nextClassAt,
+        nextClassTopic: topic || null
+      }
+    })
+
+    return { success: true, group }
+  } catch (error) {
+    console.error("Error scheduling next class:", error)
+    return { success: false, error: "Error al agendar la próxima clase" }
   }
 }

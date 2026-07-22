@@ -32,9 +32,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        // Verify Sede: ADMIN and test accounts can access any sede, otherwise user must belong to the selected sede
-        const isTestUser = user.email.endsWith('@academiasea.com')
-        if (user.role !== 'ADMIN' && !isTestUser && user.sede !== sede) {
+        // Verify Sede: ADMIN can access any sede, otherwise user must belong to the selected sede
+        if (user.role !== 'ADMIN' && user.sede !== sede) {
           throw new Error("AccessDenied")
         }
 

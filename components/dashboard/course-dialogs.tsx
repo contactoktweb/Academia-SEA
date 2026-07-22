@@ -114,7 +114,7 @@ export function CourseDialog({ mode, course, trigger }: CourseDialogProps) {
           )
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{mode === "add" ? "Crear Nuevo Curso" : "Editar Curso"}</DialogTitle>
           <DialogDescription>
