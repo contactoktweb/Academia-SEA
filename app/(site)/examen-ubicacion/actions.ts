@@ -27,7 +27,7 @@ export async function submitPlacementTest(data: {
         percentage: data.percentage,
       },
     });
-    
+
     return { success: true, data: testResult };
   } catch (error) {
     console.error("Error submitting placement test:", error);
