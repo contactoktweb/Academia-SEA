@@ -114,7 +114,7 @@ export function TeacherDialog({ mode, teacher, trigger }: TeacherDialogProps) {
           )
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[700px]" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{mode === "add" ? "Registrar Nuevo Profesor" : "Editar Profesor"}</DialogTitle>
           <DialogDescription>

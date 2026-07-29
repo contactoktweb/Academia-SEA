@@ -44,6 +44,7 @@ const studentSchema = z.object({
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
+  sede: z.string().min(1, "La sede es obligatoria"),
   // Step 2 fields
   courseId: z.string().optional(),
   groupId: z.string().optional(),
@@ -81,6 +82,7 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
       address: initialData?.studentProfile?.address || "",
       city: initialData?.studentProfile?.city || "",
       state: initialData?.studentProfile?.state || "",
+      sede: initialData?.sede || "",
       courseId: "",
       groupId: "",
       studentType: "nuevo",
@@ -109,7 +111,7 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
   }, [isEditMode]);
 
   function handleNextStep() {
-    form.trigger(["name", "email", "password"]).then((isValid) => {
+    form.trigger(["name", "email", "password", "sede"]).then((isValid) => {
       if (isValid) setStep(2);
     });
   }
@@ -264,6 +266,29 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
                         <SelectItem value="MALE">Masculino</SelectItem>
                         <SelectItem value="FEMALE">Femenino</SelectItem>
                         <SelectItem value="OTHER">Otro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="sede"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sede</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona sede..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="SEAGRULLO">El Grullo</SelectItem>
+                        <SelectItem value="SEAAUTLAN">Autlán</SelectItem>
+                        <SelectItem value="SEAUNION">Unión de Tula</SelectItem>
+                        <SelectItem value="EN_LINEA">En Línea</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

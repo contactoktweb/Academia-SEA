@@ -221,7 +221,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px]" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>
             {mode === "add" ? "Crear Nuevo Cobro" : mode === "record" ? "Registrar Pago Recibido" : "Editar Pago"}

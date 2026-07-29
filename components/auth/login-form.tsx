@@ -180,6 +180,7 @@ export function LoginForm({ logoUrl }: { logoUrl?: string }) {
                 <SelectContent>
                   <SelectItem value="SEAGRULLO">SEA El Grullo</SelectItem>
                   <SelectItem value="SEAAUTLAN">SEA Autlán</SelectItem>
+                  <SelectItem value="SEAUNION">SEA Unión de Tula</SelectItem>
                   <SelectItem value="EN_LINEA">SEA En Línea</SelectItem>
                 </SelectContent>
               </Select>

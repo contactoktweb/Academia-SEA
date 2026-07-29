@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/nosotros", label: "Nuestra Escuela" },
   { href: "/cursos", label: "Cursos" },
   { href: "/certificaciones", label: "Certificaciones" },
+  { href: "/examen-ubicacion", label: "Examen de Ubicación" },
   { href: "/privacidad", label: "Privacidad" },
   { href: "/contacto", label: "Contacto" },
 ]

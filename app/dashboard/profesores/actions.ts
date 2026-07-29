@@ -12,6 +12,7 @@ export async function createTeacher(data: {
   specialty?: string;
   employeeId?: string;
   salary?: number;
+  sede: string;
 }) {
   try {
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -23,8 +24,10 @@ export async function createTeacher(data: {
         name: data.name,
         phone: data.phone,
         role: "TEACHER",
+        sede: data.sede as any,
         teacherProfile: {
           create: {
+            sede: data.sede as any,
             employeeId: data.employeeId,
             specialty: data.specialty,
             salary: data.salary ? parseFloat(String(data.salary)) : undefined,
@@ -65,6 +68,7 @@ export async function updateTeacher(
     phone?: string;
     specialty?: string;
     salary?: number;
+    sede?: string;
   }
 ) {
   try {
@@ -74,10 +78,12 @@ export async function updateTeacher(
         name: data.name,
         email: data.email,
         phone: data.phone,
-        teacherProfile: data.specialty || data.salary ? {
+        ...(data.sede ? { sede: data.sede as any } : {}),
+        teacherProfile: data.specialty || data.salary || data.sede ? {
           update: {
             specialty: data.specialty,
             salary: data.salary ? parseFloat(String(data.salary)) : undefined,
+            ...(data.sede ? { sede: data.sede as any } : {}),
           },
         } : undefined,
       },

@@ -11,6 +11,7 @@ datasource db {
 enum Sede {
   SEAGRULLO
   SEAAUTLAN
+  SEAUNION
   EN_LINEA
 }
 
@@ -621,4 +622,23 @@ model VerificationCode {
 
   @@unique([email, code])
   @@map("verification_codes")
+}
+
+// ===== EXÁMENES DE UBICACIÓN =====
+model PlacementTest {
+  id             String   @id @default(cuid())
+  name           String
+  ageCategory    String
+  email          String?
+  phone          String?
+  sede           Sede     @default(SEAAUTLAN)
+  score          Int
+  totalQuestions Int
+  level          String
+  percentage     Float
+  status         String   @default("PENDING") // PENDING, CONTACTED, ENROLLED
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("placement_tests")
 }

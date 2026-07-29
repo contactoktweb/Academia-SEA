@@ -19,10 +19,10 @@ export async function createStudent(data: {
   emergencyContact?: string;
   emergencyPhone?: string;
   contractUrl?: string;
+  sede: string;
 }) {
   try {
-    const session = await auth();
-    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
+    const sede = data.sede as any;
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const student = await db.user.create({
@@ -71,6 +71,7 @@ export async function updateStudent(
     city?: string;
     state?: string;
     contractUrl?: string;
+    sede?: string;
   }
 ) {
   try {
@@ -80,13 +81,15 @@ export async function updateStudent(
         name: data.name,
         email: data.email,
         phone: data.phone,
-        studentProfile: data.gender || data.address || data.city || data.state || data.contractUrl ? {
+        ...(data.sede ? { sede: data.sede as any } : {}),
+        studentProfile: data.gender || data.address || data.city || data.state || data.contractUrl || data.sede ? {
           update: {
             gender: data.gender,
             address: data.address,
             city: data.city,
             state: data.state,
             ...(data.contractUrl ? { contractUrl: data.contractUrl } : {}),
+            ...(data.sede ? { sede: data.sede as any } : {}),
           },
         } : undefined,
       },
@@ -165,8 +168,8 @@ export async function enrollStudentInCourse(
   }
 ) {
   try {
-    const session = await auth();
-    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
+    const student = await db.user.findUnique({ where: { id: studentId } });
+    const sede = student?.sede || "SEAAUTLAN";
     const enrollment = await db.studentEnrollment.create({
       data: {
         studentId,

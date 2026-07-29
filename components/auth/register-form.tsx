@@ -189,6 +189,7 @@ export function RegisterForm({ logoUrl }: { logoUrl?: string }) {
                           <SelectContent>
                             <SelectItem value="SEAGRULLO">El Grullo</SelectItem>
                             <SelectItem value="SEAAUTLAN">Autlán</SelectItem>
+                            <SelectItem value="SEAUNION">Unión de Tula</SelectItem>
                             <SelectItem value="EN_LINEA">En Línea</SelectItem>
                           </SelectContent>
                         </Select>
@@ -283,6 +284,7 @@ export function RegisterForm({ logoUrl }: { logoUrl?: string }) {
                             <SelectContent>
                               <SelectItem value="SEAGRULLO">El Grullo</SelectItem>
                               <SelectItem value="SEAAUTLAN">Autlán</SelectItem>
+                              <SelectItem value="SEAUNION">Unión de Tula</SelectItem>
                               <SelectItem value="EN_LINEA">En Línea</SelectItem>
                             </SelectContent>
                           </Select>

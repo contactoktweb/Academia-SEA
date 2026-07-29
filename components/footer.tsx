@@ -57,6 +57,7 @@ export function Footer({ data }: { data?: any }) {
                 { href: "/nosotros", label: "Nuestra Escuela" },
                 { href: "/cursos", label: "Cursos" },
                 { href: "/certificaciones", label: "Certificaciones" },
+                { href: "/examen-ubicacion", label: "Examen de Ubicación" },
                 { href: "/privacidad", label: "Aviso de Privacidad" },
                 { href: "/contacto", label: "Contacto" },
               ].map((link) => (

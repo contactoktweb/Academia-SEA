@@ -26,6 +26,7 @@ const teacherSchema = z.object({
   specialty: z.string().optional(),
   employeeId: z.string().optional(),
   salary: z.string().optional(),
+  sede: z.string().min(1, "La sede es obligatoria"),
 });
 
 type TeacherFormValues = z.infer<typeof teacherSchema>;
@@ -48,6 +49,7 @@ export function TeacherForm({ initialData, onSuccess }: TeacherFormProps) {
       specialty: initialData?.teacherProfile?.specialty || "",
       employeeId: initialData?.teacherProfile?.employeeId || "",
       salary: initialData?.teacherProfile?.salary ? String(initialData.teacherProfile.salary) : "",
+      sede: initialData?.sede || "",
     },
   });
 
@@ -134,6 +136,29 @@ export function TeacherForm({ initialData, onSuccess }: TeacherFormProps) {
                 <FormControl>
                   <Input placeholder="317..." {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="sede"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sede</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona sede..." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="SEAGRULLO">El Grullo</SelectItem>
+                    <SelectItem value="SEAAUTLAN">Autlán</SelectItem>
+                    <SelectItem value="SEAUNION">Unión de Tula</SelectItem>
+                    <SelectItem value="EN_LINEA">En Línea</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

@@ -83,6 +83,12 @@ const navItems: NavItem[] = [
     icon: <BookOpen className="size-5" />,
     roles: ['ADMIN', 'TEACHER'],
   },
+  {
+    label: 'Exámenes de Ubicación',
+    href: '/dashboard/examenes-ubicacion',
+    icon: <ClipboardList className="size-5" />,
+    roles: ['ADMIN'],
+  },
   // Academic
   {
     label: 'Calificaciones',
@@ -271,7 +277,7 @@ export function DashboardSidebar({
       if (item.href === '/dashboard') {
         if (!acc['Principal']) acc['Principal'] = []
         acc['Principal'].push(item)
-      } else if (['/dashboard/alumnos', '/dashboard/familias', '/dashboard/profesores', '/dashboard/cursos'].includes(item.href)) {
+      } else if (['/dashboard/alumnos', '/dashboard/familias', '/dashboard/profesores', '/dashboard/cursos', '/dashboard/examenes-ubicacion'].includes(item.href)) {
         if (!acc['Escolar']) acc['Escolar'] = []
         acc['Escolar'].push(item)
       } else if (['/dashboard/calificaciones', '/dashboard/evaluaciones', '/dashboard/asistencia', '/dashboard/boletas'].includes(item.href)) {
