@@ -134,8 +134,17 @@ export const structure: StructureResolver = (S) =>
         ),
       // Divider
       S.divider(),
+      // Submisiones / Formularios
+      S.listItem()
+        .title('Exámenes de Ubicación (Aspirantes)')
+        .id('placementTestSubmission')
+        .child(
+          S.documentTypeList('placementTestSubmission')
+            .title('Exámenes de Ubicación Recibidos')
+        ),
+      S.divider(),
       // The rest of the document types
       ...S.documentTypeListItems().filter(
-        (listItem) => !['globalConfig', 'heroHome', 'whySection', 'coursesTeaser', 'certificationsTeaser', 'ctaSection', 'aboutHero', 'aboutTimeline', 'aboutPhilosophy', 'aboutValues', 'aboutModalities', 'coursesPage', 'certificationsPage', 'contactPage', 'privacyPage'].includes(listItem.getId() || '')
+        (listItem) => !['globalConfig', 'heroHome', 'whySection', 'coursesTeaser', 'certificationsTeaser', 'ctaSection', 'aboutHero', 'aboutTimeline', 'aboutPhilosophy', 'aboutValues', 'aboutModalities', 'coursesPage', 'certificationsPage', 'contactPage', 'privacyPage', 'placementTestSubmission'].includes(listItem.getId() || '')
       ),
     ])

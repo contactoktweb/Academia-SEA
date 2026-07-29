@@ -48,6 +48,13 @@ export const globalConfig = defineType({
             validation: (Rule) => Rule.regex(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i, { name: 'email', invert: false }),
         }),
         defineField({
+            name: 'notificationEmail',
+            title: 'Correo de Alerta de Notificaciones (Administrador)',
+            description: 'El correo del administrador que recibirá alertas automáticas cuando un alumno realice el Examen de Ubicación o envíe formularios.',
+            type: 'string',
+            validation: (Rule) => Rule.regex(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i, { name: 'email', invert: false }),
+        }),
+        defineField({
             name: 'telefonoContacto',
             title: 'Teléfono de Contacto Principal',
             description: 'Número de teléfono principal para llamadas o atención al cliente.',

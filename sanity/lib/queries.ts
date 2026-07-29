@@ -11,6 +11,7 @@ export const GLOBAL_CONFIG_QUERY = defineQuery(`
       alt
     },
     emailContacto,
+    notificationEmail,
     telefonoContacto,
     whatsapp,
     direccion,

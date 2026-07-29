@@ -14,7 +14,8 @@ import { coursesPage } from './coursesPage'
 import { certificationsPage } from './certificationsPage'
 import { contactPage } from './contactPage'
 import { privacyPage } from './privacyPage'
+import { placementTestSubmission } from './placementTestSubmission'
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [globalConfig, heroHome, whySection, coursesTeaser, certificationsTeaser, ctaSection, aboutHero, aboutTimeline, aboutPhilosophy, aboutValues, aboutModalities, coursesPage, certificationsPage, contactPage, privacyPage],
+  types: [globalConfig, heroHome, whySection, coursesTeaser, certificationsTeaser, ctaSection, aboutHero, aboutTimeline, aboutPhilosophy, aboutValues, aboutModalities, coursesPage, certificationsPage, contactPage, privacyPage, placementTestSubmission],
 }
