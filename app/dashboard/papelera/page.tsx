@@ -1,4 +1,4 @@
-import { DashboardTopBar } from "@/components/dashboard/dashboard-top-bar";
+import { DashboardTopBar } from "@/components/dashboard/sidebar";
 import { getDeletedUsers } from "./actions";
 import { PapeleraTable } from "@/components/dashboard/papelera-table";
 
