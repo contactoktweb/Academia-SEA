@@ -66,7 +66,7 @@ const navItems: NavItem[] = [
     icon: <TrendingUp className="size-5" />,
     roles: ['ADMIN'],
   },
-  // School Management
+  // School Managemen
   {
     label: 'Alumnos',
     href: '/dashboard/alumnos',
