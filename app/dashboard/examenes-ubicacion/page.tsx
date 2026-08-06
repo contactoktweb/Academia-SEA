@@ -33,23 +33,19 @@ export default async function PlacementTestsPage() {
   });
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-slate-50/50">
-      <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 lg:p-10 scrollbar-thin">
-        <DashboardTopBar title="Exámenes de Ubicación" />
+    <div className="flex flex-col gap-6">
+      <DashboardTopBar title="Exámenes de Ubicación" />
 
-        <div className="mx-auto max-w-7xl space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <div>
-              <h2 className="text-xl font-bold text-heading">Resultados de Exámenes</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Visualiza los resultados del examen de ubicación para contactar a los prospectos.
-              </p>
-            </div>
-          </div>
-
-          <PlacementTestsTable initialData={tests} />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+          <h2 className="text-xl font-bold text-heading">Resultados de Exámenes</h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Visualiza los resultados del examen de ubicación para contactar a los prospectos.
+          </p>
         </div>
-      </main>
+      </div>
+
+      <PlacementTestsTable initialData={tests} />
     </div>
   );
 }

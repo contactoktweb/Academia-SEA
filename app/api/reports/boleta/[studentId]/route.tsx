@@ -4,103 +4,128 @@ import { renderToStream } from "@react-pdf/renderer";
 import React from "react";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
+const SEDES_MAP: Record<string, string> = {
+  SEAAUTLAN: "Autlán",
+  SEAGRULLO: "El Grullo",
+  SEAUNION: "Unión de Tula",
+  EN_LINEA: "En Línea",
+};
+
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 50,
     fontFamily: "Helvetica",
+    backgroundColor: "#ffffff",
   },
-  header: {
+  headerBox: {
+    paddingBottom: 20,
     marginBottom: 30,
-    borderBottomWidth: 2,
-    borderBottomColor: "#1e3a8a",
-    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
   },
   title: {
-    fontSize: 24,
-    color: "#1e3a8a",
+    fontSize: 22,
+    color: "#000000",
     fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 5,
+    letterSpacing: 2,
+    textTransform: "uppercase",
   },
   subtitle: {
-    fontSize: 14,
-    color: "#475569",
-    textAlign: "center",
+    fontSize: 10,
+    color: "#666666",
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
   studentInfo: {
-    marginBottom: 30,
-    backgroundColor: "#f8fafc",
-    padding: 15,
-    borderRadius: 5,
+    marginBottom: 40,
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
   },
-  infoText: {
-    fontSize: 12,
-    marginBottom: 5,
-    color: "#334155",
+  infoRow: {
+    display: "flex",
+    flexDirection: "row",
+    marginBottom: 4,
+  },
+  infoLabel: {
+    width: 80,
+    fontSize: 10,
+    color: "#666666",
+    textTransform: "uppercase",
+  },
+  infoValue: {
+    flex: 1,
+    fontSize: 10,
+    color: "#000000",
   },
   table: {
     display: "flex",
     width: "auto",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
+    borderTopWidth: 1,
+    borderTopColor: "#000000",
   },
   tableRow: {
-    margin: "auto",
     flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e5e5",
   },
   tableHeader: {
-    backgroundColor: "#f1f5f9",
-  },
-  tableCol: {
-    width: "25%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   tableColLarge: {
     width: "50%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
+    padding: 10,
+    paddingLeft: 0,
   },
-  tableCell: {
-    margin: 5,
-    fontSize: 10,
-    textAlign: "center",
+  tableCol: {
+    width: "25%",
+    padding: 10,
+  },
+  tableColLast: {
+    width: "25%",
+    padding: 10,
+    paddingRight: 0,
+    textAlign: "right",
   },
   tableCellHeader: {
-    margin: 5,
-    fontSize: 10,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontSize: 9,
+    color: "#666666",
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
-  footer: {
-    position: "absolute",
-    bottom: 30,
-    left: 40,
-    right: 40,
-    textAlign: "center",
-    color: "#94a3b8",
+  tableCell: {
     fontSize: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
-    paddingTop: 10,
+    color: "#000000",
   },
   averageContainer: {
-    marginTop: 20,
+    marginTop: 30,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: "#000000",
     alignItems: "flex-end",
   },
   averageText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#0f172a",
+    fontSize: 12,
+    color: "#000000",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 40,
+    left: 50,
+    right: 50,
+    textAlign: "left",
+    color: "#999999",
+    fontSize: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e5e5",
+    paddingTop: 15,
   }
 });
 
@@ -112,40 +137,67 @@ const ReportCard = ({ student, grades }: { student: any, grades: any[] }) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Academia SEA</Text>
+        <View style={styles.headerBox}>
+          <Text style={styles.title}>ACADEMIA SEA</Text>
           <Text style={styles.subtitle}>Boleta Oficial de Calificaciones</Text>
         </View>
 
         <View style={styles.studentInfo}>
-          <Text style={styles.infoText}>Alumno: {student.user.name}</Text>
-          <Text style={styles.infoText}>Matrícula / ID: {student.studentId || "No asignada"}</Text>
-          <Text style={styles.infoText}>Fecha de Emisión: {new Date().toLocaleDateString()}</Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Alumno:</Text>
+            <Text style={styles.infoValue}>{student.user.name}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Matrícula / ID:</Text>
+            <Text style={styles.infoValue}>{student.studentId || student.user.id.slice(-6).toUpperCase()}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Sede:</Text>
+            <Text style={styles.infoValue}>{SEDES_MAP[student.user.sede] || student.user.sede}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Correo:</Text>
+            <Text style={styles.infoValue}>{student.user.email}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Emisión:</Text>
+            <Text style={styles.infoValue}>{new Date().toLocaleDateString()}</Text>
+          </View>
         </View>
 
         <View style={styles.table}>
           <View style={[styles.tableRow, styles.tableHeader]}>
             <View style={styles.tableColLarge}>
-              <Text style={styles.tableCellHeader}>Curso / Examen</Text>
+              <Text style={styles.tableCellHeader}>Curso / Asignatura</Text>
             </View>
             <View style={styles.tableCol}>
-              <Text style={styles.tableCellHeader}>Fecha</Text>
+              <Text style={styles.tableCellHeader}>Fecha Evaluada</Text>
             </View>
-            <View style={styles.tableCol}>
+            <View style={styles.tableColLast}>
               <Text style={styles.tableCellHeader}>Calificación</Text>
             </View>
           </View>
           
+          {grades.length === 0 && (
+            <View style={styles.tableRow}>
+              <View style={{ width: "100%", padding: 15, alignItems: "center" }}>
+                <Text style={{ fontSize: 10, color: "#94a3b8" }}>No hay calificaciones registradas aún.</Text>
+              </View>
+            </View>
+          )}
+
           {grades.map((grade, i) => (
-            <View style={styles.tableRow} key={i}>
+            <View style={{ ...styles.tableRow, borderBottomWidth: i === grades.length - 1 ? 0 : 1 }} key={i}>
               <View style={styles.tableColLarge}>
                 <Text style={styles.tableCell}>{grade.courseAssignment?.course?.name || "General"} - {grade.exam?.title || "Examen"}</Text>
               </View>
               <View style={styles.tableCol}>
                 <Text style={styles.tableCell}>{new Date(grade.createdAt).toLocaleDateString()}</Text>
               </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>{grade.value.toFixed(1)}</Text>
+              <View style={styles.tableColLast}>
+                <Text style={[styles.tableCell, { fontWeight: "bold", color: grade.value < 6 ? "#ef4444" : "#16a34a" }]}>
+                  {grade.value.toFixed(1)}
+                </Text>
               </View>
             </View>
           ))}

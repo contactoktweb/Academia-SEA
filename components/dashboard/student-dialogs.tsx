@@ -114,7 +114,12 @@ export function StudentDialog({ mode, student, trigger }: StudentDialogsProps) {
           )
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent 
+        className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto overscroll-contain" 
+        onInteractOutside={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onFocusOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{mode === "add" ? "Añadir Nuevo Alumno" : "Editar Alumno"}</DialogTitle>
           <DialogDescription>

@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useTransition, useEffect } from "react";
@@ -55,6 +56,7 @@ const studentSchema = z.object({
   totalInstallments: z.string().optional(),
   isScholarship: z.boolean().default(false).optional(),
   scholarshipDiscount: z.string().optional(),
+  isActive: z.boolean().optional(),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -63,6 +65,329 @@ interface StudentFormProps {
   initialData?: any;
   onSuccess: () => void;
 }
+
+const MEXICAN_STATES = [
+  "Aguascalientes",
+  "Baja California",
+  "Baja California Sur",
+  "Campeche",
+  "Chiapas",
+  "Chihuahua",
+  "Coahuila",
+  "Colima",
+  "Ciudad de México",
+  "Durango",
+  "Estado de México",
+  "Guanajuato",
+  "Guerrero",
+  "Hidalgo",
+  "Jalisco",
+  "Michoacán",
+  "Morelos",
+  "Nayarit",
+  "Nuevo León",
+  "Oaxaca",
+  "Puebla",
+  "Querétaro",
+  "Quintana Roo",
+  "San Luis Potosí",
+  "Sinaloa",
+  "Sonora",
+  "Tabasco",
+  "Tamaulipas",
+  "Tlaxcala",
+  "Veracruz",
+  "Yucatán",
+  "Zacatecas",
+];
+
+const CITIES_BY_STATE: Record<string, string[]> = {
+  Jalisco: [
+    "Autlán de Navarro",
+    "El Grullo",
+    "Unión de Tula",
+    "Guadalajara",
+    "Zapopan",
+    "Tlaquepaque",
+    "Tonalá",
+    "Puerto Vallarta",
+    "Ciudad Guzmán",
+    "El Limón",
+    "Casimiro Castillo",
+    "Villa Purificación",
+    "Tecolotlán",
+    "Tuxcacuesco",
+    "Cuautitlán de García Barragán",
+    "Cihuatlán",
+    "Tepatitlán de Morelos",
+    "Lagos de Moreno",
+    "Ameca",
+    "Arandas",
+    "Atotonilco el Alto",
+    "Sayula",
+    "Tala",
+    "Tamazula de Gordiano",
+    "Zapotlanejo",
+    "Ocotlán",
+    "Chapala",
+  ],
+  Colima: [
+    "Colima",
+    "Manzanillo",
+    "Tecomán",
+    "Villa de Álvarez",
+    "Armería",
+    "Comala",
+    "Coquimatlán",
+    "Cuauhtémoc",
+    "Ixtlahuacán",
+    "Minatitlán",
+  ],
+  "Ciudad de México": [
+    "Álvaro Obregón",
+    "Azcapotzalco",
+    "Benito Juárez",
+    "Coyoacán",
+    "Cuajimalpa de Morelos",
+    "Cuauhtémoc",
+    "Gustavo A. Madero",
+    "Iztacalco",
+    "Iztapalapa",
+    "La Magdalena Contreras",
+    "Miguel Hidalgo",
+    "Milpa Alta",
+    "Tláhuac",
+    "Tlalpan",
+    "Venustiano Carranza",
+    "Xochimilco",
+  ],
+  "Estado de México": [
+    "Toluca",
+    "Ecatepec de Morelos",
+    "Nezahualcóyotl",
+    "Naucalpan de Juárez",
+    "Tlalnepantla de Baz",
+    "Chimalhuacán",
+    "Cuautitlán Izcalli",
+    "Atizapán de Zaragoza",
+    "Huixquilucan",
+    "Metepec",
+    "Texcoco",
+  ],
+  Michoacán: [
+    "Morelia",
+    "Uruapan",
+    "Zamora",
+    "Lázaro Cárdenas",
+    "Apatzingán",
+    "La Piedad",
+    "Jiquilpan",
+    "Sahuayo",
+    "Pátzcuaro",
+    "Zitácuaro",
+  ],
+  "Nuevo León": [
+    "Monterrey",
+    "Guadalupe",
+    "San Pedro Garza García",
+    "San Nicolás de los Garza",
+    "Apodaca",
+    "General Escobedo",
+    "Santa Catarina",
+    "Juárez",
+    "García",
+  ],
+  Nayarit: [
+    "Tepic",
+    "Bahía de Banderas",
+    "Compostela",
+    "Ixtlán del Río",
+    "San Blas",
+    "Tecuala",
+    "Tuxpan",
+    "Xalisco",
+    "Santiago Ixcuintla",
+  ],
+  Guanajuato: [
+    "León",
+    "Irapuato",
+    "Celaya",
+    "Salamanca",
+    "Guanajuato",
+    "San Miguel de Allende",
+    "Silao de la Victoria",
+  ],
+  Querétaro: [
+    "Santiago de Querétaro",
+    "San Juan del Río",
+    "El Marqués",
+    "Corregidora",
+    "Tequisquiapan",
+  ],
+  Sinaloa: [
+    "Culiacán",
+    "Mazatlán",
+    "Los Mochis (Ahome)",
+    "Guasave",
+    "Guamúchil",
+  ],
+  Sonora: [
+    "Hermosillo",
+    "Ciudad Obregón",
+    "Nogales",
+    "San Luis Río Colorado",
+    "Navojoa",
+    "Guaymas",
+  ],
+  "Baja California": [
+    "Tijuana",
+    "Mexicali",
+    "Ensenada",
+    "Playas de Rosarito",
+    "Tecate",
+  ],
+  "Baja California Sur": [
+    "La Paz",
+    "Los Cabos (Cabo San Lucas / San José del Cabo)",
+    "Comondú",
+    "Loreto",
+  ],
+  Coahuila: [
+    "Saltillo",
+    "Torreón",
+    "Monclova",
+    "Piedras Negras",
+    "Acuña",
+  ],
+  Chihuahua: [
+    "Juárez",
+    "Chihuahua",
+    "Cuauhtémoc",
+    "Delicias",
+    "Parral",
+  ],
+  Aguascalientes: [
+    "Aguascalientes",
+    "Jesús María",
+    "Calvillo",
+    "Rincón de Romos",
+  ],
+  Puebla: [
+    "Puebla",
+    "Tehuacán",
+    "San Andrés Cholula",
+    "San Pedro Cholula",
+    "Atlixco",
+  ],
+  Veracruz: [
+    "Veracruz",
+    "Xalapa",
+    "Coatzacoalcos",
+    "Poza Rica",
+    "Córdoba",
+    "Orizaba",
+  ],
+  Yucatán: [
+    "Mérida",
+    "Kanasín",
+    "Valladolid",
+    "Tizimín",
+    "Progreso",
+  ],
+  "Quintana Roo": [
+    "Cancún",
+    "Playa del Carmen",
+    "Chetumal",
+    "Cozumel",
+    "Tulum",
+  ],
+  Chiapas: [
+    "Tuxtla Gutiérrez",
+    "Tapachula",
+    "San Cristóbal de las Casas",
+    "Comitán de Domínguez",
+  ],
+  Oaxaca: [
+    "Oaxaca de Juárez",
+    "Tuxtepec",
+    "Juchitán de Zaragoza",
+    "Puerto Escondido",
+    "Huatulco",
+  ],
+  Tabasco: [
+    "Villahermosa",
+    "Cárdenas",
+    "Comalcalco",
+    "Macuspana",
+  ],
+  Tamaulipas: [
+    "Reynosa",
+    "Matamoros",
+    "Nuevo Laredo",
+    "Ciudad Victoria",
+    "Tampico",
+  ],
+  Guerrero: [
+    "Acapulco de Juárez",
+    "Chilpancingo",
+    "Iguala",
+    "Zihuatanejo",
+    "Taxco",
+  ],
+  Hidalgo: [
+    "Pachuca de Soto",
+    "Mineral de la Reforma",
+    "Tulancingo",
+    "Tula de Allende",
+  ],
+  Morelos: [
+    "Cuernavaca",
+    "Jiutepec",
+    "Cuautla",
+    "Temixco",
+  ],
+  "San Luis Potosí": [
+    "San Luis Potosí",
+    "Soledad de Graciano Sánchez",
+    "Ciudad Valles",
+    "Matehuala",
+  ],
+  Zacatecas: [
+    "Zacatecas",
+    "Guadalupe",
+    "Fresnillo",
+    "Jerez",
+  ],
+  Durango: [
+    "Victoria de Durango",
+    "Gómez Palacio",
+    "Lerdo",
+  ],
+  Campeche: [
+    "San Francisco de Campeche",
+    "Ciudad del Carmen",
+    "Champotón",
+  ],
+  Tlaxcala: [
+    "Tlaxcala",
+    "Apizaco",
+    "Huamantla",
+    "Chiautempan",
+  ],
+};
+
+const DEFAULT_CITIES = [
+  "Autlán",
+  "Autlán de Navarro",
+  "El Grullo",
+  "Unión de Tula",
+  "Guadalajara",
+  "Zapopan",
+  "Tlaquepaque",
+  "Tonalá",
+  "Puerto Vallarta",
+  "Ciudad Guzmán",
+];
 
 export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
   const [isPending, startTransition] = useTransition();
@@ -82,7 +407,7 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
       address: initialData?.studentProfile?.address || "",
       city: initialData?.studentProfile?.city || "",
       state: initialData?.studentProfile?.state || "",
-      sede: initialData?.sede || "",
+      sede: initialData?.sede || "SEAAUTLAN",
       courseId: "",
       groupId: "",
       studentType: "nuevo",
@@ -92,11 +417,16 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
       totalInstallments: "",
       isScholarship: false,
       scholarshipDiscount: "",
+      isActive: initialData?.isActive ?? true,
     },
   });
 
   const isEditMode = !!initialData;
   const studentType = form.watch("studentType");
+  const monthlyValue = form.watch("monthlyValue");
+  const totalInstallments = form.watch("totalInstallments");
+  const isScholarship = form.watch("isScholarship");
+  const scholarshipDiscount = form.watch("scholarshipDiscount");
 
   useEffect(() => {
     if (!isEditMode) {
@@ -112,7 +442,15 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
 
   function handleNextStep() {
     form.trigger(["name", "email", "password", "sede"]).then((isValid) => {
-      if (isValid) setStep(2);
+      if (isValid) {
+        setStep(2);
+        setTimeout(() => {
+          const dialogContent = document.querySelector('[role="dialog"]');
+          if (dialogContent) {
+            dialogContent.scrollTop = 0;
+          }
+        }, 50);
+      }
     });
   }
 
@@ -153,7 +491,14 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
 
         const dataToSubmit = { ...values, contractUrl };
         const promise = createStudent(dataToSubmit as any).then(async (res) => {
-          if (!res.success) throw new Error(res.error);
+          if (!res.success) {
+            setStep(1);
+            form.setError("email", {
+              type: "manual",
+              message: res.error || "El correo electrónico ya está registrado.",
+            });
+            throw new Error(res.error);
+          }
           
           const newStudent = res.data;
           const studentProfileId = newStudent.studentProfile?.id;
@@ -192,9 +537,18 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+      <form 
+        onSubmit={form.handleSubmit(onSubmit)} 
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+            e.preventDefault();
+          }
+        }}
+        className="space-y-4 pt-4"
+      >
         {step === 1 && (
           <>
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 border-b pb-2 mb-3">Información Personal</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -272,33 +626,57 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="sede"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sede</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+              {!isEditMode && (
+                <FormField
+                  control={form.control}
+                  name="sede"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sede</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona sede..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="SEAGRULLO">El Grullo</SelectItem>
+                          <SelectItem value="SEAAUTLAN">Autlán</SelectItem>
+                          <SelectItem value="SEAUNION">Unión de Tula</SelectItem>
+                          <SelectItem value="EN_LINEA">En Línea</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {isEditMode && (
+                <FormField
+                  control={form.control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm md:col-span-2">
+                      <div className="space-y-0.5">
+                        <FormLabel>Estado del Alumno</FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          {field.value ? "El alumno está activo" : "El alumno está inactivo"}
+                        </p>
+                      </div>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona sede..." />
-                        </SelectTrigger>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="SEAGRULLO">El Grullo</SelectItem>
-                        <SelectItem value="SEAAUTLAN">Autlán</SelectItem>
-                        <SelectItem value="SEAUNION">Unión de Tula</SelectItem>
-                        <SelectItem value="EN_LINEA">En Línea</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium border-b pb-2">Ubicación</h3>
+            <div className="space-y-4 pt-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 border-b pb-2">Ubicación</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -315,36 +693,93 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
                 />
                 <FormField
                   control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ciudad</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Autlán" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  name="state"
+                  render={({ field }) => {
+                    const currentState = field.value || "";
+                    const stateOptions = Array.from(
+                      new Set(
+                        [...MEXICAN_STATES, currentState].filter(Boolean)
+                      )
+                    );
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Estado</FormLabel>
+                        <Select
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            // When state changes, reset city or set to the first city of that state
+                            const newCities = CITIES_BY_STATE[val];
+                            form.setValue("city", newCities && newCities.length > 0 ? newCities[0] : "");
+                          }}
+                          value={field.value || ""}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona estado..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            {stateOptions.map((st) => (
+                              <SelectItem key={st} value={st}>
+                                {st}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
                 <FormField
                   control={form.control}
-                  name="state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estado</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Jalisco" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  name="city"
+                  render={({ field }) => {
+                    const selectedState = form.watch("state");
+                    const currentCity = field.value || "";
+                    const availableCities = selectedState && CITIES_BY_STATE[selectedState]
+                      ? CITIES_BY_STATE[selectedState]
+                      : (selectedState ? [] : DEFAULT_CITIES);
+
+                    const cityOptions = Array.from(
+                      new Set(
+                        [...availableCities, currentCity].filter(Boolean)
+                      )
+                    );
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Ciudad / Municipio</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || ""}
+                          disabled={!selectedState}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={selectedState ? "Selecciona ciudad..." : "Primero selecciona un estado"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            {cityOptions.map((ct) => (
+                              <SelectItem key={ct} value={ct}>
+                                {ct}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
             </div>
 
             {!isEditMode && (
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium border-b pb-2">Documentos</h3>
+              <div className="space-y-4 pt-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 border-b pb-2">Documentos</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormItem>
                     <FormLabel>Contrato PDF</FormLabel>
@@ -369,7 +804,7 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
 
         {!isEditMode && step === 2 && (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <h3 className="text-lg font-medium border-b pb-2">Datos de Inscripción</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 border-b pb-2">Datos de Inscripción</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -549,19 +984,33 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
               )}
             </div>
 
-            <div className="bg-muted p-4 rounded-lg space-y-2 text-sm mt-4">
-              <h4 className="font-semibold mb-2">Resumen de Costos</h4>
+            <div className="bg-muted p-4 rounded-lg space-y-2 text-sm mt-4 border border-border">
+              <h4 className="font-bold text-base text-slate-900 dark:text-slate-100 border-b pb-2 mb-2">Resumen de Costos</h4>
               <div className="flex justify-between border-b border-border pb-1">
                 <span className="text-muted-foreground">Costo de Inscripción:</span>
-                <span className="font-medium">${studentType === "nuevo" ? "800" : "600"}</span>
+                <span className="font-semibold text-foreground">
+                  ${studentType === "reinscrito" ? "600" : "800"}
+                </span>
               </div>
               <div className="flex justify-between border-b border-border pb-1">
                 <span className="text-muted-foreground">Costo de Mensualidad:</span>
-                <span className="font-medium">Variables por curso (Definir en Pagos)</span>
+                <span className="font-semibold text-foreground">
+                  {monthlyValue ? (
+                    isScholarship && scholarshipDiscount && !isNaN(parseFloat(scholarshipDiscount)) ? (
+                      `$${Math.max(0, parseFloat(monthlyValue) - parseFloat(scholarshipDiscount))} ($${monthlyValue} - $${scholarshipDiscount} beca)`
+                    ) : (
+                      `$${monthlyValue}`
+                    )
+                  ) : (
+                    "Variables por curso (Definir en Pagos)"
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total de Mensualidades:</span>
-                <span className="font-medium">Definir en Plan de Pagos</span>
+                <span className="font-semibold text-foreground">
+                  {totalInstallments ? `${totalInstallments} mensualidad(es)` : "Definir en Plan de Pagos"}
+                </span>
               </div>
             </div>
 
@@ -577,7 +1026,20 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
 
         <div className="flex justify-end gap-3 pt-4">
           {!isEditMode && step === 2 && (
-            <Button type="button" variant="outline" onClick={() => setStep(1)} disabled={isPending}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                setStep(1);
+                setTimeout(() => {
+                  const dialogContent = document.querySelector('[role="dialog"]');
+                  if (dialogContent) {
+                    dialogContent.scrollTop = 0;
+                  }
+                }, 50);
+              }} 
+              disabled={isPending}
+            >
               Volver Atrás
             </Button>
           )}

@@ -47,7 +47,7 @@ export async function createCourse(data: {
     }
 
     revalidatePath("/dashboard/cursos");
-    return { success: true, data: course };
+    return { success: true, data: JSON.parse(JSON.stringify(course)) };
   } catch (error) {
     console.error("Error creating course:", error);
     return { success: false, error: "Error al crear el curso" };
@@ -135,7 +135,7 @@ export async function updateCourse(
     }
 
     revalidatePath("/dashboard/cursos");
-    return { success: true, data: course };
+    return { success: true, data: JSON.parse(JSON.stringify(course)) };
   } catch (error) {
     console.error("Error updating course:", error);
     return { success: false, error: "Error al actualizar el curso" };

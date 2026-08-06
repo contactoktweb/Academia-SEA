@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { BadgeCheck, ChevronRight, GraduationCap, Languages, BookMarked, MonitorPlay } from "lucide-react"
+import { BadgeCheck, ChevronRight, GraduationCap, Languages, BookMarked, MonitorPlay, ClipboardCheck } from "lucide-react"
 
 import { urlFor } from "@/sanity/lib/image"
 
@@ -57,6 +57,17 @@ export function HeroSection({ data }: { data?: any }) {
                   <MonitorPlay className="h-3.5 w-3.5 text-emerald-600" />
                   <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-900/80">
                     Cursos en Línea Disponibles
+                  </span>
+                </div>
+              </div>
+
+              {/* Free Placement Test Badge */}
+              <div className="group flex items-center overflow-hidden rounded-sm border border-blue-200/50 bg-blue-50/50 shadow-sm transition-all hover:bg-blue-50">
+                <div className="h-8 w-1 bg-blue-500" />
+                <div className="flex items-center gap-2 px-3 py-1.5">
+                  <ClipboardCheck className="h-3.5 w-3.5 text-blue-600" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-blue-900/80">
+                    Examen de Ubicación Gratis
                   </span>
                 </div>
               </div>

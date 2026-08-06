@@ -11,6 +11,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { BookOpen, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -108,10 +114,18 @@ export function AssignTeacherDialog({ teacherProfileId, teacherName }: AssignTea
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 px-2 text-xs font-medium text-blue-600 border-blue-200 hover:bg-blue-50">
-          <BookOpen className="h-3.5 w-3.5 mr-1" />
-          Asignar Curso
-        </Button>
+        <div>
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Asignar Curso">
+                  <BookOpen className="h-4 w-4 text-blue-600" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Asignar curso</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

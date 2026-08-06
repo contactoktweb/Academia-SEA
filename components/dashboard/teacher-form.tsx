@@ -13,6 +13,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useTransition } from "react";
 import { createTeacher, updateTeacher } from "@/app/dashboard/profesores/actions";
 import { toast } from "sonner";
@@ -26,7 +34,8 @@ const teacherSchema = z.object({
   specialty: z.string().optional(),
   employeeId: z.string().optional(),
   salary: z.string().optional(),
-  sede: z.string().min(1, "La sede es obligatoria"),
+  sede: z.string().min(1, "Debe seleccionar una sede"),
+  isActive: z.boolean().optional(),
 });
 
 type TeacherFormValues = z.infer<typeof teacherSchema>;
@@ -50,6 +59,7 @@ export function TeacherForm({ initialData, onSuccess }: TeacherFormProps) {
       employeeId: initialData?.teacherProfile?.employeeId || "",
       salary: initialData?.teacherProfile?.salary ? String(initialData.teacherProfile.salary) : "",
       sede: initialData?.sede || "",
+      isActive: initialData?.isActive ?? true,
     },
   });
 
@@ -140,29 +150,53 @@ export function TeacherForm({ initialData, onSuccess }: TeacherFormProps) {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="sede"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Sede</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+          {!initialData && (
+            <FormField
+              control={form.control}
+              name="sede"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sede</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona sede..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="SEAGRULLO">El Grullo</SelectItem>
+                      <SelectItem value="SEAAUTLAN">Autlán</SelectItem>
+                      <SelectItem value="SEAUNION">Unión de Tula</SelectItem>
+                      <SelectItem value="EN_LINEA">En Línea</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {initialData && (
+            <FormField
+              control={form.control}
+              name="isActive"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Estado del Profesor</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      {field.value ? "El profesor está activo" : "El profesor está inactivo"}
+                    </p>
+                  </div>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona sede..." />
-                    </SelectTrigger>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="SEAGRULLO">El Grullo</SelectItem>
-                    <SelectItem value="SEAAUTLAN">Autlán</SelectItem>
-                    <SelectItem value="SEAUNION">Unión de Tula</SelectItem>
-                    <SelectItem value="EN_LINEA">En Línea</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
 
         <div className="space-y-4">
@@ -175,7 +209,7 @@ export function TeacherForm({ initialData, onSuccess }: TeacherFormProps) {
                 <FormItem>
                   <FormLabel>ID de Empleado</FormLabel>
                   <FormControl>
-                    <Input placeholder="SEA-001" {...field} />
+                    <Input placeholder="Automático (Ej: SEA-DOC-1234)" {...field} value={field.value || ""} disabled={!initialData} readOnly={!initialData} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

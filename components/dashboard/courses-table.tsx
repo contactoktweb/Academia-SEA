@@ -44,6 +44,11 @@ export async function CoursesTable({ isAdmin = true }: { isAdmin?: boolean }) {
         ...as.teacher,
         salary: as.teacher.salary ? Number(as.teacher.salary) : null,
       } : null,
+      customMonthlyFee: as.customMonthlyFee ? Number(as.customMonthlyFee) : null,
+    })),
+    enrollments: course.enrollments.map(en => ({
+      ...en,
+      monthlyValue: en.monthlyValue ? Number(en.monthlyValue) : null,
     })),
   })) as any;
 

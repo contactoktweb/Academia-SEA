@@ -17,6 +17,8 @@ export async function createTeacher(data: {
   try {
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
+    const generatedEmployeeId = data.employeeId || `SEA-DOC-${Math.floor(1000 + Math.random() * 9000)}`;
+
     const rawTeacher = await db.user.create({
       data: {
         email: data.email,
@@ -28,7 +30,7 @@ export async function createTeacher(data: {
         teacherProfile: {
           create: {
             sede: data.sede as any,
-            employeeId: data.employeeId,
+            employeeId: generatedEmployeeId,
             specialty: data.specialty,
             salary: data.salary ? parseFloat(String(data.salary)) : undefined,
           },
@@ -43,17 +45,8 @@ export async function createTeacher(data: {
       },
     });
 
-    // Serialize for Client
-    const teacher = {
-      ...rawTeacher,
-      teacherProfile: rawTeacher.teacherProfile ? {
-        ...rawTeacher.teacherProfile,
-        salary: rawTeacher.teacherProfile.salary ? Number(rawTeacher.teacherProfile.salary) : null,
-      } : null,
-    };
-
     revalidatePath("/dashboard/profesores");
-    return { success: true, data: teacher };
+    return { success: true, data: JSON.parse(JSON.stringify(rawTeacher)) };
   } catch (error) {
     console.error("Error creating teacher:", error);
     return { success: false, error: "Error al crear el profesor" };
@@ -69,6 +62,7 @@ export async function updateTeacher(
     specialty?: string;
     salary?: number;
     sede?: string;
+    isActive?: boolean;
   }
 ) {
   try {
@@ -79,6 +73,7 @@ export async function updateTeacher(
         email: data.email,
         phone: data.phone,
         ...(data.sede ? { sede: data.sede as any } : {}),
+        ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
         teacherProfile: data.specialty || data.salary || data.sede ? {
           update: {
             specialty: data.specialty,
@@ -96,17 +91,8 @@ export async function updateTeacher(
       },
     });
 
-    // Serialize for Client
-    const teacher = {
-      ...rawTeacher,
-      teacherProfile: rawTeacher.teacherProfile ? {
-        ...rawTeacher.teacherProfile,
-        salary: rawTeacher.teacherProfile.salary ? Number(rawTeacher.teacherProfile.salary) : null,
-      } : null,
-    };
-
     revalidatePath("/dashboard/profesores");
-    return { success: true, data: teacher };
+    return { success: true, data: JSON.parse(JSON.stringify(rawTeacher)) };
   } catch (error) {
     console.error("Error updating teacher:", error);
     return { success: false, error: "Error al actualizar el profesor" };
@@ -115,8 +101,9 @@ export async function updateTeacher(
 
 export async function deleteTeacher(userId: string) {
   try {
-    await db.user.delete({
+    await db.user.update({
       where: { id: userId },
+      data: { deletedAt: new Date() }
     });
 
     revalidatePath("/dashboard/profesores");
@@ -149,16 +136,7 @@ export async function getTeacherDetails(userId: string) {
 
     if (!rawTeacher) return { success: false, error: "Profesor no encontrado" };
 
-    // Serialize for Client
-    const teacher = {
-      ...rawTeacher,
-      teacherProfile: rawTeacher.teacherProfile ? {
-        ...rawTeacher.teacherProfile,
-        salary: rawTeacher.teacherProfile.salary ? Number(rawTeacher.teacherProfile.salary) : null,
-      } : null,
-    };
-
-    return { success: true, data: teacher };
+    return { success: true, data: JSON.parse(JSON.stringify(rawTeacher)) };
   } catch (error) {
     console.error("Error fetching teacher details:", error);
     return { success: false, error: "Error al obtener detalles del profesor" };

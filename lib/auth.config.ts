@@ -7,12 +7,15 @@ export const authConfig = {
     error: '/login',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
         token.role = (user as any).role
         token.sede = (user as any).sede
         token.isApproved = (user as any).isApproved
+      }
+      if (trigger === 'update' && session?.sede) {
+        token.sede = session.sede
       }
       return token
     },

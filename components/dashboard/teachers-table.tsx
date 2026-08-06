@@ -17,7 +17,13 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { PlusCircle, Edit2, Trash2 } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { PlusCircle, Edit2, Trash2, HelpCircle, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { TeacherDialog } from "./teacher-dialogs"
 import { AssignTeacherDialog } from "./assign-teacher-dialog"
@@ -26,7 +32,7 @@ export async function TeachersTable() {
   const sedeCondition = await getSedeCondition();
 
   const rawTeachers = await db.user.findMany({
-    where: { role: "TEACHER", ...sedeCondition },
+    where: { role: "TEACHER", ...sedeCondition, deletedAt: null },
     select: {
       id: true,
       name: true,
@@ -100,7 +106,35 @@ export async function TeachersTable() {
                 <TableHead>Contacto</TableHead>
                 <TableHead>Cursos Asignados</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+                <TableHead className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    Acciones
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="end" className="bg-white border border-slate-200 text-slate-800 shadow-xl p-4 text-base rounded-xl z-50">
+                          <p className="font-bold text-sea-blue border-b border-slate-100 pb-2 mb-2">Explicación de Botones:</p>
+                          <ul className="space-y-2">
+                            <li className="flex items-center gap-2 text-blue-600 font-medium">
+                              <BookOpen className="h-4 w-4" /> 
+                              <span>Asignar curso a profesor</span>
+                            </li>
+                            <li className="flex items-center gap-2 text-slate-700 font-medium">
+                              <Edit2 className="h-4 w-4" /> 
+                              <span>Editar información</span>
+                            </li>
+                            <li className="flex items-center gap-2 text-red-600 font-medium">
+                              <Trash2 className="h-4 w-4" /> 
+                              <span>Eliminar profesor</span>
+                            </li>
+                          </ul>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

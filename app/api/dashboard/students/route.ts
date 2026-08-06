@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 export async function GET(request: NextRequest) {
   try {
     const students = await db.user.findMany({
-      where: { role: "STUDENT" },
+      where: { role: "STUDENT", deletedAt: null },
       include: {
         studentProfile: {
           include: {

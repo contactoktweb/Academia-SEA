@@ -27,7 +27,9 @@ import {
   Shield,
   Megaphone,
   Video,
+  Trash2,
 } from 'lucide-react'
+import { SedeSelector } from './sede-selector'
 import { cn } from '@/lib/utils'
 
 type Role = 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT'
@@ -184,6 +186,12 @@ const navItems: NavItem[] = [
     label: 'Configuración',
     href: '/dashboard/configuracion',
     icon: <Settings className="size-5" />,
+    roles: ['ADMIN'],
+  },
+  {
+    label: 'Papelera',
+    href: '/dashboard/papelera',
+    icon: <Trash2 className="size-5" />,
     roles: ['ADMIN'],
   },
 ]
@@ -430,6 +438,7 @@ export function DashboardTopBar({ title }: { title: string }) {
         </button>
         <h1 className="text-lg font-bold text-heading">{title}</h1>
         <div className="ml-auto flex items-center gap-3">
+          <SedeSelector />
           <Link
             href="/"
             className="hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors"
