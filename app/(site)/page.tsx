@@ -1,4 +1,5 @@
 import { HeroSection } from "@/components/home/hero-section"
+import { PlacementTestSection } from "@/components/home/placement-test-section"
 import { WhySection } from "@/components/home/why-section"
 import { CoursesTeaser } from "@/components/home/courses-teaser"
 import { OnlineSection } from "@/components/home/online-section"
@@ -26,6 +27,7 @@ export default async function HomePage() {
   return (
     <>
       <HeroSection data={heroData} />
+      <PlacementTestSection />
       <WhySection data={whyData} />
       <CoursesTeaser data={coursesData} />
       <OnlineSection />
