@@ -124,12 +124,6 @@ const navItems: NavItem[] = [
     roles: ['ADMIN'],
   },
   {
-    label: 'Becas',
-    href: '/dashboard/becas',
-    icon: <Shield className="size-5" />,
-    roles: ['ADMIN'],
-  },
-  {
     label: 'Estados de Cuenta',
     href: '/dashboard/estados-cuenta',
     icon: <FileText className="size-5" />,
@@ -291,7 +285,7 @@ export function DashboardSidebar({
       } else if (['/dashboard/calificaciones', '/dashboard/evaluaciones', '/dashboard/asistencia', '/dashboard/boletas'].includes(item.href)) {
         if (!acc['Académico']) acc['Académico'] = []
         acc['Académico'].push(item)
-      } else if (['/dashboard/pagos', '/dashboard/becas', '/dashboard/estados-cuenta'].includes(item.href)) {
+      } else if (['/dashboard/pagos', '/dashboard/estados-cuenta'].includes(item.href)) {
         if (!acc['Financiero']) acc['Financiero'] = []
         acc['Financiero'].push(item)
       } else if (['/dashboard/anuncios', '/dashboard/mensajes'].includes(item.href)) {

@@ -31,7 +31,7 @@ enum Role {
 
 model User {
   id          String   @id @default(cuid())
-  email       String   @unique
+  email       String
   password    String
   name        String
   phone       String?
@@ -219,7 +219,7 @@ model StudentProfile {
   id               String    @id @default(cuid())
   userId           String    @unique
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  studentId        String? // ID externo de estudiante
+  studentId        String?   @unique // Identificador interno único (Matrícula)
   birthDate        DateTime?
   gender           String?
   address          String?
@@ -508,6 +508,7 @@ model Payment {
   method         PaymentMethod       @default(CASH)
   dueDate        DateTime
   paidAt         DateTime?
+  receiptUrl     String?
   reference      String?
   notes          String?
   reminderSent   Boolean             @default(false)

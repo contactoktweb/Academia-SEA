@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
+import { auth } from "@/lib/auth";
 
 export async function createTeacher(data: {
   name: string;
@@ -12,24 +13,28 @@ export async function createTeacher(data: {
   specialty?: string;
   employeeId?: string;
   salary?: number;
-  sede: string;
+  sede?: string;
 }) {
   try {
+    const session = await auth();
+    const adminSede = (session?.user as any)?.sede;
+    const sede = (adminSede || data.sede || "SEAAUTLAN") as any;
+    const cleanEmail = data.email.trim().toLowerCase();
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const generatedEmployeeId = data.employeeId || `SEA-DOC-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const rawTeacher = await db.user.create({
       data: {
-        email: data.email,
+        email: cleanEmail,
         password: hashedPassword,
-        name: data.name,
+        name: data.name.trim(),
         phone: data.phone,
         role: "TEACHER",
-        sede: data.sede as any,
+        sede,
         teacherProfile: {
           create: {
-            sede: data.sede as any,
+            sede,
             employeeId: generatedEmployeeId,
             specialty: data.specialty,
             salary: data.salary ? parseFloat(String(data.salary)) : undefined,
@@ -103,7 +108,15 @@ export async function deleteTeacher(userId: string) {
   try {
     await db.user.update({
       where: { id: userId },
-      data: { deletedAt: new Date() }
+      data: { 
+        deletedAt: new Date(),
+        isActive: false,
+      }
+    });
+
+    await db.teacherProfile.updateMany({
+      where: { userId },
+      data: { isActive: false },
     });
 
     revalidatePath("/dashboard/profesores");

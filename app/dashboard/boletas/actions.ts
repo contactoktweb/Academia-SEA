@@ -122,13 +122,18 @@ export async function generateReportCard(data: {
 
 export async function deleteReport(reportId: string) {
   try {
-    await db.report.delete({
-      where: { id: reportId }
+    const existing = await db.report.findUnique({ where: { id: reportId } });
+    await db.report.update({
+      where: { id: reportId },
+      data: {
+        title: `[DESHABILITADO] ${existing?.title || ""}`.trim(),
+        type: "ARCHIVED",
+      },
     });
     revalidatePath("/dashboard/boletas");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting report:", error);
-    return { success: false, error: "Error al eliminar el reporte" };
+    console.error("Error disabling report:", error);
+    return { success: false, error: "Error al deshabilitar el reporte" };
   }
 }

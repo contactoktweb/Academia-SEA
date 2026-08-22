@@ -23,7 +23,7 @@ export async function getDashboardMetrics() {
       allPaymentsCount
     ] = await Promise.all([
       db.user.count({
-        where: { role: "STUDENT", isActive: true, ...sedeCondition },
+        where: { role: "STUDENT", isActive: true, deletedAt: null, ...sedeCondition },
       }),
       db.payment.findMany({
         where: {

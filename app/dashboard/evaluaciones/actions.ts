@@ -61,15 +61,16 @@ export async function updateExam(
 
 export async function deleteExam(examId: string) {
   try {
-    await db.exam.delete({
+    await db.exam.update({
       where: { id: examId },
+      data: { isActive: false },
     });
 
     revalidatePath("/dashboard/evaluaciones");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting exam:", error);
-    return { success: false, error: "Error al eliminar el examen" };
+    console.error("Error disabling exam:", error);
+    return { success: false, error: "Error al deshabilitar el examen" };
   }
 }
 

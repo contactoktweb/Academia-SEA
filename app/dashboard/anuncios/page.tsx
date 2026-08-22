@@ -1,9 +1,17 @@
 import { DashboardTopBar } from "@/components/dashboard/sidebar"
 import { AnnouncementForm } from "@/components/dashboard/announcement-form"
 import { db } from "@/lib/db"
+import { getSedeCondition } from "@/lib/multi-tenancy"
 
 export default async function Page() {
+  const sedeCondition = await getSedeCondition();
   const announcements = await db.announcement.findMany({
+    where: {
+      author: {
+        ...sedeCondition,
+        deletedAt: null,
+      }
+    },
     include: { author: true },
     orderBy: { createdAt: "desc" }
   });

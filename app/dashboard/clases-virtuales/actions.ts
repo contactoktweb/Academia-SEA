@@ -68,9 +68,24 @@ export async function getVirtualClasses() {
 
     if (role === Role.STUDENT) {
       const studentProfile = await prisma.studentProfile.findUnique({
-        where: { userId }
+        where: { userId },
+        include: {
+          payments: true,
+          user: true,
+        }
       })
       if (!studentProfile) return { error: "Perfil de estudiante no encontrado" }
+
+      const hasPaidAtLeastOne = studentProfile.payments.some((p) => p.status === "PAID");
+      const isPaidAndActive = studentProfile.user.isActive && studentProfile.isActive && (hasPaidAtLeastOne || studentProfile.payments.length === 0);
+
+      if (!isPaidAndActive) {
+        return { 
+          groups: [], 
+          isPaymentRequired: true,
+          error: "Para acceder a tus clases virtuales en vivo, debes completar el pago de tu inscripción o colegiatura en Mis Pagos." 
+        }
+      }
 
       const groups = await prisma.group.findMany({
         where: {

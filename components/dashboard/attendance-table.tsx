@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getSedeCondition } from "@/lib/multi-tenancy";
 import {
   Card,
   CardContent,
@@ -20,7 +21,16 @@ import Link from "next/link";
 import { AttendanceDialog } from "./attendance-dialogs";
 
 export async function AttendanceTable() {
+  const sedeCondition = await getSedeCondition();
   const attendances = await db.attendance.findMany({
+    where: {
+      student: {
+        user: {
+          ...sedeCondition,
+          deletedAt: null,
+        }
+      }
+    },
     include: {
       student: { include: { user: true } },
     },

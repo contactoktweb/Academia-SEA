@@ -12,9 +12,11 @@ import {
   FolderOpen,
   Facebook,
   Send,
+  MessageSquareText,
 } from "lucide-react"
 import { SubpageHero } from "@/components/subpage-hero"
 import { WhatsappIcon } from "@/components/whatsapp-icon"
+import { ContactForm } from "@/components/contact-form"
 import { sanityFetch } from "@/sanity/lib/live"
 import { CONTACT_PAGE_QUERY } from "@/sanity/lib/queries"
 
@@ -71,9 +73,18 @@ export default async function ContactoPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl bg-white/60 px-6 py-3 text-sm font-medium text-slate-600 shadow-sm border border-slate-200/60">
-            <WhatsappIcon className="h-5 w-5 text-[#25d366]" />
-            Comunícate por WhatsApp a cualquiera de nuestras sedes abajo.
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex items-center gap-2 rounded-xl bg-white/70 px-5 py-2.5 text-xs sm:text-sm font-medium text-slate-600 shadow-sm border border-slate-200/60">
+              <WhatsappIcon className="h-4 w-4 text-[#25d366]" />
+              WhatsApp directo por sede abajo
+            </div>
+            <a
+              href="#formulario-contacto"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0066cc] hover:bg-[#0052a3] px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:-translate-y-0.5"
+            >
+              <MessageSquareText className="h-4 w-4" />
+              <span>Llenar Formulario Web</span>
+            </a>
           </div>
         </div>
       </SubpageHero>
@@ -203,6 +214,13 @@ export default async function ContactoPage() {
               Síguenos en Facebook
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* Sección Formulario de Contacto Web */}
+      <section id="formulario-contacto" className="bg-slate-50/80 border-y border-slate-200/80 py-20 lg:py-28 scroll-mt-20">
+        <div className="mx-auto max-w-4xl px-4 lg:px-8">
+          <ContactForm />
         </div>
       </section>
 

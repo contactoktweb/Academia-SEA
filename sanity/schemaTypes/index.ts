@@ -15,8 +15,10 @@ import { certificationsPage } from './certificationsPage'
 import { contactPage } from './contactPage'
 import { privacyPage } from './privacyPage'
 import { placementTestSubmission } from './placementTestSubmission'
+import { leadSubmission } from './leadSubmission'
+import { contactSubmission } from './contactSubmission'
 import { systemError } from './systemError'
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [globalConfig, heroHome, whySection, coursesTeaser, certificationsTeaser, ctaSection, aboutHero, aboutTimeline, aboutPhilosophy, aboutValues, aboutModalities, coursesPage, certificationsPage, contactPage, privacyPage, placementTestSubmission, systemError],
+  types: [globalConfig, heroHome, whySection, coursesTeaser, certificationsTeaser, ctaSection, aboutHero, aboutTimeline, aboutPhilosophy, aboutValues, aboutModalities, coursesPage, certificationsPage, contactPage, privacyPage, placementTestSubmission, leadSubmission, contactSubmission, systemError],
 }

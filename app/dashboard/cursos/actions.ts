@@ -56,8 +56,10 @@ export async function createCourse(data: {
 
 export async function getTeachersForSelect() {
   try {
+    const session = await auth();
+    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
     const teachers = await db.user.findMany({
-      where: { role: "TEACHER", isActive: true },
+      where: { role: "TEACHER", isActive: true, sede: sede as any, deletedAt: null },
       include: { teacherProfile: true },
       orderBy: { name: "asc" }
     });
@@ -144,15 +146,17 @@ export async function updateCourse(
 
 export async function deleteCourse(courseId: string) {
   try {
-    await db.course.delete({
+    // Deshabilitación lógica para preservar el historial y calificaciones
+    await db.course.update({
       where: { id: courseId },
+      data: { isActive: false },
     });
 
     revalidatePath("/dashboard/cursos");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting course:", error);
-    return { success: false, error: "Error al eliminar el curso" };
+    console.error("Error disabling course:", error);
+    return { success: false, error: "Error al deshabilitar el curso" };
   }
 }
 

@@ -10,7 +10,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Credentials({
       name: 'credentials',
       credentials: {
-        email: { label: 'Correo electrónico', type: 'email' },
+        email: { label: 'Correo o Matrícula', type: 'text' },
         password: { label: 'Contraseña', type: 'password' },
         sede: { label: 'Sede', type: 'text' },
       },
@@ -19,28 +19,45 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        const email = credentials.email as string
+        const identifier = (credentials.email as string).trim()
         const password = credentials.password as string
         const sede = credentials.sede as string
 
-        const user = await db.user.findUnique({
-          where: { email },
+        // Buscar usuarios coincidentes por email o por studentId (matrícula de hermano)
+        const users = await db.user.findMany({
+          where: {
+            OR: [
+              { email: identifier },
+              { studentProfile: { studentId: identifier } },
+            ],
+            isActive: true,
+          },
           include: { teacherProfile: true, studentProfile: true },
         })
 
-        if (!user || !user.isActive) {
+        if (!users || users.length === 0) {
           return null
         }
+
+        // Encontrar el usuario cuya contraseña sea válida
+        let matchingUser = null
+        for (const u of users) {
+          const isPasswordValid = await bcrypt.compare(password, u.password)
+          if (isPasswordValid) {
+            matchingUser = u
+            break
+          }
+        }
+
+        if (!matchingUser) {
+          return null
+        }
+
+        const user = matchingUser
 
         // Verify Sede: ADMIN can access any sede, otherwise user must belong to the selected sede
-        if (user.role !== 'ADMIN' && user.sede !== sede) {
+        if (user.role !== 'ADMIN' && user.sede !== (sede as any)) {
           throw new Error("AccessDenied")
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password)
-
-        if (!isPasswordValid) {
-          return null
         }
 
         // Log the login activity

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getSedeCondition } from "@/lib/multi-tenancy";
 import {
   Card,
   CardContent,
@@ -20,9 +21,30 @@ import Link from "next/link";
 import { FamilyDialog } from "./family-dialogs";
 
 export async function FamiliesTable() {
+  const sedeCondition = await getSedeCondition();
   const families = await db.family.findMany({
+    where: {
+      links: {
+        some: {
+          studentProfile: {
+            user: {
+              ...sedeCondition,
+              deletedAt: null,
+            },
+          },
+        },
+      },
+    },
     include: {
       links: {
+        where: {
+          studentProfile: {
+            user: {
+              ...sedeCondition,
+              deletedAt: null,
+            },
+          },
+        },
         include: {
           studentProfile: { include: { user: true } },
         },

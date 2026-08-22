@@ -2,11 +2,14 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getSedeCondition } from "@/lib/multi-tenancy";
 
 export async function getDeletedUsers() {
   try {
+    const sedeCondition = await getSedeCondition();
     const users = await db.user.findMany({
       where: {
+        ...sedeCondition,
         deletedAt: {
           not: null,
         },
@@ -37,7 +40,18 @@ export async function restoreUser(userId: string) {
       where: { id: userId },
       data: {
         deletedAt: null,
+        isActive: true,
       },
+    });
+
+    await db.studentProfile.updateMany({
+      where: { userId },
+      data: { isActive: true },
+    });
+
+    await db.teacherProfile.updateMany({
+      where: { userId },
+      data: { isActive: true },
     });
 
     revalidatePath("/dashboard/papelera");
@@ -52,14 +66,29 @@ export async function restoreUser(userId: string) {
 
 export async function hardDeleteUser(userId: string) {
   try {
-    await db.user.delete({
+    // No se destruye físicamente el registro de la base de datos para permitir recuperación manual
+    await db.user.update({
       where: { id: userId },
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
+      },
+    });
+
+    await db.studentProfile.updateMany({
+      where: { userId },
+      data: { isActive: false },
+    });
+
+    await db.teacherProfile.updateMany({
+      where: { userId },
+      data: { isActive: false },
     });
 
     revalidatePath("/dashboard/papelera");
     return { success: true };
   } catch (error) {
-    console.error("Error permanently deleting user:", error);
-    return { success: false, error: "Error al eliminar definitivamente el usuario" };
+    console.error("Error disabling user:", error);
+    return { success: false, error: "Error al deshabilitar el usuario" };
   }
 }

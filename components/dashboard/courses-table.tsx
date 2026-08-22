@@ -18,9 +18,13 @@ import { Button } from "@/components/ui/button"
 import { PlusCircle, Edit2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { CourseDialog } from "./course-dialogs"
+import { getSedeCondition } from "@/lib/multi-tenancy"
 
 export async function CoursesTable({ isAdmin = true }: { isAdmin?: boolean }) {
+  const sedeCondition = await getSedeCondition();
+
   const rawCourses = await db.course.findMany({
+    where: { ...sedeCondition },
     include: {
       cycle: true,
       assignments: {

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { getSedeCondition } from "@/lib/multi-tenancy"
 
 export async function GET(request: NextRequest) {
   try {
+    const sedeCondition = await getSedeCondition();
     const courses = await db.course.findMany({
+      where: { ...sedeCondition, isActive: true },
       include: {
         cycle: true,
         assignments: {

@@ -31,14 +31,15 @@ export async function createAnnouncement(data: {
       },
     });
 
-    // Enviar correo a la audiencia seleccionada
+    // Enviar correo a la audiencia seleccionada dentro de la misma sede
+    const authorSede = (session.user as any)?.sede || "SEAAUTLAN";
     let targetUsers = [];
     if (data.audience === "ALL") {
-      targetUsers = await db.user.findMany({ where: { isActive: true }, select: { email: true } });
+      targetUsers = await db.user.findMany({ where: { isActive: true, sede: authorSede as any, deletedAt: null }, select: { email: true } });
     } else if (data.audience === "STUDENTS") {
-      targetUsers = await db.user.findMany({ where: { role: "STUDENT", isActive: true }, select: { email: true } });
+      targetUsers = await db.user.findMany({ where: { role: "STUDENT", isActive: true, sede: authorSede as any, deletedAt: null }, select: { email: true } });
     } else if (data.audience === "TEACHERS") {
-      targetUsers = await db.user.findMany({ where: { role: "TEACHER", isActive: true }, select: { email: true } });
+      targetUsers = await db.user.findMany({ where: { role: "TEACHER", isActive: true, sede: authorSede as any, deletedAt: null }, select: { email: true } });
     }
 
     const emails = targetUsers.map(u => u.email).filter(Boolean) as string[];

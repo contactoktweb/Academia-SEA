@@ -82,6 +82,7 @@
     "resend": "^6.17.1",
     "sanity": "^5.13.0",
     "sonner": "^1.7.1",
+    "stripe": "^22.5.0",
     "styled-components": "^6.3.11",
     "tailwind-merge": "^3.3.1",
     "vaul": "^1.1.2",

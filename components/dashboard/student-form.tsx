@@ -24,28 +24,31 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useTransition, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { 
   createStudent, 
   updateStudent, 
   getCoursesForEnrollment, 
   getGroupsForEnrollment,
   enrollStudentInCourse,
-  uploadContract
+  uploadContract,
+  checkSiblingEmail
 } from "@/app/dashboard/alumnos/actions";
 import { toast } from "sonner";
-import { Loader2, AlertCircle, FileText } from "lucide-react";
+import { Loader2, AlertCircle, FileText, Users, Sparkles, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const studentSchema = z.object({
   name: z.string().min(2, "El nombre es muy corto"),
   email: z.string().email("Email inválido"),
+  studentId: z.string().optional(),
   password: z.string().min(6, "Mínimo 6 caracteres").optional().or(z.literal("")),
   phone: z.string().optional(),
   gender: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
-  sede: z.string().min(1, "La sede es obligatoria"),
+  sede: z.string().optional(),
   // Step 2 fields
   courseId: z.string().optional(),
   groupId: z.string().optional(),
@@ -64,6 +67,7 @@ type StudentFormValues = z.infer<typeof studentSchema>;
 interface StudentFormProps {
   initialData?: any;
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
 const MEXICAN_STATES = [
@@ -389,25 +393,30 @@ const DEFAULT_CITIES = [
   "Ciudad Guzmán",
 ];
 
-export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
+export function StudentForm({ initialData, onSuccess, onCancel }: StudentFormProps) {
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState<1 | 2>(1);
   const [courses, setCourses] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
   const [contractFile, setContractFile] = useState<File | null>(null);
+  const [siblingInfo, setSiblingInfo] = useState<{ exists: boolean; count: number; siblings: any[] } | null>(null);
+
+  const { data: session } = useSession();
+  const activeSede = (session?.user as any)?.sede || "SEAAUTLAN";
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
     defaultValues: {
       name: initialData?.name || "",
       email: initialData?.email || "",
+      studentId: initialData?.studentProfile?.studentId || "",
       password: "",
       phone: initialData?.phone || "",
       gender: initialData?.studentProfile?.gender || "",
       address: initialData?.studentProfile?.address || "",
       city: initialData?.studentProfile?.city || "",
       state: initialData?.studentProfile?.state || "",
-      sede: initialData?.sede || "SEAAUTLAN",
+      sede: initialData?.sede || activeSede,
       courseId: "",
       groupId: "",
       studentType: "nuevo",
@@ -422,11 +431,132 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
   });
 
   const isEditMode = !!initialData;
+  const watchedEmail = form.watch("email");
   const studentType = form.watch("studentType");
   const monthlyValue = form.watch("monthlyValue");
   const totalInstallments = form.watch("totalInstallments");
   const isScholarship = form.watch("isScholarship");
   const scholarshipDiscount = form.watch("scholarshipDiscount");
+
+  const DRAFT_KEY = "sea_draft_student_form";
+  const [hasDraft, setHasDraft] = useState(false);
+
+  // 1. Restaurar borrador automáticamente si el modal se cerró por accidente
+  useEffect(() => {
+    if (isEditMode) return;
+    try {
+      const savedDraft = localStorage.getItem(DRAFT_KEY);
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed && typeof parsed === "object") {
+          const hasContent = parsed.name || parsed.email || parsed.phone || parsed.studentId;
+          if (hasContent) {
+            setHasDraft(true);
+            form.reset({
+              name: parsed.name || "",
+              email: parsed.email || "",
+              studentId: parsed.studentId || "",
+              password: parsed.password || "",
+              phone: parsed.phone || "",
+              gender: parsed.gender || "",
+              address: parsed.address || "",
+              city: parsed.city || "",
+              state: parsed.state || "",
+              sede: parsed.sede || activeSede,
+              courseId: parsed.courseId || "",
+              groupId: parsed.groupId || "",
+              studentType: parsed.studentType || "nuevo",
+              monthlyConcept: parsed.monthlyConcept || "",
+              paymentDate: parsed.paymentDate || "",
+              monthlyValue: parsed.monthlyValue || "",
+              totalInstallments: parsed.totalInstallments || "",
+              isScholarship: parsed.isScholarship || false,
+              scholarshipDiscount: parsed.scholarshipDiscount || "",
+              isActive: true,
+            });
+            if (parsed._step && (parsed._step === 1 || parsed._step === 2)) {
+              setStep(parsed._step);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error restoring student draft:", err);
+    }
+  }, [isEditMode, activeSede]);
+
+  // 2. Guardar borrador en tiempo real mientras el usuario escribe
+  const watchedAll = form.watch();
+  useEffect(() => {
+    if (isEditMode) return;
+    const timer = setTimeout(() => {
+      try {
+        const hasContent = watchedAll.name || watchedAll.email || watchedAll.phone || watchedAll.studentId || watchedAll.address;
+        if (hasContent) {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...watchedAll, _step: step }));
+          setHasDraft(true);
+        }
+      } catch (err) {
+        console.error("Error saving student draft:", err);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [watchedAll, step, isEditMode]);
+
+  const handleClearDraft = () => {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+      setHasDraft(false);
+      form.reset({
+        name: "",
+        email: "",
+        studentId: "",
+        password: "",
+        phone: "",
+        gender: "",
+        address: "",
+        city: "",
+        state: "",
+        sede: activeSede,
+        courseId: "",
+        groupId: "",
+        studentType: "nuevo",
+        monthlyConcept: "",
+        paymentDate: "",
+        monthlyValue: "",
+        totalInstallments: "",
+        isScholarship: false,
+        scholarshipDiscount: "",
+        isActive: true,
+      });
+      setStep(1);
+      setSiblingInfo(null);
+      toast.info("Borrador limpiado");
+    } catch (err) {
+      console.error("Error clearing draft:", err);
+    }
+  };
+
+  // Detectar automáticamente si el correo ingresado pertenece a una cuenta familiar / hermanos
+  useEffect(() => {
+    if (isEditMode) return;
+    if (!watchedEmail || !watchedEmail.includes("@") || watchedEmail.length < 5) {
+      setSiblingInfo(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const res = await checkSiblingEmail(watchedEmail);
+      if (res.exists) {
+        setSiblingInfo(res);
+      } else {
+        setSiblingInfo(null);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [watchedEmail, isEditMode]);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -440,23 +570,30 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
     }
   }, [isEditMode]);
 
-  function handleNextStep() {
-    form.trigger(["name", "email", "password", "sede"]).then((isValid) => {
-      if (isValid) {
-        setStep(2);
-        setTimeout(() => {
-          const dialogContent = document.querySelector('[role="dialog"]');
-          if (dialogContent) {
-            dialogContent.scrollTop = 0;
-          }
-        }, 50);
-      }
-    });
+  async function handleNextStep(e?: React.MouseEvent) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const isValid = await form.trigger(["name", "email", "password"]);
+    if (isValid) {
+      setStep(2);
+      setTimeout(() => {
+        const dialogContent = document.querySelector('[role="dialog"]');
+        if (dialogContent) {
+          dialogContent.scrollTop = 0;
+        }
+      }, 50);
+    }
   }
 
   function onSubmit(values: StudentFormValues) {
     if (!isEditMode && step === 1) {
       handleNextStep();
+      return;
+    }
+
+    if (!isEditMode && step !== 2) {
       return;
     }
 
@@ -526,6 +663,10 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
         await toast.promise(promise, {
           loading: "Creando alumno e inscribiendo...",
           success: () => {
+            try {
+              localStorage.removeItem(DRAFT_KEY);
+              setHasDraft(false);
+            } catch {}
             onSuccess();
             return "Alumno registrado e inscrito con éxito";
           },
@@ -546,6 +687,22 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
         }}
         className="space-y-4 pt-4"
       >
+        {hasDraft && !isEditMode && (
+          <div className="flex items-center justify-between bg-blue-50/90 border border-blue-200/80 rounded-xl px-3.5 py-2 text-xs text-blue-900 mb-1 animate-in fade-in duration-200">
+            <div className="flex items-center gap-2 font-medium">
+              <span className="h-2 w-2 rounded-full bg-[#0066cc] animate-pulse inline-block" />
+              <span>Borrador recuperado automáticamente</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearDraft}
+              className="text-xs text-blue-700 hover:text-red-600 underline font-bold cursor-pointer transition-colors"
+            >
+              Limpiar formulario
+            </button>
+          </div>
+        )}
+
         {step === 1 && (
           <>
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 border-b pb-2 mb-3">Información Personal</h3>
@@ -571,6 +728,42 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
                     <FormLabel>Correo Electrónico</FormLabel>
                     <FormControl>
                       <Input placeholder="juan@ejemplo.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Alerta de Hermanos / Cuenta Familiar Compartida */}
+              {siblingInfo?.exists && (
+                <div className="md:col-span-2 rounded-2xl bg-blue-50/90 p-4 border border-blue-200/80 text-xs text-blue-950 flex items-start gap-3 shadow-2xs animate-in fade-in zoom-in-95 duration-200">
+                  <div className="h-8 w-8 rounded-xl bg-blue-500/20 text-[#0066cc] flex items-center justify-center shrink-0 mt-0.5">
+                    <Users className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-extrabold text-[#0066cc] text-sm flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                      Cuenta Familiar / Hermanos Detectada
+                    </p>
+                    <p className="text-slate-600 leading-relaxed">
+                      Este correo ya pertenece a: <strong className="text-slate-900">{siblingInfo.siblings.map((s: any) => s.name).join(", ")}</strong>.
+                      Este nuevo alumno se registrará de forma <strong>independiente</strong> con sus propias materias, calificaciones, asistencias y matrícula propia.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <FormField
+                control={form.control}
+                name="studentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1">
+                      <span>Matrícula / ID Interno</span>
+                      <span className="text-[11px] text-slate-400 font-normal">(Identificador único)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej. SEA-AUT-2026-001 (Auto si se deja vacío)" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -626,31 +819,6 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
                   </FormItem>
                 )}
               />
-              {!isEditMode && (
-                <FormField
-                  control={form.control}
-                  name="sede"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sede</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona sede..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="SEAGRULLO">El Grullo</SelectItem>
-                          <SelectItem value="SEAAUTLAN">Autlán</SelectItem>
-                          <SelectItem value="SEAUNION">Unión de Tula</SelectItem>
-                          <SelectItem value="EN_LINEA">En Línea</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
               {isEditMode && (
                 <FormField
                   control={form.control}
@@ -1024,12 +1192,14 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex justify-end gap-3 pt-4 border-t mt-6">
           {!isEditMode && step === 2 && (
             <Button 
+              key="btn-back"
               type="button" 
               variant="outline" 
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
                 setStep(1);
                 setTimeout(() => {
                   const dialogContent = document.querySelector('[role="dialog"]');
@@ -1043,18 +1213,43 @@ export function StudentForm({ initialData, onSuccess }: StudentFormProps) {
               Volver Atrás
             </Button>
           )}
-          {isEditMode || step === 1 ? (
-            <Button type="button" variant="outline" onClick={() => onSuccess()} disabled={isPending}>
+
+          {(isEditMode || step === 1) && (
+            <Button 
+              key="btn-cancel"
+              type="button" 
+              variant="outline" 
+              onClick={(e) => {
+                e.preventDefault();
+                if (onCancel) {
+                  onCancel();
+                } else {
+                  onSuccess();
+                }
+              }} 
+              disabled={isPending}
+            >
               Cancelar
             </Button>
-          ) : null}
+          )}
 
-          {(!isEditMode && step === 1) ? (
-            <Button type="button" onClick={handleNextStep}>
+          {!isEditMode && step === 1 && (
+            <Button 
+              key="btn-next"
+              type="button" 
+              onClick={handleNextStep}
+              disabled={isPending}
+            >
               Siguiente: Inscripción
             </Button>
-          ) : (
-            <Button type="submit" disabled={isPending}>
+          )}
+
+          {(isEditMode || step === 2) && (
+            <Button 
+              key="btn-submit"
+              type="submit" 
+              disabled={isPending}
+            >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isEditMode ? "Guardar Cambios" : "Finalizar Registro"}
             </Button>

@@ -144,7 +144,14 @@ export async function StudentsTable({ query, isAdmin = true }: { query?: string,
                         <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">{student.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-slate-900">{student.name}</p>
+                          {student.studentProfile?.studentId && (
+                            <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200">
+                              {student.studentProfile.studentId}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {student.email}
                         </p>

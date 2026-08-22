@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getSedeCondition } from "@/lib/multi-tenancy";
 import {
   Card,
   CardContent,
@@ -19,8 +20,19 @@ import { auth } from "@/lib/auth";
 import { SearchInput } from "./search-input";
 
 export async function GradesTable({ query = "" }: { query?: string }) {
-  const [grades, students, exams, courseAssignments, session] = await Promise.all([
+  const sedeCondition = await getSedeCondition();
+  const session = await auth();
+
+  const [grades, students, exams, courseAssignments] = await Promise.all([
     db.grade.findMany({
+      where: {
+        student: {
+          user: {
+            ...sedeCondition,
+            deletedAt: null,
+          }
+        }
+      },
       include: {
         student: { include: { user: true } },
         exam: { include: { unit: { include: { course: true } } } },
@@ -29,20 +41,35 @@ export async function GradesTable({ query = "" }: { query?: string }) {
       orderBy: { createdAt: "desc" },
     }),
     db.studentProfile.findMany({
+      where: {
+        isActive: true,
+        user: {
+          ...sedeCondition,
+          deletedAt: null,
+        }
+      },
       include: { user: true },
-      where: { isActive: true },
     }),
     db.exam.findMany({
+      where: {
+        unit: {
+          course: {
+            ...sedeCondition,
+          }
+        }
+      },
       include: { unit: { include: { course: true } } },
     }),
     db.courseAssignment.findMany({
+      where: {
+        ...sedeCondition,
+      },
       include: {
         course: true,
         group: true,
         teacher: { include: { user: true } },
       },
     }),
-    auth(),
   ]);
 
   const userRole = session?.user?.role || "STUDENT";

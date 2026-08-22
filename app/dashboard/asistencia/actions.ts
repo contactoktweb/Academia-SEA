@@ -51,23 +51,30 @@ export async function recordAttendance(data: {
 
 export async function deleteAttendance(id: string) {
   try {
-    await db.attendance.delete({
+    // Deshabilitación lógica sin borrar registro
+    await db.attendance.update({
       where: { id },
+      data: {
+        status: "EXCUSED",
+        notes: "[REGISTRO DESHABILITADO]",
+      },
     });
 
     revalidatePath("/dashboard/asistencia");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting attendance:", error);
-    return { success: false, error: "Error al eliminar el registro" };
+    console.error("Error disabling attendance:", error);
+    return { success: false, error: "Error al deshabilitar el registro" };
   }
 }
 
 export async function getStudentsForAttendance() {
   try {
+    const session = await auth();
+    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
     const students = await db.user.findMany({
-      where: { role: "STUDENT", isActive: true },
-      select: { id: String, name: true, studentProfile: { select: { id: true } } },
+      where: { role: "STUDENT", isActive: true, sede: sede as any, deletedAt: null },
+      select: { id: true, name: true, studentProfile: { select: { id: true } } },
     });
     return { success: true, data: students };
   } catch (error) {

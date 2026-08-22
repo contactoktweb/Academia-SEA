@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { getSedeCondition } from "@/lib/multi-tenancy"
 
 export async function GET(request: NextRequest) {
   try {
+    const sedeCondition = await getSedeCondition();
     const teachers = await db.user.findMany({
-      where: { role: "TEACHER", deletedAt: null },
+      where: { role: "TEACHER", deletedAt: null, ...sedeCondition },
       include: {
         teacherProfile: {
           include: {

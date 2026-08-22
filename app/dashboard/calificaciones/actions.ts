@@ -83,14 +83,18 @@ export async function updateGrade(
 
 export async function deleteGrade(gradeId: string) {
   try {
-    await db.grade.delete({
+    // Deshabilitación lógica para preservar auditoría
+    await db.grade.update({
       where: { id: gradeId },
+      data: {
+        comment: "[CALIFICACIÓN ANULADA / DESHABILITADA]",
+      },
     });
 
     revalidatePath("/dashboard/calificaciones");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting grade:", error);
-    return { success: false, error: "Error al eliminar la calificación" };
+    console.error("Error disabling grade:", error);
+    return { success: false, error: "Error al deshabilitar la calificación" };
   }
 }

@@ -136,6 +136,13 @@ export const structure: StructureResolver = (S) =>
       S.divider(),
       // Submisiones / Formularios
       S.listItem()
+        .title('Prospectos y Leads (Hero)')
+        .id('leadSubmission')
+        .child(
+          S.documentTypeList('leadSubmission')
+            .title('Prospectos Registrados (Hero Web)')
+        ),
+      S.listItem()
         .title('Exámenes de Ubicación (Aspirantes)')
         .id('placementTestSubmission')
         .child(
@@ -145,6 +152,6 @@ export const structure: StructureResolver = (S) =>
       S.divider(),
       // The rest of the document types
       ...S.documentTypeListItems().filter(
-        (listItem) => !['globalConfig', 'heroHome', 'whySection', 'coursesTeaser', 'certificationsTeaser', 'ctaSection', 'aboutHero', 'aboutTimeline', 'aboutPhilosophy', 'aboutValues', 'aboutModalities', 'coursesPage', 'certificationsPage', 'contactPage', 'privacyPage', 'placementTestSubmission'].includes(listItem.getId() || '')
+        (listItem) => !['globalConfig', 'heroHome', 'whySection', 'coursesTeaser', 'certificationsTeaser', 'ctaSection', 'aboutHero', 'aboutTimeline', 'aboutPhilosophy', 'aboutValues', 'aboutModalities', 'coursesPage', 'certificationsPage', 'contactPage', 'privacyPage', 'placementTestSubmission', 'leadSubmission'].includes(listItem.getId() || '')
       ),
     ])

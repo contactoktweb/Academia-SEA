@@ -5,13 +5,47 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { createClient } from "@/utils/supabase/server";
 import { auth } from "@/lib/auth";
-
 import { reportErrorToSanity } from "@/lib/logger";
+
+export async function checkSiblingEmail(email: string) {
+  try {
+    if (!email || !email.includes("@")) return { exists: false, siblings: [] };
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUsers = await db.user.findMany({
+      where: {
+        email: normalizedEmail,
+        role: "STUDENT",
+      },
+      include: {
+        studentProfile: true,
+      },
+    });
+
+    if (existingUsers.length > 0) {
+      return {
+        exists: true,
+        count: existingUsers.length,
+        siblings: existingUsers.map((u) => ({
+          id: u.id,
+          name: u.name,
+          studentId: u.studentProfile?.studentId || "Sin matrícula",
+        })),
+      };
+    }
+
+    return { exists: false, siblings: [] };
+  } catch (error) {
+    console.error("Error checking sibling email:", error);
+    return { exists: false, siblings: [] };
+  }
+}
 
 export async function createStudent(data: {
   name: string;
   email: string;
-  password: string;
+  studentId?: string; // Identificador interno único (Matrícula)
+  password?: string;
   phone?: string;
   birthDate?: string;
   gender?: string;
@@ -21,24 +55,38 @@ export async function createStudent(data: {
   emergencyContact?: string;
   emergencyPhone?: string;
   contractUrl?: string;
-  sede: string;
+  sede?: string;
 }) {
   try {
     const session = await auth();
-    const fallbackSede = (session?.user as any)?.sede || "SEAAUTLAN";
-    const sede = (data.sede && data.sede.trim() !== "" ? data.sede : fallbackSede) as any;
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const adminSede = (session?.user as any)?.sede;
+    const sede = (adminSede || data.sede || "SEAAUTLAN") as any;
+    const cleanEmail = data.email.trim().toLowerCase();
+    const rawPassword = data.password && data.password.trim() !== "" ? data.password : "123456";
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+    // Generar o sanitizar studentId (Matrícula interna)
+    const sedePrefix = String(sede).replace("SEA", "").substring(0, 3).toUpperCase() || "GEN";
+    const generatedId = `SEA-${sedePrefix}-${new Date().getFullYear().toString().slice(-2)}${Math.floor(1000 + Math.random() * 9000)}`;
+    const finalStudentId = data.studentId && data.studentId.trim() !== "" ? data.studentId.trim() : generatedId;
+
+    // Verificar si ya existe otro hermano con este correo
+    const existingSiblingUsers = await db.user.findMany({
+      where: { email: cleanEmail, role: "STUDENT" },
+      include: { studentProfile: true },
+    });
 
     const student = await db.user.create({
       data: {
-        email: data.email,
+        email: cleanEmail,
         password: hashedPassword,
-        name: data.name,
+        name: data.name.trim(),
         phone: data.phone,
         role: "STUDENT",
         sede,
         studentProfile: {
           create: {
+            studentId: finalStudentId,
             sede,
             birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
             gender: data.gender,
@@ -56,7 +104,55 @@ export async function createStudent(data: {
       },
     });
 
+    // Si comparte correo con hermanos, vincularlos en la entidad Family
+    if (existingSiblingUsers.length > 0 && student.studentProfile) {
+      try {
+        let family = await db.family.findFirst({
+          where: { email: cleanEmail },
+        });
+
+        if (!family) {
+          const lastName = data.name.trim().split(" ").slice(1).join(" ") || data.name.trim();
+          family = await db.family.create({
+            data: {
+              name: `Familia ${lastName}`,
+              email: cleanEmail,
+              phone: data.phone,
+              address: data.address,
+            },
+          });
+
+          // Vincular hermanos existentes
+          for (const sib of existingSiblingUsers) {
+            if (sib.studentProfile) {
+              await db.familyLink.create({
+                data: {
+                  familyId: family.id,
+                  studentProfileId: sib.studentProfile.id,
+                  relationship: "HERMANO",
+                  isPrimary: false,
+                },
+              });
+            }
+          }
+        }
+
+        // Vincular nuevo hermano
+        await db.familyLink.create({
+          data: {
+            familyId: family.id,
+            studentProfileId: student.studentProfile.id,
+            relationship: "HERMANO",
+            isPrimary: false,
+          },
+        });
+      } catch (famErr) {
+        console.error("Error linking family siblings:", famErr);
+      }
+    }
+
     revalidatePath("/dashboard/alumnos");
+    revalidatePath("/dashboard/familias");
     return { success: true, data: JSON.parse(JSON.stringify(student)) };
   } catch (error: any) {
     console.error("Error creating student:", error);
@@ -70,7 +166,7 @@ export async function createStudent(data: {
     });
 
     if (error?.code === "P2002") {
-      return { success: false, error: "El correo electrónico ya está registrado con otro alumno o usuario." };
+      return { success: false, error: "El identificador interno / matrícula ya existe. Por favor utiliza una matrícula diferente." };
     }
     return { success: false, error: "Error al crear el alumno" };
   }
@@ -81,6 +177,7 @@ export async function updateStudent(
   data: {
     name?: string;
     email?: string;
+    studentId?: string;
     phone?: string;
     gender?: string;
     address?: string;
@@ -92,16 +189,19 @@ export async function updateStudent(
   }
 ) {
   try {
+    const cleanEmail = data.email ? data.email.trim().toLowerCase() : undefined;
+
     const student = await db.user.update({
       where: { id: userId },
       data: {
-        name: data.name,
-        email: data.email,
+        name: data.name ? data.name.trim() : undefined,
+        email: cleanEmail,
         phone: data.phone,
         ...(data.sede ? { sede: data.sede as any } : {}),
         ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
-        studentProfile: data.gender || data.address || data.city || data.state || data.contractUrl || data.sede ? {
+        studentProfile: {
           update: {
+            ...(data.studentId ? { studentId: data.studentId.trim() } : {}),
             gender: data.gender,
             address: data.address,
             city: data.city,
@@ -109,7 +209,7 @@ export async function updateStudent(
             ...(data.contractUrl ? { contractUrl: data.contractUrl } : {}),
             ...(data.sede ? { sede: data.sede as any } : {}),
           },
-        } : undefined,
+        },
       },
       include: {
         studentProfile: true,
@@ -128,7 +228,15 @@ export async function deleteStudent(userId: string) {
   try {
     await db.user.update({
       where: { id: userId },
-      data: { deletedAt: new Date() }
+      data: { 
+        deletedAt: new Date(),
+        isActive: false,
+      },
+    });
+
+    await db.studentProfile.updateMany({
+      where: { userId },
+      data: { isActive: false },
     });
 
     revalidatePath("/dashboard/alumnos");
@@ -190,17 +298,16 @@ export async function enrollStudentInCourse(
     const student = await db.user.findUnique({ where: { id: studentId } });
     const sede = student?.sede || "SEAAUTLAN";
 
-    // 1. Resolve targetCycleId: if missing or empty, find active cycle or create a fallback
     let targetCycleId: string | undefined = cycleId && cycleId.trim() !== "" ? cycleId : undefined;
     if (!targetCycleId) {
-      const activeCycle = await db.schoolCycle.findFirst({
+      const activeCycle = (await db.schoolCycle.findFirst({
         where: { isActive: true, sede },
-      }) || await db.schoolCycle.findFirst({
+      })) || (await db.schoolCycle.findFirst({
         where: { isActive: true },
-      }) || await db.schoolCycle.findFirst({
-        orderBy: { startDate: "desc" }
-      });
-      
+      })) || (await db.schoolCycle.findFirst({
+        orderBy: { startDate: "desc" },
+      }));
+
       if (activeCycle) {
         targetCycleId = activeCycle.id;
       } else {
@@ -211,13 +318,12 @@ export async function enrollStudentInCourse(
             endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
             sede,
             isActive: true,
-          }
+          },
         });
         targetCycleId = newCycle.id;
       }
     }
 
-    // 2. Resolve targetGroupId: pass undefined if empty string
     const targetGroupId = groupId && groupId.trim() !== "" ? groupId : undefined;
 
     const enrollment = await db.studentEnrollment.create({
@@ -228,14 +334,16 @@ export async function enrollStudentInCourse(
         cycleId: targetCycleId,
         sede,
         status: "ACTIVE",
-        ...(paymentConfig ? {
-          monthlyConcept: paymentConfig.monthlyConcept,
-          paymentDate: paymentConfig.paymentDate,
-          monthlyValue: paymentConfig.monthlyValue,
-          totalInstallments: paymentConfig.totalInstallments,
-          isScholarship: paymentConfig.isScholarship,
-          scholarshipDiscount: paymentConfig.scholarshipDiscount,
-        } : {})
+        ...(paymentConfig
+          ? {
+              monthlyConcept: paymentConfig.monthlyConcept,
+              paymentDate: paymentConfig.paymentDate,
+              monthlyValue: paymentConfig.monthlyValue,
+              totalInstallments: paymentConfig.totalInstallments,
+              isScholarship: paymentConfig.isScholarship,
+              scholarshipDiscount: paymentConfig.scholarshipDiscount,
+            }
+          : {}),
       },
     });
 
@@ -249,10 +357,12 @@ export async function enrollStudentInCourse(
 
 export async function getCoursesForEnrollment() {
   try {
+    const session = await auth();
+    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
     const courses = await db.course.findMany({
-      where: { isActive: true },
+      where: { isActive: true, sede: sede as any },
       select: { id: true, name: true, level: true },
-      orderBy: { name: "asc" }
+      orderBy: { name: "asc" },
     });
     return { success: true, data: courses };
   } catch (error) {
@@ -263,10 +373,12 @@ export async function getCoursesForEnrollment() {
 
 export async function getGroupsForEnrollment() {
   try {
+    const session = await auth();
+    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
     const groups = await db.group.findMany({
-      where: { isActive: true },
+      where: { isActive: true, sede: sede as any },
       select: { id: true, name: true, level: true },
-      orderBy: { name: "asc" }
+      orderBy: { name: "asc" },
     });
     return { success: true, data: groups };
   } catch (error) {
@@ -279,19 +391,17 @@ export async function uploadContract(formData: FormData) {
   try {
     const file = formData.get("file") as File;
     if (!file) return { success: false, error: "No se proporcionó archivo" };
-    
-    // We expect the user to have supabase connected
+
     const supabase = createClient();
-    const fileName = `contracts/${Date.now()}-${file.name.replace(/\\s+/g, "_")}`;
-    
-    // Suponemos que existe un bucket llamado "documents"
+    const fileName = `contracts/${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
+
     const { data, error } = await supabase.storage.from("documents").upload(fileName, file);
-    
+
     if (error) {
       console.error("Supabase upload error:", error);
       return { success: false, error: "Error al subir a Storage" };
     }
-    
+
     const { data: publicData } = supabase.storage.from("documents").getPublicUrl(fileName);
     return { success: true, url: publicData.publicUrl };
   } catch (error) {

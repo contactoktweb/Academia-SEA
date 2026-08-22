@@ -50,12 +50,20 @@ export default async function VirtualClassRoomPage({
       }
     }
   } else if (role === Role.STUDENT) {
-    const profile = await prisma.studentProfile.findUnique({ where: { userId: session.user.id } })
+    const profile = await prisma.studentProfile.findUnique({ 
+      where: { userId: session.user.id },
+      include: { payments: true, user: true }
+    })
     if (profile) {
-      const enrollment = await prisma.studentEnrollment.findFirst({
-        where: { groupId: group.id, studentId: profile.id, status: 'ACTIVE' }
-      })
-      if (enrollment) hasAccess = true
+      const hasPaidAtLeastOne = profile.payments.some((p) => p.status === "PAID");
+      const isPaidAndActive = profile.user.isActive && profile.isActive && (hasPaidAtLeastOne || profile.payments.length === 0);
+
+      if (isPaidAndActive) {
+        const enrollment = await prisma.studentEnrollment.findFirst({
+          where: { groupId: group.id, studentId: profile.id, status: 'ACTIVE' }
+        })
+        if (enrollment) hasAccess = true
+      }
     }
   }
 

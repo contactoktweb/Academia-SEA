@@ -92,30 +92,30 @@ export async function toggleCycleStatus(id: string, isActive: boolean) {
 
 export async function deleteSchoolCycle(id: string) {
   try {
-    await db.schoolCycle.delete({ where: { id } });
+    await db.schoolCycle.update({ where: { id }, data: { isActive: false } });
     invalidateConfigCache();
     return { success: true };
   } catch {
-    return { success: false, error: "Error al eliminar (puede tener registros asociados)" };
+    return { success: false, error: "Error al deshabilitar el ciclo" };
   }
 }
 
 export async function deleteChargeConcept(id: string) {
   try {
-    await db.chargeConcept.delete({ where: { id } });
+    await db.chargeConcept.update({ where: { id }, data: { isActive: false } });
     invalidateConfigCache();
     return { success: true };
   } catch {
-    return { success: false, error: "Error al eliminar concepto" };
+    return { success: false, error: "Error al deshabilitar el concepto" };
   }
 }
 
 export async function deletePaymentPlan(id: string) {
   try {
-    await db.paymentPlan.delete({ where: { id } });
+    await db.paymentPlan.update({ where: { id }, data: { isActive: false } });
     invalidateConfigCache();
     return { success: true };
   } catch {
-    return { success: false, error: "Error al eliminar plan" };
+    return { success: false, error: "Error al deshabilitar el plan" };
   }
 }

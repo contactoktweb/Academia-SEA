@@ -55,14 +55,18 @@ export async function updateFamily(
 
 export async function deleteFamily(id: string) {
   try {
-    await db.family.delete({
+    const existing = await db.family.findUnique({ where: { id } });
+    await db.family.update({
       where: { id },
+      data: {
+        notes: `[DESHABILITADA] ${existing?.notes || ""}`.trim(),
+      },
     });
 
     revalidatePath("/dashboard/familias");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting family:", error);
-    return { success: false, error: "Error al eliminar la familia" };
+    console.error("Error disabling family:", error);
+    return { success: false, error: "Error al deshabilitar la familia" };
   }
 }

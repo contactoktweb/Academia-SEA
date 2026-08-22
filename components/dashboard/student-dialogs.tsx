@@ -48,6 +48,10 @@ export function StudentDialog({ mode, student, trigger }: StudentDialogsProps) {
     });
   }
 
+  function handleCancel() {
+    setOpen(false);
+  }
+
   if (mode === "delete") {
     const handleDelete = () => {
       startTransition(async () => {
@@ -131,6 +135,7 @@ export function StudentDialog({ mode, student, trigger }: StudentDialogsProps) {
         <StudentForm 
           initialData={mode === "edit" ? student : undefined} 
           onSuccess={handleSuccess} 
+          onCancel={handleCancel}
         />
       </DialogContent>
     </Dialog>

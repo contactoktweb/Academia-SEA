@@ -2,6 +2,7 @@ import { DashboardTopBar } from "@/components/dashboard/sidebar"
 import { CalendarForm } from "@/components/dashboard/calendar-form"
 import { db } from "@/lib/db"
 import { Calendar as CalendarIcon, Clock, BookOpen, Flag } from "lucide-react"
+import { getSedeCondition } from "@/lib/multi-tenancy"
 
 const typeIcons: Record<string, any> = {
   INICIO_CURSO: BookOpen,
@@ -18,9 +19,12 @@ const typeColors: Record<string, string> = {
 };
 
 export default async function Page() {
+  const sedeCondition = await getSedeCondition();
   const events = await db.calendarEvent.findMany({
     orderBy: { startDate: "asc" },
     where: {
+      ...sedeCondition,
+      type: { not: "CANCELLED" },
       endDate: {
         gte: new Date(new Date().setHours(0, 0, 0, 0)) // Eventos futuros o activos
       }

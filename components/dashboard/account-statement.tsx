@@ -4,12 +4,22 @@ import { useState, useTransition, useEffect } from "react";
 import { getStudentAccountStatement } from "@/app/dashboard/estados-cuenta/actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, Loader2, Printer, CreditCard, DollarSign, Calendar } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Printer, CreditCard, DollarSign, Calendar, Send, Copy, MessageSquare, ExternalLink } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import { SendPaymentLinkDialog } from "@/components/dashboard/payment-dialogs";
+import { generateAssistedTotalPaymentLink } from "@/app/dashboard/pagos/actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface AccountStatementProps {
   students: {
@@ -24,6 +34,17 @@ export function AccountStatement({ students }: AccountStatementProps) {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [statement, setStatement] = useState<any>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Estado para el modal de Enlace de Pago Total por Stripe
+  const [isGeneratingTotalLink, setIsGeneratingTotalLink] = useState(false);
+  const [totalLinkDialogOpen, setTotalLinkDialogOpen] = useState(false);
+  const [totalLinkData, setTotalLinkData] = useState<{
+    paymentUrl: string;
+    whatsappUrl: string;
+    studentName: string;
+    amount: number;
+    conceptName: string;
+  } | null>(null);
 
   // Load statement when student changes
   useEffect(() => {
@@ -45,6 +66,27 @@ export function AccountStatement({ students }: AccountStatementProps) {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleGenerateTotalLink = async () => {
+    if (!selectedProfileId) return;
+    setIsGeneratingTotalLink(true);
+    const res = await generateAssistedTotalPaymentLink(selectedProfileId);
+    setIsGeneratingTotalLink(false);
+
+    if (res.success && res.data) {
+      setTotalLinkData(res.data);
+      setTotalLinkDialogOpen(true);
+    } else {
+      toast.error(res.error || "No se pudo generar el enlace de Stripe.");
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (totalLinkData?.paymentUrl) {
+      navigator.clipboard.writeText(totalLinkData.paymentUrl);
+      toast.success("Enlace de Stripe copiado al portapapeles");
+    }
   };
 
   return (
@@ -116,20 +158,36 @@ export function AccountStatement({ students }: AccountStatementProps) {
         <div className="space-y-6 print:space-y-4 print:p-0">
           
           {/* Cabecera del Reporte */}
-          <div className="flex justify-between items-start print:items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:items-center">
             <div>
-              <h2 className="text-2xl font-bold">Estado de Cuenta</h2>
-              <p className="text-muted-foreground">{statement.student.name}</p>
+              <h2 className="text-2xl font-bold text-slate-900">Estado de Cuenta</h2>
+              <p className="text-muted-foreground font-medium">{statement.student.name}</p>
               {statement.student.enrollment && (
                 <p className="text-sm text-slate-500">
                   {statement.student.enrollment.course.name} - {statement.student.enrollment.group.name}
                 </p>
               )}
             </div>
-            <Button onClick={handlePrint} className="print:hidden" variant="outline">
-              <Printer className="mr-2 h-4 w-4" />
-              Imprimir / PDF
-            </Button>
+            
+            <div className="flex items-center gap-2.5 print:hidden">
+              <Button
+                onClick={handleGenerateTotalLink}
+                disabled={isGeneratingTotalLink}
+                className="bg-[#0066cc] hover:bg-[#0055aa] text-white shadow-sm font-semibold gap-1.5"
+              >
+                {isGeneratingTotalLink ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4" />
+                )}
+                <span>Generar Enlace de Pago (Stripe)</span>
+              </Button>
+
+              <Button onClick={handlePrint} variant="outline">
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir / PDF
+              </Button>
+            </div>
           </div>
 
           {/* Tarjetas de Resumen */}
@@ -141,7 +199,7 @@ export function AccountStatement({ students }: AccountStatementProps) {
               </CardHeader>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-red-600">${statement.summary.totalDebt.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground">Monto a liquidar</p>
+                <p className="text-xs text-muted-foreground">Monto total a liquidar</p>
               </CardContent>
             </Card>
 
@@ -170,10 +228,15 @@ export function AccountStatement({ students }: AccountStatementProps) {
 
           {/* Pagos Pendientes */}
           <Card className="border-red-100 dark:border-red-900/30">
-            <CardHeader className="bg-red-50/50 dark:bg-red-900/10 pb-4">
-              <CardTitle className="text-red-700 dark:text-red-400 flex items-center">
-                Cargos Pendientes y Vencidos
-              </CardTitle>
+            <CardHeader className="bg-red-50/50 dark:bg-red-900/10 pb-4 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-red-700 dark:text-red-400 flex items-center">
+                  Cargos Pendientes y Vencidos
+                </CardTitle>
+                <CardDescription className="text-red-600/70 text-xs">
+                  Genera el enlace de pago por Stripe para cada concepto individual o envíaselo por WhatsApp.
+                </CardDescription>
+              </div>
             </CardHeader>
             <CardContent className="pt-4">
               <Table>
@@ -185,12 +248,13 @@ export function AccountStatement({ students }: AccountStatementProps) {
                     <TableHead>Abonado</TableHead>
                     <TableHead>Restante</TableHead>
                     <TableHead>Estado</TableHead>
+                    <TableHead className="text-right print:hidden">Acción</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {statement.pendingPayments.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center h-12 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center h-12 text-muted-foreground">
                         No hay deudas pendientes. ¡Al día!
                       </TableCell>
                     </TableRow>
@@ -207,6 +271,9 @@ export function AccountStatement({ students }: AccountStatementProps) {
                             {p.status === "OVERDUE" ? "Vencido" : "Pendiente"}
                           </span>
                         </TableCell>
+                        <TableCell className="text-right print:hidden">
+                          <SendPaymentLinkDialog payment={p} />
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -214,6 +281,73 @@ export function AccountStatement({ students }: AccountStatementProps) {
               </Table>
             </CardContent>
           </Card>
+
+          {/* Dialog para Enlace de Pago Total */}
+          <Dialog open={totalLinkDialogOpen} onOpenChange={setTotalLinkDialogOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-slate-900">
+                  <CreditCard className="h-5 w-5 text-[#0066cc]" />
+                  Enlace de Pago Stripe (Estado de Cuenta)
+                </DialogTitle>
+                <DialogDescription>
+                  Enlace generado con el saldo total de {totalLinkData?.studentName} para enviar por WhatsApp o compartir.
+                </DialogDescription>
+              </DialogHeader>
+
+              {totalLinkData && (
+                <div className="space-y-4 pt-2">
+                  <div className="rounded-xl bg-blue-50/70 p-4 border border-blue-200/80 space-y-1.5 text-xs text-slate-700">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">Alumno:</span>
+                      <span className="font-bold text-slate-900">{totalLinkData.studentName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">Concepto:</span>
+                      <span className="font-semibold text-slate-800">{totalLinkData.conceptName}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-blue-200 pt-1.5 mt-1.5">
+                      <span className="text-slate-500 font-medium">Monto a Liquidar:</span>
+                      <span className="font-black text-base text-[#0066cc]">
+                        ${totalLinkData.amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700">Enlace de Pago Seguro (Stripe):</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        readOnly
+                        value={totalLinkData.paymentUrl}
+                        className="text-xs font-mono bg-slate-50 select-all"
+                      />
+                      <Button size="sm" variant="outline" onClick={handleCopyLink} className="shrink-0 gap-1">
+                        <Copy className="h-3.5 w-3.5" />
+                        Copiar
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <a
+                      href={totalLinkData.whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-3 px-4 shadow-sm transition-all text-sm"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      <span>Enviar Enlace por WhatsApp al Alumno</span>
+                    </a>
+                  </div>
+
+                  <p className="text-[11px] text-slate-500 text-center leading-relaxed">
+                    *Al pagar en Stripe, el sistema actualizará automáticamente el estado del pago a <strong>PAGADO</strong> en tiempo real.
+                  </p>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Historial de Pagos Completados */}
           <Card>
