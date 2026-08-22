@@ -113,7 +113,7 @@ export function StudentPaymentsClient({ initialData }: StudentPaymentsClientProp
       toast.dismiss(toastId);
 
       if (response.status === 503) {
-        toast.error("⚠️ Falla en credenciales de Stripe. Contacta al administrador del sistema", { duration: 6000 });
+        toast.error("⚠️ Falla en credenciales de Stripe. Contacta al administrador del sistema.", { duration: 6000 });
         setPayingInstallmentNumber(null);
         return;
       }
