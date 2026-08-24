@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useTransition } from "react";
+import { useTransition, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { createTeacher, updateTeacher } from "@/app/dashboard/profesores/actions";
 import { toast } from "sonner";

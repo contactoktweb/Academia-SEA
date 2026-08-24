@@ -355,35 +355,101 @@ export async function enrollStudentInCourse(
   }
 }
 
-export async function getCoursesForEnrollment() {
+export async function getCoursesForEnrollment(sede?: string) {
   try {
-    const session = await auth();
-    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
+    let effectiveSede = sede;
+    if (!effectiveSede) {
+      try {
+        const session = await auth();
+        effectiveSede = (session?.user as any)?.sede;
+      } catch {}
+    }
+    if (!effectiveSede) effectiveSede = "SEAAUTLAN";
+
     const courses = await db.course.findMany({
-      where: { isActive: true, sede: sede as any },
-      select: { id: true, name: true, level: true },
+      where: {
+        isActive: true,
+        ...(effectiveSede ? { sede: effectiveSede as any } : {}),
+      },
+      select: { id: true, name: true, level: true, sede: true },
       orderBy: { name: "asc" },
     });
     return { success: true, data: courses };
   } catch (error) {
     console.error("Error fetching courses:", error);
-    return { success: false, error: "Error al obtener cursos" };
+    return { success: false, error: "Error al obtener cursos", data: [] };
   }
 }
 
-export async function getGroupsForEnrollment() {
+export async function getGroupsForEnrollment(sede?: string) {
   try {
-    const session = await auth();
-    const sede = (session?.user as any)?.sede || "SEAAUTLAN";
-    const groups = await db.group.findMany({
-      where: { isActive: true, sede: sede as any },
-      select: { id: true, name: true, level: true },
+    let effectiveSede = sede;
+    if (!effectiveSede) {
+      try {
+        const session = await auth();
+        effectiveSede = (session?.user as any)?.sede;
+      } catch {}
+    }
+    if (!effectiveSede) effectiveSede = "SEAAUTLAN";
+    
+    let groups = await db.group.findMany({
+      where: {
+        isActive: true,
+        ...(effectiveSede ? { sede: effectiveSede as any } : {}),
+      },
+      select: { id: true, name: true, level: true, schedule: true, sede: true, modality: true },
       orderBy: { name: "asc" },
     });
+
+    // Si no existen grupos creados para esta sede, auto-aprovisionamos grupos base para evitar bloqueos
+    if (groups.length === 0 && effectiveSede) {
+      try {
+        await db.group.createMany({
+          data: [
+            {
+              name: "Grupo A - Matutino",
+              level: "General",
+              schedule: "Lunes a Jueves 09:00 - 11:00",
+              sede: effectiveSede as any,
+              modality: "PRESENCIAL",
+              maxStudents: 30,
+            },
+            {
+              name: "Grupo B - Vespertino",
+              level: "General",
+              schedule: "Lunes a Jueves 16:00 - 18:00",
+              sede: effectiveSede as any,
+              modality: "PRESENCIAL",
+              maxStudents: 30,
+            },
+            {
+              name: "Grupo Sábados",
+              level: "General",
+              schedule: "Sábados 09:00 - 13:00",
+              sede: effectiveSede as any,
+              modality: "PRESENCIAL",
+              maxStudents: 30,
+            },
+          ],
+        });
+
+        groups = await db.group.findMany({
+          where: {
+            isActive: true,
+            sede: effectiveSede as any,
+          },
+          select: { id: true, name: true, level: true, schedule: true, sede: true, modality: true },
+          orderBy: { name: "asc" },
+        });
+      } catch (seedErr) {
+        console.error("Error auto-seeding default groups for sede:", seedErr);
+      }
+    }
+
     return { success: true, data: groups };
   } catch (error) {
     console.error("Error fetching groups:", error);
-    return { success: false, error: "Error al obtener grupos" };
+    return { success: false, error: "Error al obtener grupos", data: [] };
   }
 }
 

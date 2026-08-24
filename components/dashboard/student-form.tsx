@@ -399,7 +399,7 @@ export function StudentForm({ initialData, onSuccess, onCancel }: StudentFormPro
   const [courses, setCourses] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
   const [contractFile, setContractFile] = useState<File | null>(null);
-  const [siblingInfo, setSiblingInfo] = useState<{ exists: boolean; count: number; siblings: any[] } | null>(null);
+  const [siblingInfo, setSiblingInfo] = useState<{ exists: boolean; count?: number; siblings: any[] } | null>(null);
 
   const { data: session } = useSession();
   const activeSede = (session?.user as any)?.sede || "SEAAUTLAN";
@@ -558,17 +558,19 @@ export function StudentForm({ initialData, onSuccess, onCancel }: StudentFormPro
     return () => clearTimeout(timer);
   }, [watchedEmail, isEditMode]);
 
+  const watchedSede = form.watch("sede") || activeSede;
+
   useEffect(() => {
     if (!isEditMode) {
-      // Load courses and groups for new student enrollment
-      getCoursesForEnrollment().then((res) => {
+      // Cargar cursos y grupos para la sede seleccionada
+      getCoursesForEnrollment(watchedSede).then((res) => {
         if (res.success) setCourses(res.data || []);
       });
-      getGroupsForEnrollment().then((res) => {
+      getGroupsForEnrollment(watchedSede).then((res) => {
         if (res.success) setGroups(res.data || []);
       });
     }
-  }, [isEditMode]);
+  }, [isEditMode, watchedSede]);
 
   async function handleNextStep(e?: React.MouseEvent) {
     if (e) {
@@ -640,11 +642,16 @@ export function StudentForm({ initialData, onSuccess, onCancel }: StudentFormPro
           const newStudent = res.data;
           const studentProfileId = newStudent.studentProfile?.id;
           
-          if (studentProfileId && values.courseId) {
+          if (studentProfileId && values.courseId && values.courseId !== "none") {
+            const finalGroupId =
+              values.groupId && values.groupId !== "unassigned" && values.groupId !== "none"
+                ? values.groupId
+                : "";
+
             const enrollRes = await enrollStudentInCourse(
               studentProfileId,
               values.courseId,
-              values.groupId || "",
+              finalGroupId,
               "", // cycleId placeholder, if needed later
               {
                 monthlyConcept: values.monthlyConcept,
@@ -981,16 +988,24 @@ export function StudentForm({ initialData, onSuccess, onCancel }: StudentFormPro
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Curso</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona un curso..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {courses.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
+                        {courses.length === 0 ? (
+                          <SelectItem value="none" disabled>
+                            No hay cursos registrados en esta sede
+                          </SelectItem>
+                        ) : (
+                          courses.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name} {c.level ? `(${c.level})` : ""}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -1003,15 +1018,20 @@ export function StudentForm({ initialData, onSuccess, onCancel }: StudentFormPro
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Grupo</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona un grupo..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="unassigned">
+                          Sin grupo asignado (Por defecto)
+                        </SelectItem>
                         {groups.map((g) => (
-                          <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                          <SelectItem key={g.id} value={g.id}>
+                            {g.name} {g.schedule ? `• ${g.schedule}` : ""}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

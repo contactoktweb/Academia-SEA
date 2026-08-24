@@ -28,6 +28,7 @@ import {
   Megaphone,
   Video,
   Trash2,
+  Inbox,
 } from 'lucide-react'
 import { SedeSelector } from './sede-selector'
 import { cn } from '@/lib/utils'
@@ -89,6 +90,12 @@ const navItems: NavItem[] = [
     label: 'Exámenes de Ubicación',
     href: '/dashboard/examenes-ubicacion',
     icon: <ClipboardList className="size-5" />,
+    roles: ['ADMIN'],
+  },
+  {
+    label: 'Formularios de Contacto',
+    href: '/dashboard/contactos',
+    icon: <Inbox className="size-5" />,
     roles: ['ADMIN'],
   },
   // Academic
@@ -279,7 +286,7 @@ export function DashboardSidebar({
       if (item.href === '/dashboard') {
         if (!acc['Principal']) acc['Principal'] = []
         acc['Principal'].push(item)
-      } else if (['/dashboard/alumnos', '/dashboard/familias', '/dashboard/profesores', '/dashboard/cursos', '/dashboard/examenes-ubicacion'].includes(item.href)) {
+      } else if (['/dashboard/alumnos', '/dashboard/familias', '/dashboard/profesores', '/dashboard/cursos', '/dashboard/examenes-ubicacion', '/dashboard/contactos'].includes(item.href)) {
         if (!acc['Escolar']) acc['Escolar'] = []
         acc['Escolar'].push(item)
       } else if (['/dashboard/calificaciones', '/dashboard/evaluaciones', '/dashboard/asistencia', '/dashboard/boletas'].includes(item.href)) {

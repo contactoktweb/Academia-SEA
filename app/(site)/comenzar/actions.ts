@@ -2,6 +2,10 @@
 
 import { writeClient } from "@/sanity/lib/client";
 import { z } from "zod";
+import { Resend } from "resend";
+import { generateLeadConfirmationEmailHtml } from "@/lib/email-templates/lead-confirmation";
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const leadSchema = z.object({
   firstName: z.string().min(2, "El nombre es obligatorio"),
@@ -22,6 +26,11 @@ export async function submitHeroLead(data: LeadFormInput) {
     const validated = leadSchema.parse(data);
     const fullName = `${validated.firstName.trim()} ${validated.lastName.trim()}`;
     const nowIso = new Date().toISOString();
+    const formattedDate = new Date().toLocaleString("es-MX", {
+      timeZone: "America/Mexico_City",
+      dateStyle: "full",
+      timeStyle: "short",
+    });
 
     const createdDoc = await writeClient.create({
       _type: "leadSubmission",
@@ -40,6 +49,30 @@ export async function submitHeroLead(data: LeadFormInput) {
       submittedAt: nowIso,
       notes: "Lead capturado desde el formulario Hero de la página principal.",
     });
+
+    // Enviar correo de confirmación al prospecto
+    try {
+      if (resend && validated.email) {
+        const html = generateLeadConfirmationEmailHtml({
+          fullName,
+          email: validated.email.trim().toLowerCase(),
+          phone: validated.phone.trim(),
+          target: validated.target,
+          ageRange: validated.ageRange,
+          country: validated.country,
+          submittedAt: formattedDate,
+        });
+
+        await resend.emails.send({
+          from: "Academia SEA <onboarding@resend.dev>",
+          to: validated.email.trim().toLowerCase(),
+          subject: `¡Bienvenido a Academia SEA! Muy pronto nos pondremos en contacto contigo`,
+          html,
+        });
+      }
+    } catch (emailErr) {
+      console.error("Error enviando correo de confirmación de lead al usuario:", emailErr);
+    }
 
     return {
       success: true,

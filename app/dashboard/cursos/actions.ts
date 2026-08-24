@@ -282,3 +282,123 @@ export async function recordAttendance(data: {
     return { success: false, error: "Error al registrar la asistencia" };
   }
 }
+
+// ===== GESTIÓN DE GRUPOS =====
+export async function getGroups(sede?: string) {
+  try {
+    const session = await auth();
+    const effectiveSede = sede || (session?.user as any)?.sede;
+
+    const groups = await db.group.findMany({
+      where: {
+        isActive: true,
+        ...(effectiveSede ? { sede: effectiveSede as any } : {}),
+      },
+      include: {
+        assignments: {
+          include: {
+            course: true,
+            teacher: { include: { user: true } },
+          },
+        },
+        enrollments: {
+          where: { status: "ACTIVE" },
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return { success: true, data: JSON.parse(JSON.stringify(groups)) };
+  } catch (error) {
+    console.error("Error fetching groups:", error);
+    return { success: false, error: "Error al obtener los grupos", data: [] };
+  }
+}
+
+export async function createGroup(data: {
+  name: string;
+  level: string;
+  schedule?: string;
+  location?: string;
+  maxStudents?: number;
+  sede?: string;
+  modality?: "PRESENCIAL" | "VIRTUAL" | "MIXTA";
+}) {
+  try {
+    const session = await auth();
+    const effectiveSede = data.sede || (session?.user as any)?.sede || "SEAAUTLAN";
+
+    const group = await db.group.create({
+      data: {
+        name: data.name.trim(),
+        level: data.level.trim(),
+        schedule: data.schedule?.trim() || null,
+        location: data.location?.trim() || null,
+        maxStudents: data.maxStudents ? Number(data.maxStudents) : 30,
+        sede: effectiveSede as any,
+        modality: data.modality || "PRESENCIAL",
+      },
+    });
+
+    revalidatePath("/dashboard/cursos");
+    revalidatePath("/dashboard/alumnos");
+    return { success: true, data: JSON.parse(JSON.stringify(group)) };
+  } catch (error: any) {
+    console.error("Error creating group:", error);
+    return { success: false, error: "Error al crear el grupo" };
+  }
+}
+
+export async function updateGroup(
+  groupId: string,
+  data: {
+    name?: string;
+    level?: string;
+    schedule?: string;
+    location?: string;
+    maxStudents?: number;
+    sede?: string;
+    modality?: "PRESENCIAL" | "VIRTUAL" | "MIXTA";
+    isActive?: boolean;
+  }
+) {
+  try {
+    const group = await db.group.update({
+      where: { id: groupId },
+      data: {
+        ...(data.name ? { name: data.name.trim() } : {}),
+        ...(data.level ? { level: data.level.trim() } : {}),
+        ...(data.schedule !== undefined ? { schedule: data.schedule?.trim() || null } : {}),
+        ...(data.location !== undefined ? { location: data.location?.trim() || null } : {}),
+        ...(data.maxStudents !== undefined ? { maxStudents: Number(data.maxStudents) } : {}),
+        ...(data.sede ? { sede: data.sede as any } : {}),
+        ...(data.modality ? { modality: data.modality } : {}),
+        ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+      },
+    });
+
+    revalidatePath("/dashboard/cursos");
+    revalidatePath("/dashboard/alumnos");
+    return { success: true, data: JSON.parse(JSON.stringify(group)) };
+  } catch (error: any) {
+    console.error("Error updating group:", error);
+    return { success: false, error: "Error al actualizar el grupo" };
+  }
+}
+
+export async function deleteGroup(groupId: string) {
+  try {
+    // Desactivar lógicamente para no perder historial
+    await db.group.update({
+      where: { id: groupId },
+      data: { isActive: false },
+    });
+
+    revalidatePath("/dashboard/cursos");
+    revalidatePath("/dashboard/alumnos");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting group:", error);
+    return { success: false, error: "Error al eliminar el grupo" };
+  }
+}

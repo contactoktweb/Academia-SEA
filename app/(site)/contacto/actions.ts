@@ -2,6 +2,10 @@
 
 import { writeClient } from "@/sanity/lib/client";
 import { z } from "zod";
+import { Resend } from "resend";
+import { generateContactConfirmationEmailHtml } from "@/lib/email-templates/contact-confirmation";
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const contactSchema = z.object({
   fullName: z.string().min(2, "El nombre completo es obligatorio"),
@@ -18,6 +22,11 @@ export async function submitContactMessage(data: ContactFormInput) {
   try {
     const validated = contactSchema.parse(data);
     const nowIso = new Date().toISOString();
+    const formattedDate = new Date().toLocaleString("es-MX", {
+      timeZone: "America/Mexico_City",
+      dateStyle: "full",
+      timeStyle: "short",
+    });
 
     const createdDoc = await writeClient.create({
       _type: "contactSubmission",
@@ -32,6 +41,30 @@ export async function submitContactMessage(data: ContactFormInput) {
       submittedAt: nowIso,
       notes: `Mensaje enviado directamente desde el formulario de la página de contacto.`,
     });
+
+    // Enviar correo de confirmación al usuario
+    try {
+      if (resend && validated.email) {
+        const html = generateContactConfirmationEmailHtml({
+          fullName: validated.fullName.trim(),
+          email: validated.email.trim().toLowerCase(),
+          phone: validated.phone.trim(),
+          sedeInteres: validated.sedeInteres,
+          subject: validated.subject,
+          message: validated.message.trim(),
+          submittedAt: formattedDate,
+        });
+
+        await resend.emails.send({
+          from: "Academia SEA <onboarding@resend.dev>",
+          to: validated.email.trim().toLowerCase(),
+          subject: `¡Hemos recibido tu mensaje en Academia SEA!`,
+          html,
+        });
+      }
+    } catch (emailErr) {
+      console.error("Error enviando correo de confirmación de contacto al usuario:", emailErr);
+    }
 
     return {
       success: true,
