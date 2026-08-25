@@ -185,21 +185,21 @@ export function HeroLeadForm() {
       {/* Barra de progreso minimalista */}
       <div className="absolute top-0 left-6 right-6 h-1 bg-slate-100 rounded-full overflow-hidden">
         <div
-          className="h-full bg-[#0066cc] transition-all duration-500 ease-out rounded-full"
+          className="h-full bg-[#ff6600] transition-all duration-500 ease-out rounded-full"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
 
       {/* Badge Minimalista con Icono Profesional */}
       <div className="text-center pt-2 mb-4">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-blue-200/70 bg-blue-50/70 px-3.5 py-1 text-[11px] font-bold text-[#0066cc] mb-2 tracking-wider uppercase shadow-2xs">
-          <BadgePercent className="h-3.5 w-3.5 text-[#0066cc] stroke-[2.2]" />
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-orange-200/80 bg-orange-50/80 px-3.5 py-1 text-[11px] font-bold text-[#ff6600] mb-2 tracking-wider uppercase shadow-2xs">
+          <BadgePercent className="h-3.5 w-3.5 text-[#ff6600] stroke-[2.2]" />
           <span>Promoción Especial 2026</span>
         </div>
 
         <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 leading-snug">
           Aprende inglés con una{" "}
-          <span className="text-[#0066cc]">Oferta Especial</span>
+          <span className="text-[#ff6600]">Oferta Especial</span>
         </h2>
       </div>
 
@@ -215,7 +215,7 @@ export function HeroLeadForm() {
                 : "text-slate-500 hover:text-slate-900"
             }`}
           >
-            <User className="h-3.5 w-3.5 text-[#0066cc]" />
+            <User className="h-3.5 w-3.5 text-[#ff6600]" />
             <span>Para mí</span>
           </button>
           <button
@@ -242,7 +242,7 @@ export function HeroLeadForm() {
                 placeholder="Nombre *"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-3 pr-2 text-slate-900 placeholder:text-slate-400 focus:border-[#0066cc] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0066cc]/20 transition-all text-xs sm:text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-3 pr-2 text-slate-900 placeholder:text-slate-400 focus:border-[#ff6600] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#ff6600]/20 transition-all text-xs sm:text-sm"
               />
             </div>
             <div className="relative">
@@ -252,7 +252,7 @@ export function HeroLeadForm() {
                 placeholder="Apellido *"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-3 pr-2 text-slate-900 placeholder:text-slate-400 focus:border-[#0066cc] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0066cc]/20 transition-all text-xs sm:text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-3 pr-2 text-slate-900 placeholder:text-slate-400 focus:border-[#ff6600] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#ff6600]/20 transition-all text-xs sm:text-sm"
               />
             </div>
           </div>
@@ -268,7 +268,7 @@ export function HeroLeadForm() {
                 placeholder="Correo electrónico *"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-9 pr-3 text-slate-900 placeholder:text-slate-400 focus:border-[#0066cc] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0066cc]/20 transition-all text-xs sm:text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-9 pr-3 text-slate-900 placeholder:text-slate-400 focus:border-[#ff6600] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#ff6600]/20 transition-all text-xs sm:text-sm"
               />
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
             </div>
@@ -320,7 +320,7 @@ export function HeroLeadForm() {
                 placeholder="Número de teléfono *"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 px-3 text-slate-900 placeholder:text-slate-400 focus:border-[#0066cc] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0066cc]/20 transition-all text-xs sm:text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 px-3 text-slate-900 placeholder:text-slate-400 focus:border-[#ff6600] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#ff6600]/20 transition-all text-xs sm:text-sm"
               />
             </div>
           </div>
@@ -333,7 +333,7 @@ export function HeroLeadForm() {
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Select value={country} onValueChange={handleCountryChange}>
-                  <SelectTrigger className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs text-slate-800 focus:border-[#0066cc] focus:ring-1 focus:ring-[#0066cc]/20 shadow-none cursor-pointer">
+                  <SelectTrigger className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs text-slate-800 focus:border-[#ff6600] focus:ring-1 focus:ring-[#ff6600]/20 shadow-none cursor-pointer">
                     <div className="flex items-center gap-1.5 truncate">
                       <Globe className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                       <SelectValue placeholder="País" />
@@ -352,7 +352,7 @@ export function HeroLeadForm() {
               <div className="space-y-1">
                 {country === "México" ? (
                   <Select value={state} onValueChange={(val) => setState(val)}>
-                    <SelectTrigger className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs text-slate-800 focus:border-[#0066cc] focus:ring-1 focus:ring-[#0066cc]/20 shadow-none cursor-pointer">
+                    <SelectTrigger className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs text-slate-800 focus:border-[#ff6600] focus:ring-1 focus:ring-[#ff6600]/20 shadow-none cursor-pointer">
                       <div className="flex items-center gap-1.5 truncate">
                         <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                         <SelectValue placeholder="Estado" />
@@ -368,7 +368,7 @@ export function HeroLeadForm() {
                   </Select>
                 ) : country === "Colombia" ? (
                   <Select value={state} onValueChange={(val) => setState(val)}>
-                    <SelectTrigger className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs text-slate-800 focus:border-[#0066cc] focus:ring-1 focus:ring-[#0066cc]/20 shadow-none cursor-pointer">
+                    <SelectTrigger className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs text-slate-800 focus:border-[#ff6600] focus:ring-1 focus:ring-[#ff6600]/20 shadow-none cursor-pointer">
                       <div className="flex items-center gap-1.5 truncate">
                         <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                         <SelectValue placeholder="Departamento" />
@@ -389,7 +389,7 @@ export function HeroLeadForm() {
                       placeholder="Estado / Región"
                       value={state}
                       onChange={(e) => setState(e.target.value)}
-                      className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/70 pl-8 pr-2.5 text-xs text-slate-800 focus:border-[#0066cc] focus:bg-white focus:outline-none"
+                      className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/70 pl-8 pr-2.5 text-xs text-slate-800 focus:border-[#ff6600] focus:bg-white focus:outline-none"
                     />
                     <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
                   </div>
@@ -400,7 +400,7 @@ export function HeroLeadForm() {
             {/* Rango de Edad con Selector Personalizado */}
             <div className="space-y-1">
               <Select value={ageRange} onValueChange={(val) => setAgeRange(val)}>
-                <SelectTrigger className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/70 px-3 text-xs text-slate-800 focus:border-[#0066cc] focus:ring-1 focus:ring-[#0066cc]/20 shadow-none cursor-pointer">
+                <SelectTrigger className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/70 px-3 text-xs text-slate-800 focus:border-[#ff6600] focus:ring-1 focus:ring-[#ff6600]/20 shadow-none cursor-pointer">
                   <div className="flex items-center gap-2 truncate">
                     <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                     <SelectValue placeholder="Selecciona rango de edad" />
@@ -419,7 +419,7 @@ export function HeroLeadForm() {
             {/* Disclaimer */}
             <p className="text-[10px] leading-relaxed text-slate-500 pt-1">
               Al enviar mis datos autorizo a recibir información y acepto la{" "}
-              <Link href="/privacidad" className="underline text-slate-700 hover:text-[#0066cc]">
+              <Link href="/privacidad" className="underline text-slate-700 hover:text-[#ff6600]">
                 Política de Privacidad
               </Link>.
             </p>
