@@ -1,9 +1,11 @@
 "use server";
 
-import { writeClient } from "@/sanity/lib/client";
+import { client, writeClient } from "@/sanity/lib/client";
+import { GLOBAL_CONFIG_QUERY } from "@/sanity/lib/queries";
 import { z } from "zod";
 import { Resend } from "resend";
 import { generateLeadConfirmationEmailHtml } from "@/lib/email-templates/lead-confirmation";
+import { generateAdminLeadNotificationEmailHtml } from "@/lib/email-templates/admin-lead-notification";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -50,7 +52,7 @@ export async function submitHeroLead(data: LeadFormInput) {
       notes: "Lead capturado desde el formulario Hero de la página principal.",
     });
 
-    // Enviar correo de confirmación al prospecto
+    // 1. Enviar correo de confirmación al prospecto
     try {
       if (resend && validated.email) {
         const html = generateLeadConfirmationEmailHtml({
@@ -72,6 +74,40 @@ export async function submitHeroLead(data: LeadFormInput) {
       }
     } catch (emailErr) {
       console.error("Error enviando correo de confirmación de lead al usuario:", emailErr);
+    }
+
+    // 2. Enviar correo de notificación al administrador
+    try {
+      const globalConfig = await client.fetch(GLOBAL_CONFIG_QUERY);
+      const recipientEmail =
+        globalConfig?.notificationEmail ||
+        globalConfig?.emailContacto ||
+        process.env.ADMIN_EMAIL ||
+        "admin@academia-sea.com";
+
+      if (resend && recipientEmail) {
+        const adminHtml = generateAdminLeadNotificationEmailHtml({
+          fullName,
+          email: validated.email.trim().toLowerCase(),
+          phone: validated.phone.trim(),
+          phoneType: validated.phoneType,
+          country: validated.country,
+          state: validated.state?.trim(),
+          target: validated.target,
+          ageRange: validated.ageRange,
+          submittedAt: formattedDate,
+          source: "Hero Principal Web (/)",
+        });
+
+        await resend.emails.send({
+          from: "Academia SEA <onboarding@resend.dev>",
+          to: recipientEmail,
+          subject: `🚀 Nuevo Prospecto Web: ${fullName} (${validated.target} - ${validated.country})`,
+          html: adminHtml,
+        });
+      }
+    } catch (adminEmailErr) {
+      console.error("Error enviando correo de notificación de lead al administrador:", adminEmailErr);
     }
 
     return {

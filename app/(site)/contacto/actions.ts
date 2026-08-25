@@ -1,9 +1,11 @@
 "use server";
 
-import { writeClient } from "@/sanity/lib/client";
+import { client, writeClient } from "@/sanity/lib/client";
+import { GLOBAL_CONFIG_QUERY } from "@/sanity/lib/queries";
 import { z } from "zod";
 import { Resend } from "resend";
 import { generateContactConfirmationEmailHtml } from "@/lib/email-templates/contact-confirmation";
+import { generateAdminContactNotificationEmailHtml } from "@/lib/email-templates/admin-contact-notification";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -42,7 +44,7 @@ export async function submitContactMessage(data: ContactFormInput) {
       notes: `Mensaje enviado directamente desde el formulario de la página de contacto.`,
     });
 
-    // Enviar correo de confirmación al usuario
+    // 1. Enviar correo de confirmación al usuario
     try {
       if (resend && validated.email) {
         const html = generateContactConfirmationEmailHtml({
@@ -64,6 +66,38 @@ export async function submitContactMessage(data: ContactFormInput) {
       }
     } catch (emailErr) {
       console.error("Error enviando correo de confirmación de contacto al usuario:", emailErr);
+    }
+
+    // 2. Enviar correo de notificación al administrador
+    try {
+      const globalConfig = await client.fetch(GLOBAL_CONFIG_QUERY);
+      const recipientEmail =
+        globalConfig?.notificationEmail ||
+        globalConfig?.emailContacto ||
+        process.env.ADMIN_EMAIL ||
+        "admin@academia-sea.com";
+
+      if (resend && recipientEmail) {
+        const adminHtml = generateAdminContactNotificationEmailHtml({
+          fullName: validated.fullName.trim(),
+          email: validated.email.trim().toLowerCase(),
+          phone: validated.phone.trim(),
+          sedeInteres: validated.sedeInteres,
+          subject: validated.subject,
+          message: validated.message.trim(),
+          submittedAt: formattedDate,
+          source: "Página de Contacto (/contacto)",
+        });
+
+        await resend.emails.send({
+          from: "Academia SEA <onboarding@resend.dev>",
+          to: recipientEmail,
+          subject: `📬 Nuevo Mensaje de Contacto: ${validated.fullName.trim()} (${validated.subject})`,
+          html: adminHtml,
+        });
+      }
+    } catch (adminEmailErr) {
+      console.error("Error enviando correo de notificación de contacto al administrador:", adminEmailErr);
     }
 
     return {
