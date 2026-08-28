@@ -377,7 +377,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
         </DialogTrigger>
       )}
 
-      <DialogContent className="sm:max-w-[460px]" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-[460px] max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>
             {mode === "add" ? "Crear Nuevo Cobro" : "Registrar Pago con Comprobante"}
@@ -807,7 +807,7 @@ export function SendPaymentLinkDialog({ payment }: { payment: any }) {
           <TooltipContent side="top" className="text-xs">Enviar link de pago Stripe</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-slate-900">
             <CreditCard className="h-5 w-5 text-[#0066cc]" />
