@@ -181,7 +181,7 @@ export function ReceiptViewerDialog({ payment }: ReceiptViewerProps) {
         </Tooltip>
       </TooltipProvider>
 
-      <DialogContent className="w-[92vw] max-w-[500px] sm:max-w-[500px] max-h-[88vh] flex flex-col p-0 border border-slate-200/80 rounded-3xl shadow-2xl bg-white overflow-hidden">
+      <DialogContent className="w-[92vw] max-w-[490px] sm:max-w-[490px] max-h-[85vh] h-auto flex flex-col min-h-0 p-0 border border-slate-200/80 rounded-3xl shadow-2xl bg-white overflow-hidden">
         
         {/* Barra superior con selector de pestaña si hay archivo subido (Fija) */}
         {hasUploadedReceipt && (
@@ -214,8 +214,8 @@ export function ReceiptViewerDialog({ payment }: ReceiptViewerProps) {
           </div>
         )}
 
-        {/* ─── CONTENEDOR CON SCROLL FLUIDO ─── */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        {/* ─── CONTENEDOR CON SCROLL FLUIDO (min-h-0 activa el overflow-y-auto en flexbox) ─── */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {/* ─── VISTA 1: Comprobante Adjunto (Imagen o PDF) ─── */}
           {hasUploadedReceipt && activeTab === "comprobante" && (
             <div className="p-5 sm:p-6 space-y-4">
@@ -229,11 +229,11 @@ export function ReceiptViewerDialog({ payment }: ReceiptViewerProps) {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2 overflow-y-auto flex items-center justify-center min-h-[220px] max-h-[460px]">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2 flex items-center justify-center h-[340px] max-h-[45vh] w-full overflow-hidden">
                 {isPdf ? (
                   <iframe
                     src={payment.receiptUrl!}
-                    className="w-full h-[400px] rounded-xl border-0 bg-white"
+                    className="w-full h-full rounded-xl border-0 bg-white"
                     title="Comprobante PDF"
                   />
                 ) : (
@@ -241,7 +241,7 @@ export function ReceiptViewerDialog({ payment }: ReceiptViewerProps) {
                   <img
                     src={payment.receiptUrl!}
                     alt={`Comprobante de pago de ${studentName}`}
-                    className="max-h-[440px] w-auto object-contain rounded-xl shadow-sm"
+                    className="max-h-full max-w-full object-contain rounded-xl shadow-xs"
                   />
                 )}
               </div>
