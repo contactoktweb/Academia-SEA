@@ -90,7 +90,7 @@ export function ReceiptViewerDialog({ payment }: ReceiptViewerProps) {
   const conceptName = payment.concept?.name || payment.notes || "Colegiatura / Cobro";
   const amount = payment.amountPaid || payment.amount;
   const paidDate = payment.paidAt ? new Date(payment.paidAt) : new Date(payment.dueDate);
-  const isPdf = payment.receiptUrl?.toLowerCase().endsWith(".pdf");
+  const isPdf = Boolean(payment.receiptUrl?.toLowerCase().endsWith(".pdf") || payment.receiptUrl?.toLowerCase().includes(".pdf"));
 
   const handlePrint = () => {
     window.print();

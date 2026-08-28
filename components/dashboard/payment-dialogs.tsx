@@ -60,7 +60,10 @@ import {
   ExternalLink,
   ShieldAlert,
   CreditCard,
-  RotateCw
+  RotateCw,
+  Lock,
+  FileCheck,
+  Image as ImageIcon
 } from "lucide-react";
 import { 
   createPayment, 
@@ -94,6 +97,15 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { compressImage } from "@/lib/compress-image";
+
+function generateAutoReference(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `REC-${year}${month}${day}-${randomSuffix}`;
+}
 
 const paymentSchema = z.object({
   studentId: z.string().min(1, "Seleccione un estudiante"),
@@ -159,29 +171,56 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
       amount: payment?.amount?.toString() || "",
       dueDate: payment?.dueDate ? new Date(payment.dueDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       notes: payment?.notes || "",
-      amountPaid: payment?.amountPaid?.toString() || payment?.amount?.toString() || "",
+      amountPaid: (payment?.amountPaid ?? payment?.amount ?? "").toString(),
       method: payment?.method || "BANK_TRANSFER",
       reference: payment?.reference || "",
       receiptUrl: payment?.receiptUrl || "",
     },
   });
 
+  // Sincronizar formulario cada vez que se abra el modal
+  useEffect(() => {
+    if (open && payment) {
+      form.reset({
+        studentId: payment.studentId || "",
+        conceptId: payment.conceptId || "",
+        cycleId: payment.cycleId || "",
+        amount: payment.amount?.toString() || "",
+        dueDate: payment.dueDate ? new Date(payment.dueDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        notes: payment.notes || "",
+        amountPaid: (payment.amountPaid ?? payment.amount ?? "").toString(),
+        method: payment.method || "BANK_TRANSFER",
+        reference: payment.reference || "",
+        receiptUrl: payment.receiptUrl || "",
+      });
+      setReceiptFile(null);
+      setReceiptPreviewUrl(payment.receiptUrl || null);
+    }
+  }, [open, payment, form]);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setIsCompressing(true);
-      try {
-        const optimized = await compressImage(file);
-        setReceiptFile(optimized);
-        const tempUrl = URL.createObjectURL(optimized);
-        setReceiptPreviewUrl(tempUrl);
-      } catch (err) {
-        console.error("Error optimizando imagen:", err);
+      if (file.type.startsWith("image/")) {
+        setIsCompressing(true);
+        try {
+          const optimized = await compressImage(file);
+          setReceiptFile(optimized);
+          const tempUrl = URL.createObjectURL(optimized);
+          setReceiptPreviewUrl(tempUrl);
+        } catch (err) {
+          console.error("Error optimizando imagen:", err);
+          setReceiptFile(file);
+          const tempUrl = URL.createObjectURL(file);
+          setReceiptPreviewUrl(tempUrl);
+        } finally {
+          setIsCompressing(false);
+        }
+      } else {
+        // Documento PDF u otros
         setReceiptFile(file);
         const tempUrl = URL.createObjectURL(file);
         setReceiptPreviewUrl(tempUrl);
-      } finally {
-        setIsCompressing(false);
       }
     }
   };
@@ -198,12 +237,15 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
     startTransition(async () => {
       let finalReceiptUrl = values.receiptUrl || payment?.receiptUrl || "";
 
-      // Subir archivo si se seleccionó uno nuevo (asegurando compresión)
+      // Subir archivo si se seleccionó uno nuevo
       if (receiptFile) {
         setIsUploadingFile(true);
-        const optimizedFile = await compressImage(receiptFile);
+        const fileToSend = receiptFile.type.startsWith("image/")
+          ? await compressImage(receiptFile)
+          : receiptFile;
+
         const formData = new FormData();
-        formData.append("file", optimizedFile);
+        formData.append("file", fileToSend);
         const uploadRes = await uploadPaymentReceipt(formData);
         setIsUploadingFile(false);
 
@@ -216,10 +258,15 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
 
       let promise;
       if (mode === "record") {
+        // Si no se especificó referencia, asignar una automática
+        const finalRef = values.reference?.trim() || generateAutoReference();
+        // El monto no es editable y se fija exactamente al monto adeudado
+        const lockedAmount = parseFloat(String(payment?.amount || values.amountPaid || 0));
+
         promise = recordPayment(payment.id, {
-          amountPaid: parseFloat(values.amountPaid || String(payment.amount)),
+          amountPaid: lockedAmount,
           method: values.method || "BANK_TRANSFER",
-          reference: values.reference,
+          reference: finalRef,
           receiptUrl: finalReceiptUrl,
           notes: values.notes,
         });
@@ -390,9 +437,9 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                                       setIsPopoverOpen(false);
                                       if (profileId) {
                                         getStudentFinancialSummary(profileId).then(res => {
-                                          if (res.success) {
+                                          if (res.success && res.data) {
                                             setFinancialSummary(res.data);
-                                            if (res.data.activePlans?.length > 0) {
+                                            if (res.data.activePlans && res.data.activePlans.length > 0) {
                                               const plan = res.data.activePlans[0];
                                               const amountToPay = plan.customAmount || plan.plan?.amount;
                                               if (amountToPay) form.setValue("amount", String(amountToPay));
@@ -501,36 +548,51 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
 
             {mode === "record" && (
               <>
-                <div className="rounded-lg bg-slate-50 p-3 border border-slate-200 text-xs space-y-1">
-                  <p><strong>Alumno:</strong> {payment?.student?.user?.name}</p>
-                  <p><strong>Concepto:</strong> {payment?.concept?.name || payment?.notes || "Colegiatura"}</p>
-                  <p><strong>Monto Adeudado:</strong> ${parseFloat(String(payment?.amount || 0)).toFixed(2)} MXN</p>
+                <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-200 text-xs space-y-1.5 shadow-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Alumno:</span>
+                    <strong className="text-slate-900">{payment?.student?.user?.name || "Estudiante"}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Concepto:</span>
+                    <strong className="text-slate-800">{payment?.concept?.name || payment?.notes || "Colegiatura"}</strong>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-200 pt-1.5 mt-1">
+                    <span className="text-slate-500">Monto Adeudado:</span>
+                    <strong className="text-sm font-black text-emerald-700">
+                      ${parseFloat(String(payment?.amount || 0)).toFixed(2)} MXN
+                    </strong>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="amountPaid"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Monto Recibido ($ MXN)</FormLabel>
-                        <FormControl>
-                          <Input type="number" step="0.01" placeholder="800.00" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Monto NO editable */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-xs font-bold text-slate-700">Monto Recibido</FormLabel>
+                      <span className="text-[10px] font-semibold text-slate-500 flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                        <Lock className="h-2.5 w-2.5 text-slate-400" />
+                        Bloqueado
+                      </span>
+                    </div>
+                    <Input
+                      type="text"
+                      readOnly
+                      disabled
+                      value={`$ ${parseFloat(String(payment?.amount || 0)).toFixed(2)} MXN`}
+                      className="h-9 text-xs font-black bg-slate-100/90 text-slate-900 border-slate-200 cursor-not-allowed select-none"
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}
                     name="method"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Método de Pago</FormLabel>
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-xs font-bold text-slate-700">Método de Pago</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-9 text-xs">
                               <SelectValue placeholder="Seleccione método" />
                             </SelectTrigger>
                           </FormControl>
@@ -553,65 +615,107 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                   control={form.control}
                   name="reference"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número de Referencia / Folio / Autorización</FormLabel>
+                    <FormItem className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-xs font-bold text-slate-700">
+                          Número de Referencia / Folio / Autorización
+                        </FormLabel>
+                        <span className="text-[10px] text-slate-400 font-medium">Opcional</span>
+                      </div>
                       <FormControl>
-                        <Input placeholder="Ej: SPEI-984214 o Folio 1234" {...field} />
+                        <Input 
+                          placeholder="Ej: SPEI-984214 o Folio de recibo" 
+                          className="h-9 text-xs" 
+                          {...field} 
+                        />
                       </FormControl>
+                      <p className="text-[11px] text-slate-500">
+                        *Si se deja vacío, el sistema asignará un folio automático (ej. REC-{new Date().getFullYear()}...).
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* ─── Comprobante Obligatorio ─── */}
-                <div className="space-y-2 pt-1">
-                  <FormLabel className="flex items-center gap-1 text-slate-900 font-bold">
-                    <span>Comprobante de Pago</span>
-                    <span className="text-red-500">* (Obligatorio)</span>
-                  </FormLabel>
+                {/* ─── Comprobante Obligatorio (PDF o Imagen) ─── */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="flex items-center gap-1 text-slate-900 font-bold text-xs">
+                      <span>Comprobante de Pago</span>
+                      <span className="text-red-500">* (Obligatorio)</span>
+                    </FormLabel>
+                    <span className="text-[10px] text-slate-400 font-medium">PDF, JPG, PNG, WEBP</span>
+                  </div>
 
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
-                    accept="image/*,application/pdf"
+                    accept="image/jpeg,image/png,image/webp,image/jpg,application/pdf"
                     className="hidden"
                   />
 
                   <div
                     onClick={() => !isCompressing && fileInputRef.current?.click()}
-                    className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                    className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
                       isCompressing
                         ? "border-amber-400 bg-amber-50/50 cursor-wait"
                         : receiptFile || receiptPreviewUrl
-                        ? "border-emerald-400 bg-emerald-50/50"
-                        : "border-slate-300 hover:border-[#0066cc] bg-slate-50"
+                        ? "border-emerald-400 bg-emerald-50/60 hover:bg-emerald-50"
+                        : "border-slate-300 hover:border-[#0066cc] bg-slate-50 hover:bg-blue-50/30"
                     }`}
                   >
                     {isCompressing ? (
                       <Loader2 className="h-6 w-6 mb-2 text-amber-600 animate-spin" />
+                    ) : receiptFile ? (
+                      receiptFile.type === "application/pdf" || receiptFile.name.toLowerCase().endsWith(".pdf") ? (
+                        <FileText className="h-7 w-7 mb-1 text-red-600" />
+                      ) : (
+                        <ImageIcon className="h-7 w-7 mb-1 text-emerald-600" />
+                      )
+                    ) : receiptPreviewUrl ? (
+                      receiptPreviewUrl.toLowerCase().includes(".pdf") ? (
+                        <FileText className="h-7 w-7 mb-1 text-red-600" />
+                      ) : (
+                        <FileCheck className="h-7 w-7 mb-1 text-emerald-600" />
+                      )
                     ) : (
-                      <Upload className={`h-6 w-6 mb-2 ${receiptFile || receiptPreviewUrl ? "text-emerald-600" : "text-slate-400"}`} />
+                      <Upload className="h-6 w-6 mb-2 text-slate-400" />
                     )}
+
                     {isCompressing ? (
                       <div className="text-center">
-                        <p className="text-xs font-bold text-amber-800">Optimizando imagen...</p>
-                        <p className="text-[11px] text-amber-600">Comprimiendo archivo para subida rápida</p>
+                        <p className="text-xs font-bold text-amber-800">Optimizando archivo...</p>
+                        <p className="text-[11px] text-amber-600">Procesando para subida rápida y segura</p>
                       </div>
                     ) : receiptFile ? (
-                      <div className="text-center">
-                        <p className="text-xs font-bold text-emerald-800">{receiptFile.name}</p>
-                        <p className="text-[11px] text-emerald-600">{(receiptFile.size / 1024).toFixed(1)} KB - Clic para cambiar</p>
+                      <div className="text-center space-y-1">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            receiptFile.type === "application/pdf" || receiptFile.name.toLowerCase().endsWith(".pdf")
+                              ? "bg-red-100 text-red-800"
+                              : "bg-emerald-100 text-emerald-800"
+                          }`}>
+                            {receiptFile.type === "application/pdf" || receiptFile.name.toLowerCase().endsWith(".pdf") ? "DOCUMENTO PDF" : "IMAGEN"}
+                          </span>
+                          <p className="text-xs font-bold text-slate-800 truncate max-w-[220px]">{receiptFile.name}</p>
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                          {(receiptFile.size / 1024).toFixed(1)} KB • Clic para cambiar archivo
+                        </p>
                       </div>
                     ) : receiptPreviewUrl ? (
-                      <div className="text-center">
-                        <p className="text-xs font-bold text-emerald-800">Comprobante adjuntado previamente</p>
-                        <p className="text-[11px] text-emerald-600">Clic para subir uno nuevo</p>
+                      <div className="text-center space-y-1">
+                        <p className="text-xs font-bold text-emerald-800 flex items-center justify-center gap-1">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                          Comprobante adjuntado previamente
+                        </p>
+                        <p className="text-[11px] text-emerald-600">Clic para seleccionar un nuevo archivo (PDF o Imagen)</p>
                       </div>
                     ) : (
                       <div className="text-center">
-                        <p className="text-xs font-semibold text-slate-700">Subir imagen o PDF del comprobante</p>
-                        <p className="text-[11px] text-slate-400">Captura de transferencia, ticket o recibo</p>
+                        <p className="text-xs font-semibold text-slate-700">Subir imagen o documento PDF del comprobante</p>
+                        <p className="text-[11px] text-slate-400">Captura de transferencia, ticket o recibo en PDF</p>
                       </div>
                     )}
                   </div>
@@ -658,11 +762,11 @@ export function SendPaymentLinkDialog({ payment }: { payment: any }) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [linkData, setLinkData] = useState<{
-    paymentUrl: string;
-    whatsappUrl: string;
-    studentName: string;
-    amount: number;
-    conceptName: string;
+    paymentUrl?: string | null;
+    whatsappUrl?: string;
+    studentName?: string;
+    amount?: number;
+    conceptName?: string;
   } | null>(null);
 
   const handleGenerateLink = async () => {

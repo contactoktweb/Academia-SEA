@@ -72,13 +72,22 @@ export async function recordPayment(
       return { success: false, error: "Pago no encontrado" };
     }
 
+    // Si no se proporcionó número de referencia, asignar uno automático
+    const autoRef = `REC-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    const finalReference = data.reference?.trim() || autoRef;
+
+    // Asegurar que el monto registrado sea exactamente el del cobro si no fue especificado o fue alterado
+    const finalAmountPaid = data.amountPaid && data.amountPaid > 0 
+      ? parseFloat(String(data.amountPaid)) 
+      : Number(existing.amount);
+
     const rawPayment = await db.payment.update({
       where: { id: paymentId },
       data: {
-        amountPaid: parseFloat(String(data.amountPaid)),
-        method: data.method as any,
-        reference: data.reference || null,
-        receiptUrl: data.receiptUrl || null,
+        amountPaid: finalAmountPaid,
+        method: (data.method as any) || "BANK_TRANSFER",
+        reference: finalReference,
+        receiptUrl: data.receiptUrl || existing.receiptUrl || null,
         paidAt: new Date(),
         status: "PAID",
         notes: data.notes || existing.notes,
@@ -122,8 +131,17 @@ export async function uploadPaymentReceipt(formData: FormData) {
     const uploadsDir = path.join(process.cwd(), "public", "uploads", "comprobantes");
     await mkdir(uploadsDir, { recursive: true });
 
-    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filename = `${Date.now()}-${cleanFileName}`;
+    // Preservar la extensión original (.pdf, .png, .jpg, .jpeg, .webp)
+    let ext = path.extname(file.name);
+    if (!ext) {
+      if (file.type === "application/pdf") ext = ".pdf";
+      else if (file.type === "image/png") ext = ".png";
+      else if (file.type === "image/webp") ext = ".webp";
+      else ext = ".jpg";
+    }
+
+    const baseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
+    const filename = `${Date.now()}-${baseName}${ext.toLowerCase()}`;
     const filepath = path.join(uploadsDir, filename);
 
     await writeFile(filepath, buffer);
