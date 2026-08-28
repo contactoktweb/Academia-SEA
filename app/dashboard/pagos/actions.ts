@@ -128,28 +128,25 @@ export async function uploadPaymentReceipt(formData: FormData) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const uploadsDir = path.join(process.cwd(), "public", "uploads", "comprobantes");
-    await mkdir(uploadsDir, { recursive: true });
-
-    // Preservar la extensión original (.pdf, .png, .jpg, .jpeg, .webp)
-    let ext = path.extname(file.name);
-    if (!ext) {
-      if (file.type === "application/pdf") ext = ".pdf";
-      else if (file.type === "image/png") ext = ".png";
-      else if (file.type === "image/webp") ext = ".webp";
-      else ext = ".jpg";
+    // Determinar el MIME type exacto del archivo
+    let mimeType = file.type;
+    if (!mimeType || mimeType === "application/octet-stream") {
+      const ext = path.extname(file.name).toLowerCase();
+      if (ext === ".pdf") mimeType = "application/pdf";
+      else if (ext === ".png") mimeType = "image/png";
+      else if (ext === ".webp") mimeType = "image/webp";
+      else if (ext === ".gif") mimeType = "image/gif";
+      else mimeType = "image/jpeg";
     }
 
-    const baseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
-    const filename = `${Date.now()}-${baseName}${ext.toLowerCase()}`;
-    const filepath = path.join(uploadsDir, filename);
+    // Convertir a Data URI en Base64 para almacenarlo directamente en la base de datos (PostgreSQL/Supabase)
+    const base64 = buffer.toString("base64");
+    const dataUrl = `data:${mimeType};base64,${base64}`;
 
-    await writeFile(filepath, buffer);
-
-    return { success: true, url: `/uploads/comprobantes/${filename}` };
+    return { success: true, url: dataUrl };
   } catch (error) {
-    console.error("Error uploading payment receipt:", error);
-    return { success: false, error: "Error al subir el comprobante" };
+    console.error("Error processing payment receipt for database:", error);
+    return { success: false, error: "Error al procesar el comprobante para la base de datos" };
   }
 }
 

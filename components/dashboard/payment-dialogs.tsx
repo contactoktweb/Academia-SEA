@@ -838,7 +838,7 @@ export function SendPaymentLinkDialog({ payment }: { payment: any }) {
               <div className="flex justify-between border-t border-blue-200 pt-1.5 mt-1.5">
                 <span className="text-slate-500 font-medium">Monto a Cobrar:</span>
                 <span className="font-black text-base text-[#0066cc]">
-                  ${linkData.amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN
+                  ${(linkData.amount || 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })} MXN
                 </span>
               </div>
             </div>
@@ -849,7 +849,7 @@ export function SendPaymentLinkDialog({ payment }: { payment: any }) {
               <div className="flex items-center gap-2">
                 <Input
                   readOnly
-                  value={linkData.paymentUrl}
+                  value={linkData.paymentUrl || ""}
                   className="text-xs font-mono bg-slate-50 select-all"
                 />
                 <Button size="sm" variant="outline" onClick={handleCopyLink} className="shrink-0 gap-1">
