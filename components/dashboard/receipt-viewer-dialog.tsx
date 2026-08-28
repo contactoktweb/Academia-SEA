@@ -132,16 +132,296 @@ export function ReceiptViewerDialog({ payment }: ReceiptViewerProps) {
     }
   };
 
+  const formattedPaidDate = `${paidDate.toLocaleDateString("es-MX", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })}${
+    payment.paidAt
+      ? ` - ${paidDate.toLocaleTimeString("es-MX", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`
+      : ""
+  }`;
+
   const handlePrint = () => {
-    // Si estamos en la pestaña de comprobante, cambiar a recibo antes de imprimir
-    if (activeTab !== "recibo") {
-      setActiveTab("recibo");
-      setTimeout(() => {
-        window.print();
-      }, 200);
-    } else {
+    // Generar documento de impresión limpio y optimizado a 1 sola página
+    const printIframe = document.createElement("iframe");
+    printIframe.style.position = "fixed";
+    printIframe.style.right = "0";
+    printIframe.style.bottom = "0";
+    printIframe.style.width = "0";
+    printIframe.style.height = "0";
+    printIframe.style.border = "0";
+    document.body.appendChild(printIframe);
+
+    const doc = printIframe.contentWindow?.document;
+    if (!doc) {
       window.print();
+      return;
     }
+
+    const printHtml = `
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="utf-8" />
+        <title>Recibo de Pago - ${studentName}</title>
+        <style>
+          @page {
+            size: letter portrait;
+            margin: 10mm 15mm;
+          }
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #0f172a;
+            background: #ffffff;
+            font-size: 11.5px;
+            line-height: 1.35;
+          }
+          .receipt-container {
+            width: 100%;
+            max-width: 580px;
+            margin: 0 auto;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 16px;
+            padding: 22px 26px;
+            background: #ffffff;
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 1.5px solid #e2e8f0;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+          }
+          .brand-title {
+            font-size: 17px;
+            font-weight: 900;
+            color: #0066cc;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+          }
+          .brand-sub {
+            font-size: 9.5px;
+            color: #64748b;
+            font-weight: 600;
+            margin-top: 1px;
+          }
+          .badge {
+            display: inline-block;
+            margin-top: 6px;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: 9.5px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+          }
+          .receipt-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-top: 5px;
+          }
+          .amount-box {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 14px;
+            text-align: center;
+            margin-bottom: 14px;
+          }
+          .amount-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+          }
+          .amount-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: #0f172a;
+            margin-top: 2px;
+          }
+          .amount-currency {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+          }
+          .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+          }
+          .data-table tr {
+            border-bottom: 1px solid #f1f5f9;
+          }
+          .data-table tr:last-child {
+            border-bottom: none;
+          }
+          .data-table td {
+            padding: 5.5px 0;
+            font-size: 11px;
+            vertical-align: middle;
+          }
+          .data-table td.label {
+            color: #64748b;
+            font-weight: 600;
+            width: 36%;
+          }
+          .data-table td.value {
+            color: #0f172a;
+            font-weight: 700;
+            text-align: right;
+            width: 64%;
+          }
+          .mono-badge {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 9.5px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 2px 6px;
+            border-radius: 4px;
+          }
+          .origin-badge {
+            display: inline-block;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 9.5px;
+            font-weight: 700;
+          }
+          .footer {
+            border-top: 1.5px solid #e2e8f0;
+            padding-top: 10px;
+            text-align: center;
+          }
+          .footer p {
+            font-size: 9.5px;
+            color: #64748b;
+            line-height: 1.35;
+          }
+          .footer .legal {
+            font-size: 8.5px;
+            color: #94a3b8;
+            margin-top: 3px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-container">
+          <div class="header">
+            <div class="brand-title">Academia de Inglés SEA</div>
+            <div class="brand-sub">Centro de Aprendizaje Líder • Jalisco, México</div>
+            <div>
+              <span class="badge">✓ Pago Acreditado Oficialmente</span>
+            </div>
+            <div class="receipt-title">Recibo / Comprobante de Pago</div>
+          </div>
+
+          <div class="amount-box">
+            <div class="amount-label">Monto Total Liquidado</div>
+            <div class="amount-value">
+              $${Number(amount).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+              <span class="amount-currency">MXN</span>
+            </div>
+          </div>
+
+          <table class="data-table">
+            <tbody>
+              <tr>
+                <td class="label">Alumno:</td>
+                <td class="value">${studentName}</td>
+              </tr>
+              ${
+                studentEmail
+                  ? `
+              <tr>
+                <td class="label">Email del Alumno:</td>
+                <td class="value">${studentEmail}</td>
+              </tr>`
+                  : ""
+              }
+              ${
+                studentPhone
+                  ? `
+              <tr>
+                <td class="label">Teléfono / WhatsApp:</td>
+                <td class="value">${studentPhone}</td>
+              </tr>`
+                  : ""
+              }
+              <tr>
+                <td class="label">Concepto:</td>
+                <td class="value">${conceptName}</td>
+              </tr>
+              <tr>
+                <td class="label">Fecha y Hora de Pago:</td>
+                <td class="value">${formattedPaidDate}</td>
+              </tr>
+              <tr>
+                <td class="label">Método / Canal:</td>
+                <td class="value"><span class="origin-badge">${originLabel}</span></td>
+              </tr>
+              ${
+                payment.reference
+                  ? `
+              <tr>
+                <td class="label">Folio / Referencia:</td>
+                <td class="value"><span class="mono-badge">${payment.reference}</span></td>
+              </tr>`
+                  : ""
+              }
+              ${
+                payment.notes
+                  ? `
+              <tr>
+                <td class="label">Observaciones:</td>
+                <td class="value" style="font-weight: 500; font-style: italic; font-size: 10px;">${payment.notes}</td>
+              </tr>`
+                  : ""
+              }
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p>Documento digital oficial emitido por <strong>Academia de Inglés SEA</strong>.</p>
+            <p class="legal">Este recibo certifica la liquidación del cobro. Válido como constancia oficial de no adeudo.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    doc.open();
+    doc.write(printHtml);
+    doc.close();
+
+    setTimeout(() => {
+      printIframe.contentWindow?.focus();
+      printIframe.contentWindow?.print();
+      setTimeout(() => {
+        if (document.body.contains(printIframe)) {
+          document.body.removeChild(printIframe);
+        }
+      }, 2000);
+    }, 250);
   };
 
   if (!isPaid && !hasUploadedReceipt) {
