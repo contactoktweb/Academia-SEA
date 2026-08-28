@@ -330,7 +330,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
         </DialogTrigger>
       )}
 
-      <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto overscroll-contain" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-[460px]" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>
             {mode === "add" ? "Crear Nuevo Cobro" : "Registrar Pago con Comprobante"}
