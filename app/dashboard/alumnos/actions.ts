@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { createClient } from "@/utils/supabase/server";
 import { auth } from "@/lib/auth";
 import { reportErrorToSanity } from "@/lib/logger";
+import { getSedeCondition } from "@/lib/multi-tenancy";
 
 export async function checkSiblingEmail(email: string) {
   try {
@@ -359,10 +360,8 @@ export async function getCoursesForEnrollment(sede?: string) {
   try {
     let effectiveSede = sede;
     if (!effectiveSede) {
-      try {
-        const session = await auth();
-        effectiveSede = (session?.user as any)?.sede;
-      } catch {}
+      const condition = await getSedeCondition();
+      effectiveSede = condition.sede;
     }
     if (!effectiveSede) effectiveSede = "SEAAUTLAN";
 
@@ -385,10 +384,8 @@ export async function getGroupsForEnrollment(sede?: string) {
   try {
     let effectiveSede = sede;
     if (!effectiveSede) {
-      try {
-        const session = await auth();
-        effectiveSede = (session?.user as any)?.sede;
-      } catch {}
+      const condition = await getSedeCondition();
+      effectiveSede = condition.sede;
     }
     if (!effectiveSede) effectiveSede = "SEAAUTLAN";
     

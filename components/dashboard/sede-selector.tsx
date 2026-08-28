@@ -40,8 +40,9 @@ export function SedeSelector() {
       const res = await updateUserActiveSede(newSede);
       if (res.success) {
         await update({ sede: newSede });
-        router.refresh();
         toast.success(`Sede activa cambiada a ${SEDES_MAP[newSede] || newSede}`);
+        router.refresh();
+        window.location.reload();
       } else {
         toast.error(res.error || "Error al cambiar de sede");
       }
