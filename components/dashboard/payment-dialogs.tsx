@@ -93,6 +93,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { compressImage } from "@/lib/compress-image";
 
 const paymentSchema = z.object({
   studentId: z.string().min(1, "Seleccione un estudiante"),
@@ -121,6 +122,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(payment?.receiptUrl || null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -164,12 +166,23 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
     },
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setReceiptFile(file);
-      const tempUrl = URL.createObjectURL(file);
-      setReceiptPreviewUrl(tempUrl);
+      setIsCompressing(true);
+      try {
+        const optimized = await compressImage(file);
+        setReceiptFile(optimized);
+        const tempUrl = URL.createObjectURL(optimized);
+        setReceiptPreviewUrl(tempUrl);
+      } catch (err) {
+        console.error("Error optimizando imagen:", err);
+        setReceiptFile(file);
+        const tempUrl = URL.createObjectURL(file);
+        setReceiptPreviewUrl(tempUrl);
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -185,11 +198,12 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
     startTransition(async () => {
       let finalReceiptUrl = values.receiptUrl || payment?.receiptUrl || "";
 
-      // Subir archivo si se seleccionó uno nuevo
+      // Subir archivo si se seleccionó uno nuevo (asegurando compresión)
       if (receiptFile) {
         setIsUploadingFile(true);
+        const optimizedFile = await compressImage(receiptFile);
         const formData = new FormData();
-        formData.append("file", receiptFile);
+        formData.append("file", optimizedFile);
         const uploadRes = await uploadPaymentReceipt(formData);
         setIsUploadingFile(false);
 
@@ -316,7 +330,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
         </DialogTrigger>
       )}
 
-      <DialogContent className="sm:max-w-[460px]" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto overscroll-contain" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>
             {mode === "add" ? "Crear Nuevo Cobro" : "Registrar Pago con Comprobante"}
@@ -565,15 +579,26 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                   />
 
                   <div
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => !isCompressing && fileInputRef.current?.click()}
                     className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
-                      receiptFile || receiptPreviewUrl
+                      isCompressing
+                        ? "border-amber-400 bg-amber-50/50 cursor-wait"
+                        : receiptFile || receiptPreviewUrl
                         ? "border-emerald-400 bg-emerald-50/50"
                         : "border-slate-300 hover:border-[#0066cc] bg-slate-50"
                     }`}
                   >
-                    <Upload className={`h-6 w-6 mb-2 ${receiptFile || receiptPreviewUrl ? "text-emerald-600" : "text-slate-400"}`} />
-                    {receiptFile ? (
+                    {isCompressing ? (
+                      <Loader2 className="h-6 w-6 mb-2 text-amber-600 animate-spin" />
+                    ) : (
+                      <Upload className={`h-6 w-6 mb-2 ${receiptFile || receiptPreviewUrl ? "text-emerald-600" : "text-slate-400"}`} />
+                    )}
+                    {isCompressing ? (
+                      <div className="text-center">
+                        <p className="text-xs font-bold text-amber-800">Optimizando imagen...</p>
+                        <p className="text-[11px] text-amber-600">Comprimiendo archivo para subida rápida</p>
+                      </div>
+                    ) : receiptFile ? (
                       <div className="text-center">
                         <p className="text-xs font-bold text-emerald-800">{receiptFile.name}</p>
                         <p className="text-[11px] text-emerald-600">{(receiptFile.size / 1024).toFixed(1)} KB - Clic para cambiar</p>
@@ -614,10 +639,10 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
               </Button>
               <Button 
                 type="submit" 
-                disabled={isPending || isUploadingFile || (mode === "record" && !receiptFile && !receiptPreviewUrl)}
+                disabled={isPending || isUploadingFile || isCompressing || (mode === "record" && !receiptFile && !receiptPreviewUrl)}
                 className={mode === "record" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-[#0066cc] hover:bg-[#0055aa] text-white"}
               >
-                {(isPending || isUploadingFile) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {(isPending || isUploadingFile || isCompressing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {mode === "record" ? "Confirmar y Marcar como Pagado" : "Guardar Cobro"}
               </Button>
             </DialogFooter>

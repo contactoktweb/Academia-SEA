@@ -986,11 +986,11 @@ export function StudentForm({ initialData, onSuccess, onCancel }: StudentFormPro
                 control={form.control}
                 name="courseId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Curso</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full min-w-0">
                           <SelectValue placeholder="Selecciona un curso..." />
                         </SelectTrigger>
                       </FormControl>
@@ -1016,11 +1016,11 @@ export function StudentForm({ initialData, onSuccess, onCancel }: StudentFormPro
                 control={form.control}
                 name="groupId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Grupo</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full min-w-0">
                           <SelectValue placeholder="Selecciona un grupo..." />
                         </SelectTrigger>
                       </FormControl>
