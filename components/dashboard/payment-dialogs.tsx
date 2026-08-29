@@ -226,14 +226,6 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
   };
 
   const onSubmit = async (values: PaymentFormValues) => {
-    // Si estamos en modo "record", el comprobante es OBLIGATORIO
-    if (mode === "record") {
-      if (!receiptFile && !receiptPreviewUrl) {
-        toast.error("Es obligatorio adjuntar un comprobante de pago para registrar el cobro manualmente.");
-        return;
-      }
-    }
-
     startTransition(async () => {
       let finalReceiptUrl = values.receiptUrl || payment?.receiptUrl || "";
 
@@ -267,7 +259,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
           amountPaid: lockedAmount,
           method: values.method || "BANK_TRANSFER",
           reference: finalRef,
-          receiptUrl: finalReceiptUrl,
+          receiptUrl: finalReceiptUrl || undefined,
           notes: values.notes,
         });
       } else if (mode === "add") {
@@ -283,7 +275,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
       }
 
       await toast.promise(promise, {
-        loading: mode === "record" ? "Registrando pago con comprobante..." : "Creando cobro...",
+        loading: mode === "record" ? "Registrando pago..." : "Creando cobro...",
         success: (result: any) => {
           if (result.success) {
             handleSuccess();
@@ -366,7 +358,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                 </Button>
               </DialogTrigger>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">Registrar pago con comprobante</TooltipContent>
+            <TooltipContent side="top" className="text-xs">Registrar pago recibido</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       ) : (
@@ -380,12 +372,12 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
       <DialogContent className="sm:max-w-[460px] max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>
-            {mode === "add" ? "Crear Nuevo Cobro" : "Registrar Pago con Comprobante"}
+            {mode === "add" ? "Crear Nuevo Cobro" : "Registrar Pago"}
           </DialogTitle>
           <DialogDescription>
             {mode === "add" 
               ? "Genera una nueva obligación de pago para un estudiante." 
-              : `Registra el pago recibido para ${payment?.student?.user?.name || "el alumno"}. Es obligatorio adjuntar el comprobante.`}
+              : `Registra el pago recibido para ${payment?.student?.user?.name || "el alumno"}.`}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -637,12 +629,12 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                   )}
                 />
 
-                {/* ─── Comprobante Obligatorio (PDF o Imagen) ─── */}
+                {/* ─── Comprobante Opcional (PDF o Imagen) ─── */}
                 <div className="space-y-1.5 pt-1">
                   <div className="flex items-center justify-between">
-                    <FormLabel className="flex items-center gap-1 text-slate-900 font-bold text-xs">
+                    <FormLabel className="flex items-center gap-1.5 text-slate-900 font-bold text-xs">
                       <span>Comprobante de Pago</span>
-                      <span className="text-red-500">* (Obligatorio)</span>
+                      <span className="text-slate-400 font-normal text-[11px]">(Opcional)</span>
                     </FormLabel>
                     <span className="text-[10px] text-slate-400 font-medium">PDF, JPG, PNG, WEBP</span>
                   </div>
@@ -703,6 +695,19 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                         <p className="text-[11px] text-slate-500">
                           {(receiptFile.size / 1024).toFixed(1)} KB • Clic para cambiar archivo
                         </p>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReceiptFile(null);
+                            setReceiptPreviewUrl(null);
+                            form.setValue("receiptUrl", "");
+                            if (fileInputRef.current) fileInputRef.current.value = "";
+                          }}
+                          className="text-[11px] text-red-500 hover:text-red-700 underline font-medium cursor-pointer pt-0.5 inline-block"
+                        >
+                          Quitar archivo
+                        </button>
                       </div>
                     ) : receiptPreviewUrl ? (
                       <div className="text-center space-y-1">
@@ -710,12 +715,25 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                           Comprobante adjuntado previamente
                         </p>
-                        <p className="text-[11px] text-emerald-600">Clic para seleccionar un nuevo archivo (PDF o Imagen)</p>
+                        <p className="text-[11px] text-emerald-600">Clic para cambiar archivo (PDF o Imagen)</p>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReceiptFile(null);
+                            setReceiptPreviewUrl(null);
+                            form.setValue("receiptUrl", "");
+                            if (fileInputRef.current) fileInputRef.current.value = "";
+                          }}
+                          className="text-[11px] text-red-500 hover:text-red-700 underline font-medium cursor-pointer pt-0.5 inline-block"
+                        >
+                          Quitar comprobante
+                        </button>
                       </div>
                     ) : (
                       <div className="text-center">
                         <p className="text-xs font-semibold text-slate-700">Subir imagen o documento PDF del comprobante</p>
-                        <p className="text-[11px] text-slate-400">Captura de transferencia, ticket o recibo en PDF</p>
+                        <p className="text-[11px] text-slate-400">Captura de transferencia, ticket o recibo (opcional)</p>
                       </div>
                     )}
                   </div>
@@ -743,7 +761,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
               </Button>
               <Button 
                 type="submit" 
-                disabled={isPending || isUploadingFile || isCompressing || (mode === "record" && !receiptFile && !receiptPreviewUrl)}
+                disabled={isPending || isUploadingFile || isCompressing}
                 className={mode === "record" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-[#0066cc] hover:bg-[#0055aa] text-white"}
               >
                 {(isPending || isUploadingFile || isCompressing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

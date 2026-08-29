@@ -33,7 +33,7 @@ export async function PaymentsTable() {
   });
 
   // Serialize Decimal objects for Client Components
-  const payments = rawPayments.map(payment => ({
+  const payments: any[] = rawPayments.map(payment => ({
     ...payment,
     amount: Number(payment.amount),
     amountPaid: payment.amountPaid ? Number(payment.amountPaid) : null,
@@ -41,12 +41,12 @@ export async function PaymentsTable() {
       ...payment.concept,
       amount: Number(payment.concept.amount),
     } : null,
-  })) as any;
+  }));
 
-  const paidCount = payments.filter((p) => p.status === "PAID").length;
-  const pendingCount = payments.filter((p) => ["PENDING", "OVERDUE"].includes(p.status)).length;
-  const totalAmount = payments.reduce((sum, p) => sum + parseFloat(String(p.amount)), 0);
-  const paidAmount = payments.filter((p) => p.status === "PAID").reduce((sum, p) => sum + parseFloat(String(p.amountPaid || p.amount || 0)), 0);
+  const paidCount = payments.filter((p: any) => p.status === "PAID").length;
+  const pendingCount = payments.filter((p: any) => ["PENDING", "OVERDUE"].includes(p.status)).length;
+  const totalAmount = payments.reduce((sum: number, p: any) => sum + parseFloat(String(p.amount)), 0);
+  const paidAmount = payments.filter((p: any) => p.status === "PAID").reduce((sum: number, p: any) => sum + parseFloat(String(p.amountPaid || p.amount || 0)), 0);
 
   return (
     <>
@@ -105,7 +105,7 @@ export async function PaymentsTable() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">Gestión y Registro de Pagos</h2>
           <p className="text-sm text-muted-foreground">
-            Envía enlaces de Stripe asistidos a alumnos, registra pagos con comprobante o revierte transacciones.
+            Envía enlaces de Stripe asistidos a alumnos, registra pagos o revierte transacciones.
           </p>
         </div>
         <PaymentsHeaderActions />
@@ -236,7 +236,7 @@ export async function PaymentsTable() {
                                 {/* 1. Enviar Link Asistido por Stripe / WhatsApp */}
                                 <SendPaymentLinkDialog payment={payment} />
 
-                                {/* 2. Marcar como Pagado con Comprobante Obligatorio */}
+                                {/* 2. Marcar como Pagado (Comprobante Opcional) */}
                                 <PaymentDialog mode="record" payment={payment} />
                               </>
                             ) : (

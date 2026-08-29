@@ -103,7 +103,7 @@ export function PaymentsHeaderActions() {
                 </div>
                 <div>
                   <strong className="text-slate-900 block">Registrar Pago Manual:</strong>
-                  <span>Marca el cobro como pagado adjuntando obligatoriamente el comprobante.</span>
+                  <span>Marca el cobro como pagado (el comprobante es opcional para pagos en efectivo).</span>
                 </div>
               </div>
 
