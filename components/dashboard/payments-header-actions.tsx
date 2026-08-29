@@ -20,7 +20,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { PaymentDialog } from "./payment-dialogs";
+import { generatePendingEnrollmentPayments } from "@/app/dashboard/pagos/actions";
 import { toast } from "sonner";
+import { Coins } from "lucide-react";
 
 export function PaymentsHeaderActions() {
   const router = useRouter();
@@ -33,8 +35,38 @@ export function PaymentsHeaderActions() {
     });
   };
 
+  const handleSyncPayments = () => {
+    startTransition(async () => {
+      const res = await generatePendingEnrollmentPayments();
+      if (res.success) {
+        if (res.count && res.count > 0) {
+          toast.success(`Se generaron ${res.count} cobro(s) pendiente(s) de mensualidad.`);
+        } else {
+          toast.info("Todos los cobros de mensualidad ya estaban sincronizados y al día.");
+        }
+        router.refresh();
+      } else {
+        toast.error(res.error || "Error al sincronizar cobros");
+      }
+    });
+  };
+
   return (
     <div className="flex items-center gap-2">
+      {/* Botón de Sincronizar Mensualidades */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleSyncPayments}
+        disabled={isPending}
+        className="h-9 gap-1.5 text-slate-600 hover:text-slate-900 border-slate-200 shadow-sm"
+        title="Verificar y generar mensualidades pendientes a un mes del registro"
+      >
+        <Coins className="h-4 w-4 text-emerald-600" />
+        <span className="hidden md:inline text-xs font-semibold">
+          Sincronizar Mensualidades
+        </span>
+      </Button>
       {/* Botón de Ayuda con Guía de Iconos de Acciones */}
       <Popover>
         <PopoverTrigger asChild>

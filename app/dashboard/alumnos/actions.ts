@@ -296,8 +296,11 @@ export async function enrollStudentInCourse(
   }
 ) {
   try {
-    const student = await db.user.findUnique({ where: { id: studentId } });
-    const sede = student?.sede || "SEAAUTLAN";
+    const studentProfile = await db.studentProfile.findUnique({
+      where: { id: studentId },
+      include: { user: true },
+    });
+    const sede = studentProfile?.sede || studentProfile?.user?.sede || "SEAAUTLAN";
 
     let targetCycleId: string | undefined = cycleId && cycleId.trim() !== "" ? cycleId : undefined;
     if (!targetCycleId) {
@@ -348,7 +351,64 @@ export async function enrollStudentInCourse(
       },
     });
 
+    // ── Auto-crear la primera obligación de pago pendiente (a 1 mes del registro) ──
+    if (paymentConfig?.monthlyValue && paymentConfig.monthlyValue > 0) {
+      try {
+        const baseAmount = Number(paymentConfig.monthlyValue);
+        const discount = paymentConfig.isScholarship && paymentConfig.scholarshipDiscount 
+          ? Number(paymentConfig.scholarshipDiscount) 
+          : 0;
+        const finalAmount = Math.max(0, baseAmount - discount);
+
+        let concept = await db.chargeConcept.findFirst({
+          where: {
+            sede,
+            isActive: true,
+            type: "TUITION",
+          },
+        });
+
+        if (!concept) {
+          concept = await db.chargeConcept.findFirst({
+            where: { isActive: true, type: "TUITION" },
+          });
+        }
+
+        // Calcular fecha de vencimiento a 1 mes del registro
+        const now = new Date();
+        const targetYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
+        const targetMonth = (now.getMonth() + 1) % 12;
+        let targetDay = paymentConfig.paymentDate && paymentConfig.paymentDate >= 1 && paymentConfig.paymentDate <= 31
+          ? paymentConfig.paymentDate
+          : 10;
+        
+        const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+        if (targetDay > daysInTargetMonth) targetDay = daysInTargetMonth;
+
+        const dueDate = new Date(Date.UTC(targetYear, targetMonth, targetDay, 12, 0, 0));
+
+        await db.payment.create({
+          data: {
+            studentId,
+            cycleId: targetCycleId,
+            conceptId: concept?.id,
+            amount: finalAmount,
+            dueDate,
+            method: "BANK_TRANSFER",
+            status: "PENDING",
+            notes: paymentConfig.monthlyConcept?.trim() || "Colegiatura Mensual",
+            sede,
+          },
+        });
+      } catch (payErr) {
+        console.error("Error creating auto-generated initial tuition payment:", payErr);
+      }
+    }
+
     revalidatePath("/dashboard/alumnos");
+    revalidatePath("/dashboard/pagos");
+    revalidatePath("/dashboard/estados-cuenta");
+    revalidatePath("/dashboard/mis-pagos");
     return { success: true, data: JSON.parse(JSON.stringify(enrollment)) };
   } catch (error) {
     console.error("Error enrolling student:", error);

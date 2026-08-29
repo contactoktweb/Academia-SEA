@@ -583,3 +583,91 @@ export async function getStudentFinancialSummary(studentProfileId: string) {
     return { success: false, error: "Error al cargar resumen financiero" };
   }
 }
+
+export async function generatePendingEnrollmentPayments() {
+  try {
+    const students = await db.studentProfile.findMany({
+      where: {
+        isActive: true,
+        user: { isActive: true, deletedAt: null },
+        enrollments: { some: { status: "ACTIVE" } },
+      },
+      include: {
+        user: true,
+        enrollments: {
+          where: { status: "ACTIVE" },
+          include: { course: true, cycle: true },
+        },
+        payments: {
+          include: { concept: true },
+        },
+      },
+      orderBy: { user: { name: "asc" } },
+    });
+
+    const concepts = await db.chargeConcept.findMany({ where: { isActive: true } });
+    let createdCount = 0;
+
+    for (const s of students) {
+      const enr = s.enrollments[0];
+      if (!enr) continue;
+
+      const sede = s.sede || s.user.sede || "SEAAUTLAN";
+      const tuitionConcept = concepts.find((c) => c.sede === sede && c.type === "TUITION") || concepts.find((c) => c.type === "TUITION");
+
+      const baseAmount = enr.monthlyValue ? Number(enr.monthlyValue) : Number(tuitionConcept?.amount || 800);
+      const discount = enr.isScholarship && enr.scholarshipDiscount ? Number(enr.scholarshipDiscount) : 0;
+      const finalAmount = Math.max(0, baseAmount - discount);
+
+      // Calcular fecha de vencimiento (1 mes posterior al registro / inscripción)
+      const enrDate = new Date(enr.enrolledAt || s.createdAt);
+      const targetYear = enrDate.getMonth() === 11 ? enrDate.getFullYear() + 1 : enrDate.getFullYear();
+      const targetMonth = (enrDate.getMonth() + 1) % 12;
+      let targetDay = enr.paymentDate && enr.paymentDate >= 1 && enr.paymentDate <= 31 ? enr.paymentDate : 10;
+      
+      const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+      if (targetDay > daysInTargetMonth) targetDay = daysInTargetMonth;
+
+      const dueDate = new Date(Date.UTC(targetYear, targetMonth, targetDay, 12, 0, 0));
+
+      // Verificar si ya existe un pago de colegiatura generado para ese mes
+      const alreadyHasPayment = s.payments.some((p) => {
+        const d = new Date(p.dueDate);
+        return (
+          d.getFullYear() === targetYear &&
+          d.getMonth() === targetMonth &&
+          p.status !== "CANCELLED"
+        );
+      });
+
+      if (!alreadyHasPayment) {
+        await db.payment.create({
+          data: {
+            studentId: s.id,
+            cycleId: enr.cycleId,
+            conceptId: tuitionConcept?.id,
+            amount: finalAmount,
+            dueDate,
+            method: "BANK_TRANSFER",
+            status: "PENDING",
+            notes: enr.monthlyConcept?.trim() || "Colegiatura Mensual",
+            sede,
+          },
+        });
+        createdCount++;
+      }
+    }
+
+    try {
+      revalidatePath("/dashboard/pagos");
+      revalidatePath("/dashboard/estados-cuenta");
+      revalidatePath("/dashboard/alumnos");
+      revalidatePath("/dashboard/mis-pagos");
+    } catch {}
+
+    return { success: true, count: createdCount, totalStudents: students.length };
+  } catch (error) {
+    console.error("Error generating pending enrollment payments:", error);
+    return { success: false, error: "Error al generar cobros pendientes de mensualidad" };
+  }
+}
