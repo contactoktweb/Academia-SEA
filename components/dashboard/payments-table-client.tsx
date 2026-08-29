@@ -4,9 +4,7 @@ import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Table,
@@ -34,6 +32,7 @@ import {
   ChevronsRight,
   CreditCard,
   RotateCcw,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentDialog, SendPaymentLinkDialog, RevertPaymentDialog } from "./payment-dialogs";
@@ -45,6 +44,13 @@ interface PaymentsTableClientProps {
   itemsPerPage?: number;
 }
 
+function formatYMD(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function PaymentsTableClient({
   payments,
   concepts = [],
@@ -53,8 +59,49 @@ export function PaymentsTableClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedConcept, setSelectedConcept] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+  const [datePreset, setDatePreset] = useState<string>("ALL");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [pageSize, setPageSize] = useState<number>(itemsPerPage);
   const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Manejador de rangos rápidos de fecha
+  const applyDatePreset = (preset: string) => {
+    setDatePreset(preset);
+    const now = new Date();
+    if (preset === "ALL") {
+      setStartDate("");
+      setEndDate("");
+    } else if (preset === "TODAY") {
+      const todayStr = formatYMD(now);
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (preset === "THIS_WEEK") {
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(now);
+      monday.setDate(diff);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      setStartDate(formatYMD(monday));
+      setEndDate(formatYMD(sunday));
+    } else if (preset === "THIS_MONTH") {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      setStartDate(formatYMD(firstDay));
+      setEndDate(formatYMD(lastDay));
+    } else if (preset === "LAST_MONTH") {
+      const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
+      setStartDate(formatYMD(firstDay));
+      setEndDate(formatYMD(lastDay));
+    } else if (preset === "THIS_YEAR") {
+      const firstDay = new Date(now.getFullYear(), 0, 1);
+      const lastDay = new Date(now.getFullYear(), 11, 31);
+      setStartDate(formatYMD(firstDay));
+      setEndDate(formatYMD(lastDay));
+    }
+  };
 
   // Lista de conceptos únicos disponibles para filtrar
   const conceptOptions = useMemo(() => {
@@ -110,9 +157,20 @@ export function PaymentsTableClient({
         }
       }
 
+      // 4. Filtro por Fecha / Rango de Fechas
+      if (startDate || endDate) {
+        const rawDate = payment.paidAt || payment.dueDate || payment.createdAt;
+        if (rawDate) {
+          const pDate = new Date(rawDate);
+          const pDateStr = formatYMD(pDate);
+          if (startDate && pDateStr < startDate) return false;
+          if (endDate && pDateStr > endDate) return false;
+        }
+      }
+
       return true;
     });
-  }, [payments, searchQuery, selectedConcept, selectedStatus]);
+  }, [payments, searchQuery, selectedConcept, selectedStatus, startDate, endDate]);
 
   // Paginación
   const totalPages = Math.max(1, Math.ceil(filteredPayments.length / pageSize));
@@ -139,125 +197,175 @@ export function PaymentsTableClient({
     setSearchQuery("");
     setSelectedConcept("ALL");
     setSelectedStatus("ALL");
+    setDatePreset("ALL");
+    setStartDate("");
+    setEndDate("");
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchQuery.trim() !== "" || selectedConcept !== "ALL" || selectedStatus !== "ALL";
+  const hasActiveFilters =
+    searchQuery.trim() !== "" ||
+    selectedConcept !== "ALL" ||
+    selectedStatus !== "ALL" ||
+    datePreset !== "ALL" ||
+    startDate !== "" ||
+    endDate !== "";
 
   return (
     <Card className="overflow-hidden border-slate-200 shadow-sm">
-      <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-base font-bold text-slate-900">Registro de Pagos</CardTitle>
-            <CardDescription className="text-xs">
-              {hasActiveFilters ? (
-                <>
-                  Mostrando <strong className="text-slate-800">{filteredPayments.length}</strong> de {payments.length} pagos registrados
-                </>
-              ) : (
-                `Todos los pagos y cuotas registradas en el sistema (${payments.length} totales)`
-              )}
-            </CardDescription>
-          </div>
-
-          {/* ─── Buscador y Filtros ─── */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
-            {/* 1. Buscador */}
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-              <Input
-                type="text"
-                placeholder="Buscar alumno, folio..."
-                className="pl-8 pr-8 h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
+      <CardHeader className="bg-slate-50/60 border-b border-slate-100 p-3.5 sm:p-4">
+        <div className="flex flex-wrap items-center gap-2.5 w-full">
+          {/* 1. Buscador */}
+          <div className="relative flex-1 min-w-[200px] sm:min-w-[220px]">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Buscar alumno, folio, concepto..."
+              className="pl-8 pr-8 h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
                   setCurrentPage(1);
                 }}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setCurrentPage(1);
-                  }}
-                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* 2. Filtro por Concepto */}
-            <div className="w-full sm:w-52">
-              <Select
-                value={selectedConcept}
-                onValueChange={(val) => {
-                  setSelectedConcept(val);
-                  setCurrentPage(1);
-                }}
+                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 transition-colors"
               >
-                <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs">
-                  <span className="truncate text-left block w-full">
-                    {selectedConcept === "ALL" ? "Todos los conceptos" : selectedConcept}
-                  </span>
-                </SelectTrigger>
-                <SelectContent className="max-h-64 max-w-[300px]">
-                  <SelectItem value="ALL" className="text-xs font-semibold text-slate-900">
-                    Todos los conceptos ({payments.length})
-                  </SelectItem>
-                  {conceptOptions.map((conceptName) => {
-                    const count = payments.filter((p: any) => (p.concept?.name || p.notes || "").trim() === conceptName).length;
-                    return (
-                      <SelectItem key={conceptName} value={conceptName} className="text-xs">
-                        <div className="flex items-center justify-between gap-2 w-full">
-                          <span className="truncate">{conceptName}</span>
-                          <span className="text-[11px] text-slate-400 font-mono shrink-0">({count})</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* 3. Filtro por Estado */}
-            <div className="w-full sm:w-36">
-              <Select
-                value={selectedStatus}
-                onValueChange={(val) => {
-                  setSelectedStatus(val);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs">
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL" className="text-xs">Todos los estados</SelectItem>
-                  <SelectItem value="PAID" className="text-xs font-medium text-emerald-700">Pagados</SelectItem>
-                  <SelectItem value="PENDING" className="text-xs font-medium text-amber-700">Pendientes</SelectItem>
-                  <SelectItem value="OVERDUE" className="text-xs font-medium text-red-700">Vencidos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* 4. Botón Limpiar Filtros */}
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-                className="h-9 px-2.5 text-xs text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 rounded-lg shrink-0"
-                title="Limpiar filtros de búsqueda"
-              >
-                <RotateCcw className="h-3.5 w-3.5 mr-1 text-slate-400" />
-                Limpiar
-              </Button>
+                <X className="h-3.5 w-3.5" />
+              </button>
             )}
           </div>
+
+          {/* 2. Filtro por Concepto */}
+          <div className="w-full sm:w-[175px]">
+            <Select
+              value={selectedConcept}
+              onValueChange={(val) => {
+                setSelectedConcept(val);
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs">
+                <span className="truncate text-left block w-full">
+                  {selectedConcept === "ALL" ? "Todos los conceptos" : selectedConcept}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="max-h-64 max-w-[300px]">
+                <SelectItem value="ALL" className="text-xs font-semibold text-slate-900">
+                  Todos los conceptos ({payments.length})
+                </SelectItem>
+                {conceptOptions.map((conceptName) => {
+                  const count = payments.filter((p: any) => (p.concept?.name || p.notes || "").trim() === conceptName).length;
+                  return (
+                    <SelectItem key={conceptName} value={conceptName} className="text-xs">
+                      <div className="flex items-center justify-between gap-2 w-full">
+                        <span className="truncate">{conceptName}</span>
+                        <span className="text-[11px] text-slate-400 font-mono shrink-0">({count})</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 3. Filtro por Estado */}
+          <div className="w-full sm:w-[135px]">
+            <Select
+              value={selectedStatus}
+              onValueChange={(val) => {
+                setSelectedStatus(val);
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL" className="text-xs">Todos los estados</SelectItem>
+                <SelectItem value="PAID" className="text-xs font-medium text-emerald-700">Pagados</SelectItem>
+                <SelectItem value="PENDING" className="text-xs font-medium text-amber-700">Pendientes</SelectItem>
+                <SelectItem value="OVERDUE" className="text-xs font-medium text-red-700">Vencidos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 4. Filtro por Período / Fecha */}
+          <div className="w-full sm:w-[155px]">
+            <Select
+              value={datePreset}
+              onValueChange={(val) => {
+                applyDatePreset(val);
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs">
+                <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400 shrink-0" />
+                <SelectValue placeholder="Filtrar por fecha" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL" className="text-xs">Todas las fechas</SelectItem>
+                <SelectItem value="TODAY" className="text-xs">Hoy</SelectItem>
+                <SelectItem value="THIS_WEEK" className="text-xs">Esta semana</SelectItem>
+                <SelectItem value="THIS_MONTH" className="text-xs">Este mes</SelectItem>
+                <SelectItem value="LAST_MONTH" className="text-xs">Mes anterior</SelectItem>
+                <SelectItem value="THIS_YEAR" className="text-xs">Este año ({new Date().getFullYear()})</SelectItem>
+                <SelectItem value="CUSTOM" className="text-xs font-semibold text-[#0066cc]">Rango personalizado...</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 5. Inputs de Rango de Fechas (Del / Al) */}
+          {(datePreset === "CUSTOM" || startDate || endDate) && (
+            <div className="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-lg border border-slate-200/80">
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-slate-500 pl-1">Del:</span>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setDatePreset("CUSTOM");
+                    setCurrentPage(1);
+                  }}
+                  className="h-7 w-[125px] text-[11px] bg-white border-slate-200 px-1.5 py-0"
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-slate-500">Al:</span>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setDatePreset("CUSTOM");
+                    setCurrentPage(1);
+                  }}
+                  className="h-7 w-[125px] text-[11px] bg-white border-slate-200 px-1.5 py-0"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 6. Botón Limpiar Filtros */}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="h-9 px-2.5 text-xs text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 rounded-lg shrink-0 sm:ml-auto"
+              title="Limpiar todos los filtros"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1 text-slate-400" />
+              Limpiar
+            </Button>
+          )}
         </div>
       </CardHeader>
 
@@ -425,6 +533,7 @@ export function PaymentsTableClient({
                 Mostrando <span className="font-semibold text-slate-800">{startIndex + 1}</span> a{" "}
                 <span className="font-semibold text-slate-800">{Math.min(endIndex, filteredPayments.length)}</span> de{" "}
                 <span className="font-semibold text-slate-800">{filteredPayments.length}</span> pagos
+                {hasActiveFilters && ` (filtrados de ${payments.length})`}
               </div>
 
               {/* Selector de registros por página */}
