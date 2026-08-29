@@ -132,18 +132,11 @@ export function ReceiptViewerDialog({ payment }: ReceiptViewerProps) {
     }
   };
 
-  const formattedPaidDate = `${paidDate.toLocaleDateString("es-MX", {
+  const formattedPaidDate = paidDate.toLocaleDateString("es-MX", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  })}${
-    payment.paidAt
-      ? ` - ${paidDate.toLocaleTimeString("es-MX", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}`
-      : ""
-  }`;
+  });
 
   const handlePrint = () => {
     // Generar documento de impresión limpio y optimizado a 1 sola página
@@ -372,7 +365,7 @@ export function ReceiptViewerDialog({ payment }: ReceiptViewerProps) {
                 <td class="value">${conceptName}</td>
               </tr>
               <tr>
-                <td class="label">Fecha y Hora de Pago:</td>
+                <td class="label">Fecha de Pago:</td>
                 <td class="value">${formattedPaidDate}</td>
               </tr>
               <tr>
@@ -630,12 +623,7 @@ export function ReceiptViewerDialog({ payment }: ReceiptViewerProps) {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
-                      })}{" "}
-                      {payment.paidAt &&
-                        `- ${paidDate.toLocaleTimeString("es-MX", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}`}
+                      })}
                     </span>
                   </div>
 
