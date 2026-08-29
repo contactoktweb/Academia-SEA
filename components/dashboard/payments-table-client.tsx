@@ -213,15 +213,15 @@ export function PaymentsTableClient({
 
   return (
     <Card className="overflow-hidden border-slate-200 shadow-sm">
-      <CardHeader className="bg-slate-50/60 border-b border-slate-100 p-3.5 sm:p-4">
-        <div className="flex flex-wrap items-center gap-2.5 w-full">
+      <CardHeader className="bg-slate-50/60 border-b border-slate-100 p-3 sm:p-3.5">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-2.5 w-full">
           {/* 1. Buscador */}
-          <div className="relative flex-1 min-w-[200px] sm:min-w-[220px]">
+          <div className="relative flex-1 min-w-[180px]">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
             <Input
               type="text"
               placeholder="Buscar alumno, folio, concepto..."
-              className="pl-8 pr-8 h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs"
+              className="pl-8 pr-8 h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs w-full"
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -242,130 +242,133 @@ export function PaymentsTableClient({
             )}
           </div>
 
-          {/* 2. Filtro por Concepto */}
-          <div className="w-full sm:w-[175px]">
-            <Select
-              value={selectedConcept}
-              onValueChange={(val) => {
-                setSelectedConcept(val);
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs">
-                <span className="truncate text-left block w-full">
-                  {selectedConcept === "ALL" ? "Todos los conceptos" : selectedConcept}
-                </span>
-              </SelectTrigger>
-              <SelectContent className="max-h-64 max-w-[300px]">
-                <SelectItem value="ALL" className="text-xs font-semibold text-slate-900">
-                  Todos los conceptos ({payments.length})
-                </SelectItem>
-                {conceptOptions.map((conceptName) => {
-                  const count = payments.filter((p: any) => (p.concept?.name || p.notes || "").trim() === conceptName).length;
-                  return (
-                    <SelectItem key={conceptName} value={conceptName} className="text-xs">
-                      <div className="flex items-center justify-between gap-2 w-full">
-                        <span className="truncate">{conceptName}</span>
-                        <span className="text-[11px] text-slate-400 font-mono shrink-0">({count})</span>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 3. Filtro por Estado */}
-          <div className="w-full sm:w-[135px]">
-            <Select
-              value={selectedStatus}
-              onValueChange={(val) => {
-                setSelectedStatus(val);
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL" className="text-xs">Todos los estados</SelectItem>
-                <SelectItem value="PAID" className="text-xs font-medium text-emerald-700">Pagados</SelectItem>
-                <SelectItem value="PENDING" className="text-xs font-medium text-amber-700">Pendientes</SelectItem>
-                <SelectItem value="OVERDUE" className="text-xs font-medium text-red-700">Vencidos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 4. Filtro por Período / Fecha */}
-          <div className="w-full sm:w-[155px]">
-            <Select
-              value={datePreset}
-              onValueChange={(val) => {
-                applyDatePreset(val);
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs">
-                <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400 shrink-0" />
-                <SelectValue placeholder="Filtrar por fecha" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL" className="text-xs">Todas las fechas</SelectItem>
-                <SelectItem value="TODAY" className="text-xs">Hoy</SelectItem>
-                <SelectItem value="THIS_WEEK" className="text-xs">Esta semana</SelectItem>
-                <SelectItem value="THIS_MONTH" className="text-xs">Este mes</SelectItem>
-                <SelectItem value="LAST_MONTH" className="text-xs">Mes anterior</SelectItem>
-                <SelectItem value="THIS_YEAR" className="text-xs">Este año ({new Date().getFullYear()})</SelectItem>
-                <SelectItem value="CUSTOM" className="text-xs font-semibold text-[#0066cc]">Rango personalizado...</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 5. Inputs de Rango de Fechas (Del / Al) */}
-          {(datePreset === "CUSTOM" || startDate || endDate) && (
-            <div className="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-lg border border-slate-200/80">
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] font-bold text-slate-500 pl-1">Del:</span>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    setDatePreset("CUSTOM");
-                    setCurrentPage(1);
-                  }}
-                  className="h-7 w-[125px] text-[11px] bg-white border-slate-200 px-1.5 py-0"
-                />
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] font-bold text-slate-500">Al:</span>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => {
-                    setEndDate(e.target.value);
-                    setDatePreset("CUSTOM");
-                    setCurrentPage(1);
-                  }}
-                  className="h-7 w-[125px] text-[11px] bg-white border-slate-200 px-1.5 py-0"
-                />
-              </div>
+          {/* Grupo de Filtros (Uno al lado del otro en pantallas no móviles) */}
+          <div className="flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-2">
+            {/* 2. Filtro por Concepto */}
+            <div className="w-full sm:w-[170px] shrink-0">
+              <Select
+                value={selectedConcept}
+                onValueChange={(val) => {
+                  setSelectedConcept(val);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs w-full">
+                  <span className="truncate text-left block w-full">
+                    {selectedConcept === "ALL" ? "Todos los conceptos" : selectedConcept}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="max-h-64 max-w-[300px]">
+                  <SelectItem value="ALL" className="text-xs font-semibold text-slate-900">
+                    Todos los conceptos ({payments.length})
+                  </SelectItem>
+                  {conceptOptions.map((conceptName) => {
+                    const count = payments.filter((p: any) => (p.concept?.name || p.notes || "").trim() === conceptName).length;
+                    return (
+                      <SelectItem key={conceptName} value={conceptName} className="text-xs">
+                        <div className="flex items-center justify-between gap-2 w-full">
+                          <span className="truncate">{conceptName}</span>
+                          <span className="text-[11px] text-slate-400 font-mono shrink-0">({count})</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
-          )}
 
-          {/* 6. Botón Limpiar Filtros */}
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearFilters}
-              className="h-9 px-2.5 text-xs text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 rounded-lg shrink-0 sm:ml-auto"
-              title="Limpiar todos los filtros"
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1 text-slate-400" />
-              Limpiar
-            </Button>
-          )}
+            {/* 3. Filtro por Estado */}
+            <div className="w-full sm:w-[130px] shrink-0">
+              <Select
+                value={selectedStatus}
+                onValueChange={(val) => {
+                  setSelectedStatus(val);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs w-full">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL" className="text-xs">Todos los estados</SelectItem>
+                  <SelectItem value="PAID" className="text-xs font-medium text-emerald-700">Pagados</SelectItem>
+                  <SelectItem value="PENDING" className="text-xs font-medium text-amber-700">Pendientes</SelectItem>
+                  <SelectItem value="OVERDUE" className="text-xs font-medium text-red-700">Vencidos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 4. Filtro por Período / Fecha */}
+            <div className="w-full sm:w-[150px] shrink-0">
+              <Select
+                value={datePreset}
+                onValueChange={(val) => {
+                  applyDatePreset(val);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="h-9 text-xs bg-white border-slate-200 rounded-lg shadow-2xs w-full">
+                  <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400 shrink-0" />
+                  <SelectValue placeholder="Filtrar por fecha" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL" className="text-xs">Todas las fechas</SelectItem>
+                  <SelectItem value="TODAY" className="text-xs">Hoy</SelectItem>
+                  <SelectItem value="THIS_WEEK" className="text-xs">Esta semana</SelectItem>
+                  <SelectItem value="THIS_MONTH" className="text-xs">Este mes</SelectItem>
+                  <SelectItem value="LAST_MONTH" className="text-xs">Mes anterior</SelectItem>
+                  <SelectItem value="THIS_YEAR" className="text-xs">Este año ({new Date().getFullYear()})</SelectItem>
+                  <SelectItem value="CUSTOM" className="text-xs font-semibold text-[#0066cc]">Rango personalizado...</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 5. Inputs de Rango de Fechas (Del / Al) */}
+            {(datePreset === "CUSTOM" || startDate || endDate) && (
+              <div className="flex items-center gap-1.5 bg-slate-100/90 p-1 rounded-lg border border-slate-200/80 shrink-0 w-full sm:w-auto">
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-bold text-slate-500 pl-1">Del:</span>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setDatePreset("CUSTOM");
+                      setCurrentPage(1);
+                    }}
+                    className="h-7 w-[115px] text-[11px] bg-white border-slate-200 px-1.5 py-0"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-bold text-slate-500">Al:</span>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setDatePreset("CUSTOM");
+                      setCurrentPage(1);
+                    }}
+                    className="h-7 w-[115px] text-[11px] bg-white border-slate-200 px-1.5 py-0"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 6. Botón Limpiar Filtros */}
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="h-9 px-2.5 text-xs text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 rounded-lg shrink-0 w-full sm:w-auto justify-center"
+                title="Limpiar todos los filtros"
+              >
+                <RotateCcw className="h-3.5 w-3.5 mr-1 text-slate-400" />
+                Limpiar
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 
