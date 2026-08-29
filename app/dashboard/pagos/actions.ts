@@ -63,6 +63,7 @@ export async function recordPayment(
     method: string;
     reference?: string;
     receiptUrl?: string;
+    paidAt?: string | Date;
     notes?: string;
   }
 ) {
@@ -81,6 +82,21 @@ export async function recordPayment(
       ? parseFloat(String(data.amountPaid)) 
       : Number(existing.amount);
 
+    // Fecha de pago proporcionada (validar y asignar timestamp)
+    let finalPaidAt = new Date();
+    if (data.paidAt) {
+      const parsedDate = new Date(data.paidAt);
+      if (!isNaN(parsedDate.getTime())) {
+        const now = new Date();
+        if (typeof data.paidAt === "string" && data.paidAt.length === 10) {
+          const [y, m, d] = data.paidAt.split("-").map(Number);
+          finalPaidAt = new Date(y, m - 1, d, now.getHours(), now.getMinutes(), now.getSeconds());
+        } else {
+          finalPaidAt = parsedDate;
+        }
+      }
+    }
+
     const rawPayment = await db.payment.update({
       where: { id: paymentId },
       data: {
@@ -88,7 +104,7 @@ export async function recordPayment(
         method: (data.method as any) || "BANK_TRANSFER",
         reference: finalReference,
         receiptUrl: data.receiptUrl || existing.receiptUrl || null,
-        paidAt: new Date(),
+        paidAt: finalPaidAt,
         status: "PAID",
         notes: data.notes || existing.notes,
       },
@@ -111,6 +127,7 @@ export async function recordPayment(
     revalidatePath("/dashboard/pagos");
     revalidatePath("/dashboard/mis-pagos");
     revalidatePath("/dashboard/estados-cuenta");
+    revalidatePath("/dashboard/metricas");
     return { success: true, data: payment };
   } catch (error) {
     console.error("Error recording payment:", error);

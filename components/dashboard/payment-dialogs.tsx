@@ -98,6 +98,14 @@ import {
 import { cn } from "@/lib/utils";
 import { compressImage } from "@/lib/compress-image";
 
+function getTodayString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function generateAutoReference(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -113,6 +121,7 @@ const paymentSchema = z.object({
   cycleId: z.string().optional(),
   amount: z.string().min(1, "Monto requerido"),
   dueDate: z.string().min(1, "Fecha de vencimiento requerida"),
+  paidAt: z.string().optional(),
   notes: z.string().optional(),
   status: z.string().optional(),
   amountPaid: z.string().optional(),
@@ -169,7 +178,8 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
       conceptId: payment?.conceptId || "",
       cycleId: payment?.cycleId || "",
       amount: payment?.amount?.toString() || "",
-      dueDate: payment?.dueDate ? new Date(payment.dueDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      dueDate: payment?.dueDate ? new Date(payment.dueDate).toISOString().split('T')[0] : getTodayString(),
+      paidAt: payment?.paidAt ? new Date(payment.paidAt).toISOString().split('T')[0] : getTodayString(),
       notes: payment?.notes || "",
       amountPaid: (payment?.amountPaid ?? payment?.amount ?? "").toString(),
       method: payment?.method || "BANK_TRANSFER",
@@ -186,7 +196,8 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
         conceptId: payment.conceptId || "",
         cycleId: payment.cycleId || "",
         amount: payment.amount?.toString() || "",
-        dueDate: payment.dueDate ? new Date(payment.dueDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        dueDate: payment.dueDate ? new Date(payment.dueDate).toISOString().split('T')[0] : getTodayString(),
+        paidAt: payment.paidAt ? new Date(payment.paidAt).toISOString().split('T')[0] : getTodayString(),
         notes: payment.notes || "",
         amountPaid: (payment.amountPaid ?? payment.amount ?? "").toString(),
         method: payment.method || "BANK_TRANSFER",
@@ -260,6 +271,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
           method: values.method || "BANK_TRANSFER",
           reference: finalRef,
           receiptUrl: finalReceiptUrl || undefined,
+          paidAt: values.paidAt || getTodayString(),
           notes: values.notes,
         });
       } else if (mode === "add") {
@@ -549,6 +561,12 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                     <span className="text-slate-500">Concepto:</span>
                     <strong className="text-slate-800">{payment?.concept?.name || payment?.notes || "Colegiatura"}</strong>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Fecha de Vencimiento:</span>
+                    <span className="font-semibold text-slate-700">
+                      {payment?.dueDate ? new Date(payment.dueDate).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" }) : "-"}
+                    </span>
+                  </div>
                   <div className="flex justify-between border-t border-slate-200 pt-1.5 mt-1">
                     <span className="text-slate-500">Monto Adeudado:</span>
                     <strong className="text-sm font-black text-emerald-700">
@@ -603,31 +621,59 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="reference"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <FormLabel className="text-xs font-bold text-slate-700">
-                          Número de Referencia / Folio / Autorización
-                        </FormLabel>
-                        <span className="text-[10px] text-slate-400 font-medium">Opcional</span>
-                      </div>
-                      <FormControl>
-                        <Input 
-                          placeholder="Ej: SPEI-984214 o Folio de recibo" 
-                          className="h-9 text-xs" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <p className="text-[11px] text-slate-500">
-                        *Si se deja vacío, el sistema asignará un folio automático (ej. REC-{new Date().getFullYear()}...).
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Fecha de Pago (Solo desde hoy hacia atrás) */}
+                  <FormField
+                    control={form.control}
+                    name="paidAt"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="text-xs font-bold text-slate-700">
+                            Fecha de Pago
+                          </FormLabel>
+                          <span className="text-[10px] text-emerald-700 font-semibold">Hasta hoy</span>
+                        </div>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            max={getTodayString()} 
+                            className="h-9 text-xs" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="reference"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="text-xs font-bold text-slate-700 truncate">
+                            Folio / Referencia
+                          </FormLabel>
+                          <span className="text-[10px] text-slate-400 font-medium">Opcional</span>
+                        </div>
+                        <FormControl>
+                          <Input 
+                            placeholder="Ej: SPEI-984214" 
+                            className="h-9 text-xs" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <p className="text-[11px] text-slate-500">
+                  *Si la referencia se deja vacía, el sistema asignará un folio automático (ej. REC-{new Date().getFullYear()}...).
+                </p>
 
                 {/* ─── Comprobante Opcional (PDF o Imagen) ─── */}
                 <div className="space-y-1.5 pt-1">
