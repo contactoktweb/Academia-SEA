@@ -23,7 +23,10 @@ import { ReceiptViewerDialog } from "./receipt-viewer-dialog";
 export async function PaymentsTable() {
   const sedeCondition = await getSedeCondition();
   const rawPayments = await db.payment.findMany({
-    where: sedeCondition,
+    where: {
+      ...sedeCondition,
+      status: { not: "CANCELLED" },
+    },
     include: {
       student: { include: { user: true } },
       concept: true,
@@ -236,16 +239,16 @@ export async function PaymentsTable() {
                                 {/* 1. Enviar Link Asistido por Stripe / WhatsApp */}
                                 <SendPaymentLinkDialog payment={payment} />
 
-                                {/* 2. Marcar como Pagado (Comprobante Opcional) */}
+                                {/* 2. Marcar como Pagado / Registrar Comprobante */}
                                 <PaymentDialog mode="record" payment={payment} />
+
+                                {/* 3. Eliminar Cobro Pendiente */}
+                                <PaymentDialog mode="delete" payment={payment} />
                               </>
                             ) : (
-                              /* 3. Revertir Pago para el Administrador */
+                              /* 4. Revertir Pago para el Administrador (Motivo Obligatorio) */
                               <RevertPaymentDialog payment={payment} />
                             )}
-
-                            {/* 4. Eliminar */}
-                            <PaymentDialog mode="delete" payment={payment} />
                           </div>
                         </TableCell>
                       </TableRow>

@@ -25,7 +25,11 @@ export async function getStudentAccountStatement(studentProfileId: string) {
 
     // Fetch all payments for this student
     const allPayments = await db.payment.findMany({
-      where: { studentId: studentProfileId, ...sedeCondition },
+      where: {
+        studentId: studentProfileId,
+        ...sedeCondition,
+        status: { not: "CANCELLED" },
+      },
       include: { concept: true, cycle: true },
       orderBy: { dueDate: "asc" }
     });

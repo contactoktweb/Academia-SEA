@@ -45,6 +45,7 @@ export async function getStudentPaymentSchedule() {
           orderBy: { enrolledAt: "desc" },
         },
         payments: {
+          where: { status: { not: "CANCELLED" } },
           include: {
             concept: true,
           },

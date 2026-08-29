@@ -322,9 +322,9 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
         </TooltipProvider>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar cobro/pago?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar este cobro pendiente?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción eliminará el registro de pago de {payment?.student?.user?.name}. Si ya fue pagado, esto alterará los reportes financieros.
+              Esta acción eliminará el registro de cobro para {payment?.student?.user?.name || "el alumno"}. Se removerá de la tabla y de las estadísticas financieras.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -911,12 +911,19 @@ export function RevertPaymentDialog({ payment }: { payment: any }) {
   const [reason, setReason] = useState("");
   const router = useRouter();
 
-  const handleRevert = () => {
+  const handleRevert = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!reason.trim()) {
+      toast.error("Debe ingresar un motivo obligatorio para revertir el pago.");
+      return;
+    }
+
     startTransition(async () => {
-      const res = await revertPayment(payment.id, reason);
+      const res = await revertPayment(payment.id, reason.trim());
       if (res.success) {
         toast.success("Pago revertido con éxito. El estado volvió a Pendiente.");
         setOpen(false);
+        setReason("");
         router.refresh();
       } else {
         toast.error(res.error || "Error al revertir el pago.");
@@ -925,57 +932,72 @@ export function RevertPaymentDialog({ payment }: { payment: any }) {
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(val) => {
+      setOpen(val);
+      if (!val) setReason("");
+    }}>
       <TooltipProvider delayDuration={100}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <AlertDialogTrigger asChild>
+            <DialogTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg">
                 <RotateCcw className="h-4 w-4" />
               </Button>
-            </AlertDialogTrigger>
+            </DialogTrigger>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">Revertir pago a pendiente</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-amber-800">
+      <DialogContent className="sm:max-w-[460px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-amber-800">
             <ShieldAlert className="h-5 w-5 text-amber-600" />
             ¿Revertir este pago a Pendiente?
-          </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
+          </DialogTitle>
+          <DialogDescription className="space-y-2 pt-1 text-slate-600 text-xs">
             <span>
               Esta acción revertirá el pago de <strong>{payment?.student?.user?.name}</strong> (${parseFloat(String(payment?.amountPaid || payment?.amount || 0)).toFixed(2)} MXN).
             </span>
-            <span className="block text-xs text-slate-500">
-              El estado volverá a <strong>PENDIENTE</strong>, se borrará la fecha de cobro y el alumno volverá a tener el saldo pendiente en su cuenta.
+            <span className="block text-slate-500">
+              El estado volverá a <strong>PENDIENTE</strong> para que puedas registrar o subir nuevamente el pago o comprobante corregido.
             </span>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="py-2">
-          <label className="text-xs font-semibold text-slate-700 mb-1 block">Motivo de la reversión (Opcional):</label>
-          <Input
-            placeholder="Ej: Error en el comprobante / Pago cancelado"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className="text-xs"
-          />
-        </div>
+        <form onSubmit={handleRevert} className="space-y-3 pt-2">
+          <div className="space-y-1.5">
+            <label className="flex items-center justify-between text-xs font-bold text-slate-800">
+              <span>Motivo de la reversión</span>
+              <span className="text-red-500 font-bold text-[11px]">* (Obligatorio)</span>
+            </label>
+            <Textarea
+              placeholder="Explica el motivo (ej. Error en el importe, comprobante ilegible, pago cancelado o rebotado, etc.)..."
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={3}
+              required
+              className="text-xs resize-none"
+            />
+            <p className="text-[11px] text-slate-500">
+              *Este motivo se registrará en el historial de observaciones del cobro.
+            </p>
+          </div>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleRevert}
-            disabled={isPending}
-            className="bg-amber-600 hover:bg-amber-700 text-white"
-          >
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Confirmar Reversión
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isPending || !reason.trim()}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmar Reversión
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

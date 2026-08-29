@@ -11,7 +11,7 @@ export async function DashboardOverviewStats() {
     db.course.count({ where: { isActive: true, ...sedeCondition } }),
     db.teacherProfile.count({ where: { isActive: true, ...sedeCondition } }),
     db.payment.findMany({
-      where: { ...sedeCondition },
+      where: { ...sedeCondition, status: { not: "CANCELLED" } },
       select: { amount: true, amountPaid: true, status: true }
     })
   ]);

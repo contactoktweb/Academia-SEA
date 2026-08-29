@@ -239,8 +239,12 @@ export async function generateAssistedPaymentLink(paymentId: string) {
   }
 }
 
-export async function revertPayment(paymentId: string, reason?: string) {
+export async function revertPayment(paymentId: string, reason: string) {
   try {
+    if (!reason || !reason.trim()) {
+      return { success: false, error: "El motivo de la reversión es obligatorio." };
+    }
+
     const existing = await db.payment.findUnique({ where: { id: paymentId } });
     if (!existing) {
       return { success: false, error: "Pago no encontrado" };
@@ -251,8 +255,8 @@ export async function revertPayment(paymentId: string, reason?: string) {
     const newStatus = isOverdue ? "OVERDUE" : "PENDING";
 
     const updatedNotes = existing.notes
-      ? `${existing.notes} | [Revertido el ${today.toLocaleDateString("es-MX")}: ${reason || "Reversión por Administrador"}]`
-      : `[Revertido el ${today.toLocaleDateString("es-MX")}: ${reason || "Reversión por Administrador"}]`;
+      ? `${existing.notes} | [Revertido el ${today.toLocaleDateString("es-MX")}: ${reason.trim()}]`
+      : `[Revertido el ${today.toLocaleDateString("es-MX")}: ${reason.trim()}]`;
 
     await db.payment.update({
       where: { id: paymentId },
@@ -261,6 +265,7 @@ export async function revertPayment(paymentId: string, reason?: string) {
         amountPaid: null,
         paidAt: null,
         receiptUrl: null,
+        reference: null,
         notes: updatedNotes,
       },
     });
@@ -268,6 +273,7 @@ export async function revertPayment(paymentId: string, reason?: string) {
     revalidatePath("/dashboard/pagos");
     revalidatePath("/dashboard/mis-pagos");
     revalidatePath("/dashboard/estados-cuenta");
+    revalidatePath("/dashboard/metricas");
     return { success: true };
   } catch (error) {
     console.error("Error reverting payment:", error);
@@ -381,6 +387,18 @@ export async function createScholarship(data: {
 
 export async function deletePayment(id: string) {
   try {
+    const existing = await db.payment.findUnique({ where: { id } });
+    if (!existing) {
+      return { success: false, error: "Pago no encontrado" };
+    }
+
+    if (existing.status === "PAID") {
+      return {
+        success: false,
+        error: "Un pago ya cobrado/pagado no se puede eliminar directamente. Debe revertirlo primero a pendiente con su respectivo motivo.",
+      };
+    }
+
     // Deshabilitación/Cancelación lógica sin pérdida de registro contable
     await db.payment.update({
       where: { id },
@@ -391,6 +409,8 @@ export async function deletePayment(id: string) {
 
     revalidatePath("/dashboard/pagos");
     revalidatePath("/dashboard/mis-pagos");
+    revalidatePath("/dashboard/estados-cuenta");
+    revalidatePath("/dashboard/metricas");
     return { success: true };
   } catch (error) {
     console.error("Error disabling payment:", error);
