@@ -12,7 +12,33 @@ import { PaymentsTableClient } from "./payments-table-client";
 
 export async function PaymentsTable() {
   const sedeCondition = await getSedeCondition();
-  const [rawPayments, rawConcepts] = await Promise.all([
+
+  // 1. Estadísticas agregadas + Catálogo de conceptos + Primera página (10 registros)
+  const [statsSummary, rawConcepts, initialCount, initialRawPayments] = await Promise.all([
+    db.payment.groupBy({
+      by: ["status"],
+      where: {
+        ...sedeCondition,
+        status: { not: "CANCELLED" },
+      },
+      _sum: {
+        amount: true,
+        amountPaid: true,
+      },
+      _count: {
+        id: true,
+      },
+    }),
+    db.chargeConcept.findMany({
+      where: { isActive: true, ...sedeCondition },
+      orderBy: { name: "asc" },
+    }),
+    db.payment.count({
+      where: {
+        ...sedeCondition,
+        status: { not: "CANCELLED" },
+      },
+    }),
     db.payment.findMany({
       where: {
         ...sedeCondition,
@@ -24,33 +50,44 @@ export async function PaymentsTable() {
         cycle: true,
       },
       orderBy: { createdAt: "desc" },
-    }),
-    db.chargeConcept.findMany({
-      where: { isActive: true, ...sedeCondition },
-      orderBy: { name: "asc" },
+      take: 10,
     }),
   ]);
 
-  // Serialize Decimal objects for Client Components
-  const payments: any[] = rawPayments.map(payment => ({
+  let totalAmount = 0;
+  let paidAmount = 0;
+  let paidCount = 0;
+  let pendingCount = 0;
+
+  statsSummary.forEach((stat) => {
+    const amt = Number(stat._sum.amount || 0);
+    const paidAmt = Number(stat._sum.amountPaid || 0);
+    totalAmount += amt;
+    if (stat.status === "PAID") {
+      paidAmount += paidAmt > 0 ? paidAmt : amt;
+      paidCount += stat._count.id;
+    } else {
+      pendingCount += stat._count.id;
+    }
+  });
+
+  // Serializar Decimales para Client Components
+  const initialPayments: any[] = initialRawPayments.map((payment) => ({
     ...payment,
     amount: Number(payment.amount),
     amountPaid: payment.amountPaid ? Number(payment.amountPaid) : null,
-    concept: payment.concept ? {
-      ...payment.concept,
-      amount: Number(payment.concept.amount),
-    } : null,
+    concept: payment.concept
+      ? {
+          ...payment.concept,
+          amount: Number(payment.concept.amount),
+        }
+      : null,
   }));
 
-  const concepts: any[] = rawConcepts.map(concept => ({
+  const concepts: any[] = rawConcepts.map((concept) => ({
     ...concept,
     amount: Number(concept.amount),
   }));
-
-  const paidCount = payments.filter((p: any) => p.status === "PAID").length;
-  const pendingCount = payments.filter((p: any) => ["PENDING", "OVERDUE"].includes(p.status)).length;
-  const totalAmount = payments.reduce((sum: number, p: any) => sum + parseFloat(String(p.amount)), 0);
-  const paidAmount = payments.filter((p: any) => p.status === "PAID").reduce((sum: number, p: any) => sum + parseFloat(String(p.amountPaid || p.amount || 0)), 0);
 
   return (
     <>
@@ -63,7 +100,7 @@ export async function PaymentsTable() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${totalAmount.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">{payments.length} pagos registrados</p>
+            <p className="text-xs text-muted-foreground">{initialCount} pagos registrados</p>
           </CardContent>
         </Card>
 
@@ -115,8 +152,13 @@ export async function PaymentsTable() {
         <PaymentsHeaderActions />
       </div>
 
-      {/* Tabla interactiva con buscador, filtro por concepto y paginador */}
-      <PaymentsTableClient payments={payments} concepts={concepts} />
+      {/* Tabla asíncrona con carga paginada bajo demanda desde el servidor */}
+      <PaymentsTableClient
+        initialPayments={initialPayments}
+        initialTotalCount={initialCount}
+        concepts={concepts}
+        totalRegistered={initialCount}
+      />
     </>
   );
 }

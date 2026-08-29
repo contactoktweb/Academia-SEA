@@ -708,3 +708,131 @@ export async function generatePendingEnrollmentPayments() {
     return { success: false, error: "Error al generar cobros pendientes de mensualidad" };
   }
 }
+
+export async function getPaginatedPaymentsAction(params: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  concept?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+}) {
+  try {
+    const sedeCondition = await getSedeCondition();
+    const page = Math.max(1, Number(params.page) || 1);
+    const pageSize = Math.max(1, Math.min(100, Number(params.pageSize) || 10));
+
+    const where: any = {
+      ...sedeCondition,
+      status: { not: "CANCELLED" },
+    };
+
+    // 1. Filtro por Estado
+    if (params.status && params.status !== "ALL") {
+      where.status = params.status;
+    }
+
+    // 2. Filtro por Concepto
+    if (params.concept && params.concept !== "ALL") {
+      const c = params.concept.trim();
+      where.AND = [
+        ...(where.AND || []),
+        {
+          OR: [
+            { conceptId: c },
+            { concept: { name: { contains: c, mode: "insensitive" } } },
+            { notes: { contains: c, mode: "insensitive" } },
+          ],
+        },
+      ];
+    }
+
+    // 3. Filtro por Buscador (Alumno, Email, Folio/Referencia, Notas, Concepto)
+    if (params.search && params.search.trim()) {
+      const q = params.search.trim();
+      where.AND = [
+        ...(where.AND || []),
+        {
+          OR: [
+            { student: { user: { name: { contains: q, mode: "insensitive" } } } },
+            { student: { user: { email: { contains: q, mode: "insensitive" } } } },
+            { reference: { contains: q, mode: "insensitive" } },
+            { notes: { contains: q, mode: "insensitive" } },
+            { concept: { name: { contains: q, mode: "insensitive" } } },
+          ],
+        },
+      ];
+    }
+
+    // 4. Filtro por Fecha o Rango de Fechas
+    if (params.startDate || params.endDate) {
+      const dateConditions: any[] = [];
+      if (params.startDate) {
+        const start = new Date(`${params.startDate}T00:00:00.000Z`);
+        dateConditions.push({
+          OR: [
+            { paidAt: { gte: start } },
+            { AND: [{ paidAt: null }, { dueDate: { gte: start } }] },
+            { AND: [{ paidAt: null }, { dueDate: null }, { createdAt: { gte: start } }] },
+          ],
+        });
+      }
+      if (params.endDate) {
+        const end = new Date(`${params.endDate}T23:59:59.999Z`);
+        dateConditions.push({
+          OR: [
+            { paidAt: { lte: end } },
+            { AND: [{ paidAt: null }, { dueDate: { lte: end } }] },
+            { AND: [{ paidAt: null }, { dueDate: null }, { createdAt: { lte: end } }] },
+          ],
+        });
+      }
+      if (dateConditions.length > 0) {
+        where.AND = [...(where.AND || []), ...dateConditions];
+      }
+    }
+
+    const [totalCount, rawPayments] = await Promise.all([
+      db.payment.count({ where }),
+      db.payment.findMany({
+        where,
+        include: {
+          student: { include: { user: true } },
+          concept: true,
+          cycle: true,
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
+
+    const payments = rawPayments.map((p) => ({
+      ...p,
+      amount: Number(p.amount),
+      amountPaid: p.amountPaid ? Number(p.amountPaid) : null,
+      concept: p.concept
+        ? {
+            ...p.concept,
+            amount: Number(p.concept.amount),
+          }
+        : null,
+    }));
+
+    return {
+      success: true,
+      data: {
+        payments,
+        totalCount,
+        page,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(totalCount / pageSize)),
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching paginated payments:", error);
+    return { success: false, error: "Error al cargar pagos paginados" };
+  }
+}
+

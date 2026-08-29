@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -33,14 +33,18 @@ import {
   CreditCard,
   RotateCcw,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentDialog, SendPaymentLinkDialog, RevertPaymentDialog } from "./payment-dialogs";
 import { ReceiptViewerDialog } from "./receipt-viewer-dialog";
+import { getPaginatedPaymentsAction } from "@/app/dashboard/pagos/actions";
 
 interface PaymentsTableClientProps {
-  payments: any[];
+  initialPayments?: any[];
+  initialTotalCount?: number;
   concepts?: any[];
+  totalRegistered?: number;
   itemsPerPage?: number;
 }
 
@@ -52,10 +56,16 @@ function formatYMD(date: Date): string {
 }
 
 export function PaymentsTableClient({
-  payments,
+  initialPayments = [],
+  initialTotalCount = 0,
   concepts = [],
+  totalRegistered = 0,
   itemsPerPage = 10,
 }: PaymentsTableClientProps) {
+  const [payments, setPayments] = useState<any[]>(initialPayments);
+  const [totalCount, setTotalCount] = useState<number>(initialTotalCount);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedConcept, setSelectedConcept] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
@@ -64,6 +74,66 @@ export function PaymentsTableClient({
   const [endDate, setEndDate] = useState<string>("");
   const [pageSize, setPageSize] = useState<number>(itemsPerPage);
   const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const isInitialRender = useRef(true);
+
+  // Lista de conceptos únicos disponibles
+  const conceptOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    concepts.forEach((c: any) => {
+      if (c.name) map.set(c.name.trim(), c.id || c.name);
+    });
+    return Array.from(map.keys()).sort((a, b) => a.localeCompare(b, "es"));
+  }, [concepts]);
+
+  // Carga asíncrona de pagos desde el servidor
+  const loadPayments = useCallback(
+    async (params: {
+      page: number;
+      pageSize: number;
+      search: string;
+      concept: string;
+      status: string;
+      startDate: string;
+      endDate: string;
+    }) => {
+      setIsLoading(true);
+      try {
+        const res = await getPaginatedPaymentsAction(params);
+        if (res.success && res.data) {
+          setPayments(res.data.payments);
+          setTotalCount(res.data.totalCount);
+        }
+      } catch (error) {
+        console.error("Error al cargar pagos asíncronamente:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  // Efecto reactivo con debounce para búsquedas y filtros
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      loadPayments({
+        page: currentPage,
+        pageSize,
+        search: searchQuery,
+        concept: selectedConcept,
+        status: selectedStatus,
+        startDate,
+        endDate,
+      });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [currentPage, pageSize, searchQuery, selectedConcept, selectedStatus, startDate, endDate, loadPayments]);
 
   // Manejador de rangos rápidos de fecha
   const applyDatePreset = (preset: string) => {
@@ -103,81 +173,11 @@ export function PaymentsTableClient({
     }
   };
 
-  // Lista de conceptos únicos disponibles para filtrar
-  const conceptOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    // 1. Catálogo de conceptos de la base de datos
-    concepts.forEach((c: any) => {
-      if (c.name) map.set(c.name.trim(), c.id || c.name);
-    });
-    // 2. Conceptos presentes en los pagos existentes
-    payments.forEach((p: any) => {
-      const name = p.concept?.name || p.notes;
-      if (name && !map.has(name.trim())) {
-        map.set(name.trim(), name.trim());
-      }
-    });
-    return Array.from(map.keys()).sort((a, b) => a.localeCompare(b, "es"));
-  }, [concepts, payments]);
-
-  // Filtrado reactivo en memoria
-  const filteredPayments = useMemo(() => {
-    return payments.filter((payment) => {
-      // 1. Filtro por buscador (nombre de alumno, email, referencia, notas o concepto)
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const studentName = payment.student?.user?.name?.toLowerCase() || "";
-        const studentEmail = payment.student?.user?.email?.toLowerCase() || "";
-        const reference = payment.reference?.toLowerCase() || "";
-        const conceptName = (payment.concept?.name || payment.notes || "").toLowerCase();
-        const notes = payment.notes?.toLowerCase() || "";
-
-        const matchesSearch =
-          studentName.includes(query) ||
-          studentEmail.includes(query) ||
-          reference.includes(query) ||
-          conceptName.includes(query) ||
-          notes.includes(query);
-
-        if (!matchesSearch) return false;
-      }
-
-      // 2. Filtro por Concepto
-      if (selectedConcept !== "ALL") {
-        const currentConceptName = (payment.concept?.name || payment.notes || "").trim().toLowerCase();
-        if (currentConceptName !== selectedConcept.trim().toLowerCase()) {
-          return false;
-        }
-      }
-
-      // 3. Filtro por Estado
-      if (selectedStatus !== "ALL") {
-        if (payment.status !== selectedStatus) {
-          return false;
-        }
-      }
-
-      // 4. Filtro por Fecha / Rango de Fechas
-      if (startDate || endDate) {
-        const rawDate = payment.paidAt || payment.dueDate || payment.createdAt;
-        if (rawDate) {
-          const pDate = new Date(rawDate);
-          const pDateStr = formatYMD(pDate);
-          if (startDate && pDateStr < startDate) return false;
-          if (endDate && pDateStr > endDate) return false;
-        }
-      }
-
-      return true;
-    });
-  }, [payments, searchQuery, selectedConcept, selectedStatus, startDate, endDate]);
-
   // Paginación
-  const totalPages = Math.max(1, Math.ceil(filteredPayments.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const validCurrentPage = Math.min(currentPage, totalPages);
-  const startIndex = (validCurrentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const currentPayments = filteredPayments.slice(startIndex, endIndex);
+  const startIndex = totalCount > 0 ? (validCurrentPage - 1) * pageSize : 0;
+  const endIndex = Math.min(startIndex + pageSize, totalCount);
 
   // Generador de números de página con elipsis
   const getPageNumbers = () => {
@@ -215,9 +215,13 @@ export function PaymentsTableClient({
     <Card className="overflow-hidden border-slate-200 shadow-sm">
       <CardHeader className="bg-slate-50/60 border-b border-slate-100 p-3 sm:p-3.5">
         <div className="flex flex-col lg:flex-row lg:items-center gap-2.5 w-full">
-          {/* 1. Buscador */}
+          {/* 1. Buscador Asíncrono */}
           <div className="relative flex-1 min-w-[180px]">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+            {isLoading ? (
+              <Loader2 className="absolute left-2.5 top-2.5 h-4 w-4 text-[#0066cc] animate-spin" />
+            ) : (
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+            )}
             <Input
               type="text"
               placeholder="Buscar alumno, folio, concepto..."
@@ -260,19 +264,13 @@ export function PaymentsTableClient({
                 </SelectTrigger>
                 <SelectContent className="max-h-64 max-w-[300px]">
                   <SelectItem value="ALL" className="text-xs font-semibold text-slate-900">
-                    Todos los conceptos ({payments.length})
+                    Todos los conceptos
                   </SelectItem>
-                  {conceptOptions.map((conceptName) => {
-                    const count = payments.filter((p: any) => (p.concept?.name || p.notes || "").trim() === conceptName).length;
-                    return (
-                      <SelectItem key={conceptName} value={conceptName} className="text-xs">
-                        <div className="flex items-center justify-between gap-2 w-full">
-                          <span className="truncate">{conceptName}</span>
-                          <span className="text-[11px] text-slate-400 font-mono shrink-0">({count})</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
+                  {conceptOptions.map((conceptName) => (
+                    <SelectItem key={conceptName} value={conceptName} className="text-xs">
+                      <span className="truncate">{conceptName}</span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -372,7 +370,12 @@ export function PaymentsTableClient({
         </div>
       </CardHeader>
 
-      <CardContent className="p-0">
+      <CardContent className="p-0 relative">
+        {/* Indicador de carga asíncrona sutil */}
+        {isLoading && (
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#0066cc] animate-pulse z-10" />
+        )}
+
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -388,32 +391,41 @@ export function PaymentsTableClient({
                 <TableHead className="text-right font-bold text-slate-700 pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {filteredPayments.length === 0 ? (
+            <TableBody className={cn(isLoading && "opacity-60 transition-opacity duration-200")}>
+              {payments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="h-36 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 py-4">
-                      <Search className="h-8 w-8 text-slate-300" />
-                      <p className="text-sm font-semibold text-slate-700">
-                        {hasActiveFilters
-                          ? "No se encontraron pagos con los filtros seleccionados."
-                          : "No hay pagos registrados aún."}
-                      </p>
-                      {hasActiveFilters && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleClearFilters}
-                          className="mt-1 text-xs"
-                        >
-                          Restablecer búsqueda y filtros
-                        </Button>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-8 w-8 text-[#0066cc] animate-spin" />
+                          <p className="text-sm font-semibold text-slate-700">Cargando pagos...</p>
+                        </>
+                      ) : (
+                        <>
+                          <Search className="h-8 w-8 text-slate-300" />
+                          <p className="text-sm font-semibold text-slate-700">
+                            {hasActiveFilters
+                              ? "No se encontraron pagos con los filtros seleccionados."
+                              : "No hay pagos registrados aún."}
+                          </p>
+                          {hasActiveFilters && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleClearFilters}
+                              className="mt-1 text-xs"
+                            >
+                              Restablecer búsqueda y filtros
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                currentPayments.map((payment: any) => {
+                payments.map((payment: any) => {
                   const isPaid = payment.status === "PAID";
 
                   const isAssistedStripe =
@@ -528,15 +540,15 @@ export function PaymentsTableClient({
           </Table>
         </div>
 
-        {/* ─── Paginador y Selector de Página ─── */}
-        {filteredPayments.length > 0 && (
+        {/* ─── Paginador y Selector de Página Asíncrono ─── */}
+        {totalCount > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50/50">
             <div className="flex items-center gap-3 text-xs text-slate-500">
               <div>
                 Mostrando <span className="font-semibold text-slate-800">{startIndex + 1}</span> a{" "}
-                <span className="font-semibold text-slate-800">{Math.min(endIndex, filteredPayments.length)}</span> de{" "}
-                <span className="font-semibold text-slate-800">{filteredPayments.length}</span> pagos
-                {hasActiveFilters && ` (filtrados de ${payments.length})`}
+                <span className="font-semibold text-slate-800">{endIndex}</span> de{" "}
+                <span className="font-semibold text-slate-800">{totalCount}</span> pagos
+                {hasActiveFilters && totalRegistered > 0 && ` (filtrados de ${totalRegistered})`}
               </div>
 
               {/* Selector de registros por página */}
@@ -570,7 +582,7 @@ export function PaymentsTableClient({
                   size="icon"
                   className="h-8 w-8 text-xs"
                   onClick={() => setCurrentPage(1)}
-                  disabled={validCurrentPage === 1}
+                  disabled={validCurrentPage === 1 || isLoading}
                   title="Primera página"
                 >
                   <ChevronsLeft className="h-3.5 w-3.5" />
@@ -582,7 +594,7 @@ export function PaymentsTableClient({
                   size="icon"
                   className="h-8 w-8 text-xs"
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={validCurrentPage === 1}
+                  disabled={validCurrentPage === 1 || isLoading}
                   title="Página anterior"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
@@ -600,6 +612,7 @@ export function PaymentsTableClient({
                         key={`page-${page}`}
                         variant={validCurrentPage === page ? "default" : "outline"}
                         size="sm"
+                        disabled={isLoading}
                         className={cn(
                           "h-8 min-w-8 px-2 text-xs font-semibold",
                           validCurrentPage === page
@@ -620,7 +633,7 @@ export function PaymentsTableClient({
                   size="icon"
                   className="h-8 w-8 text-xs"
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={validCurrentPage === totalPages}
+                  disabled={validCurrentPage === totalPages || isLoading}
                   title="Página siguiente"
                 >
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -632,7 +645,7 @@ export function PaymentsTableClient({
                   size="icon"
                   className="h-8 w-8 text-xs"
                   onClick={() => setCurrentPage(totalPages)}
-                  disabled={validCurrentPage === totalPages}
+                  disabled={validCurrentPage === totalPages || isLoading}
                   title="Última página"
                 >
                   <ChevronsRight className="h-3.5 w-3.5" />
