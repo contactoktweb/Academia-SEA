@@ -7,6 +7,7 @@ import { getSedeCondition } from "@/lib/multi-tenancy";
 import { stripe, isStripeConfigured } from "@/lib/stripe";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { syncAndGenerateMonthlyPayments } from "@/lib/payment-plan-service";
 
 export async function createPayment(data: {
   studentId: string;
@@ -53,6 +54,81 @@ export async function createPayment(data: {
   } catch (error) {
     console.error("Error creating payment:", error);
     return { success: false, error: "Error al crear el pago" };
+  }
+}
+
+export async function updatePayment(
+  paymentId: string,
+  data: {
+    conceptId?: string;
+    amount?: number;
+    dueDate?: string;
+    notes?: string;
+  }
+) {
+  try {
+    const existing = await db.payment.findUnique({ where: { id: paymentId } });
+    if (!existing) {
+      return { success: false, error: "Pago no encontrado" };
+    }
+
+    const updateData: any = {};
+    if (data.conceptId !== undefined) updateData.conceptId = data.conceptId || null;
+    if (data.amount !== undefined && !isNaN(data.amount)) updateData.amount = parseFloat(String(data.amount));
+    if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
+    if (data.notes !== undefined) updateData.notes = data.notes;
+
+    const rawPayment = await db.payment.update({
+      where: { id: paymentId },
+      data: updateData,
+      include: {
+        student: { include: { user: true } },
+        concept: true,
+      },
+    });
+
+    const payment = {
+      ...rawPayment,
+      amount: Number(rawPayment.amount),
+      amountPaid: rawPayment.amountPaid ? Number(rawPayment.amountPaid) : null,
+      concept: rawPayment.concept ? {
+        ...rawPayment.concept,
+        amount: Number(rawPayment.concept.amount),
+      } : null,
+    };
+
+    revalidatePath("/dashboard/pagos");
+    revalidatePath("/dashboard/mis-pagos");
+    revalidatePath("/dashboard/estados-cuenta");
+    return { success: true, data: payment };
+  } catch (error) {
+    console.error("Error updating payment:", error);
+    return { success: false, error: "Error al actualizar el cobro" };
+  }
+}
+
+export async function updatePaymentDueDate(paymentId: string, newDueDate: string) {
+  try {
+    if (!newDueDate) {
+      return { success: false, error: "Fecha de vencimiento requerida" };
+    }
+
+    const updated = await db.payment.update({
+      where: { id: paymentId },
+      data: {
+        dueDate: new Date(newDueDate),
+      },
+    });
+
+    revalidatePath("/dashboard/pagos");
+    revalidatePath("/dashboard/mis-pagos");
+    revalidatePath("/dashboard/estados-cuenta");
+    revalidatePath("/dashboard/alumnos");
+
+    return { success: true, data: updated };
+  } catch (error) {
+    console.error("Error updating payment due date:", error);
+    return { success: false, error: "Error al actualizar la fecha de vencimiento" };
   }
 }
 
@@ -629,69 +705,14 @@ export async function generatePendingEnrollmentPayments() {
         user: { isActive: true, deletedAt: null },
         enrollments: { some: { status: "ACTIVE" } },
       },
-      include: {
-        user: true,
-        enrollments: {
-          where: { status: "ACTIVE" },
-          include: { course: true, cycle: true },
-        },
-        payments: {
-          include: { concept: true },
-        },
-      },
-      orderBy: { user: { name: "asc" } },
+      select: { id: true },
     });
 
-    const concepts = await db.chargeConcept.findMany({ where: { isActive: true } });
-    let createdCount = 0;
-
+    let syncCount = 0;
     for (const s of students) {
-      const enr = s.enrollments[0];
-      if (!enr) continue;
-
-      const sede = s.sede || s.user.sede || "SEAAUTLAN";
-      const tuitionConcept = concepts.find((c) => c.sede === sede && c.type === "TUITION") || concepts.find((c) => c.type === "TUITION");
-
-      const baseAmount = enr.monthlyValue ? Number(enr.monthlyValue) : Number(tuitionConcept?.amount || 800);
-      const discount = enr.isScholarship && enr.scholarshipDiscount ? Number(enr.scholarshipDiscount) : 0;
-      const finalAmount = Math.max(0, baseAmount - discount);
-
-      // Calcular fecha de vencimiento (1 mes posterior al registro / inscripción)
-      const enrDate = new Date(enr.enrolledAt || s.createdAt);
-      const targetYear = enrDate.getMonth() === 11 ? enrDate.getFullYear() + 1 : enrDate.getFullYear();
-      const targetMonth = (enrDate.getMonth() + 1) % 12;
-      let targetDay = enr.paymentDate && enr.paymentDate >= 1 && enr.paymentDate <= 31 ? enr.paymentDate : 10;
-      
-      const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
-      if (targetDay > daysInTargetMonth) targetDay = daysInTargetMonth;
-
-      const dueDate = new Date(Date.UTC(targetYear, targetMonth, targetDay, 12, 0, 0));
-
-      // Verificar si ya existe un pago de colegiatura generado para ese mes
-      const alreadyHasPayment = s.payments.some((p) => {
-        const d = new Date(p.dueDate);
-        return (
-          d.getFullYear() === targetYear &&
-          d.getMonth() === targetMonth &&
-          p.status !== "CANCELLED"
-        );
-      });
-
-      if (!alreadyHasPayment) {
-        await db.payment.create({
-          data: {
-            studentId: s.id,
-            cycleId: enr.cycleId,
-            conceptId: tuitionConcept?.id,
-            amount: finalAmount,
-            dueDate,
-            method: "BANK_TRANSFER",
-            status: "PENDING",
-            notes: enr.monthlyConcept?.trim() || "Colegiatura Mensual",
-            sede,
-          },
-        });
-        createdCount++;
+      const res = await syncAndGenerateMonthlyPayments(s.id);
+      if (res.success) {
+        syncCount++;
       }
     }
 
@@ -702,10 +723,10 @@ export async function generatePendingEnrollmentPayments() {
       revalidatePath("/dashboard/mis-pagos");
     } catch {}
 
-    return { success: true, count: createdCount, totalStudents: students.length };
+    return { success: true, count: syncCount, totalStudents: students.length };
   } catch (error) {
     console.error("Error generating pending enrollment payments:", error);
-    return { success: false, error: "Error al generar cobros pendientes de mensualidad" };
+    return { success: false, error: "Error al sincronizar cuotas pendientes de mensualidad" };
   }
 }
 

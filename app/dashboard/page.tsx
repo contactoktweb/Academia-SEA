@@ -11,11 +11,11 @@ export default async function DashboardGeneralPanel() {
   const session = await auth();
   const role = session?.user?.role;
 
-  if (role === 'TEACHER') {
+  if (role === 'TEACHER' && session?.user) {
     return <TeacherDashboard user={session.user} />;
   }
 
-  if (role === 'STUDENT') {
+  if (role === 'STUDENT' && session?.user) {
     const access = await getStudentAcademicAccess(session.user.id);
     return <StudentDashboard user={session.user} access={access} />;
   }

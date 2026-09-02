@@ -55,7 +55,9 @@ export async function getSystemConfig() {
 
 // ─── Helper to bust the cache after any write ───────────────────────────────
 function invalidateConfigCache() {
-  revalidateTag("system-config");
+  try {
+    (revalidateTag as any)("system-config");
+  } catch {}
   revalidatePath("/dashboard/configuracion");
 }
 

@@ -23,9 +23,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { PlusCircle, Edit2, Trash2, FileText, HelpCircle } from "lucide-react"
+import { PlusCircle, Edit2, Trash2, FileText, HelpCircle, CalendarCheck } from "lucide-react"
 import Link from "next/link"
 import { StudentDialog } from "./student-dialogs"
+import { StudentPaymentPlanDialog } from "./student-payment-plan-dialog"
 
 export async function StudentsTable({ query, isAdmin = true }: { query?: string, isAdmin?: boolean }) {
   const sedeCondition = await getSedeCondition();
@@ -109,6 +110,10 @@ export async function StudentsTable({ query, isAdmin = true }: { query?: string,
                               <FileText className="h-4 w-4" /> 
                               <span>Descargar boleta PDF</span>
                             </li>
+                            <li className="flex items-center gap-2 text-[#0066cc] font-medium">
+                              <CalendarCheck className="h-4 w-4" /> 
+                              <span>Revisar plan de pagos y cuotas</span>
+                            </li>
                             <li className="flex items-center gap-2 text-slate-700 font-medium">
                               <Edit2 className="h-4 w-4" /> 
                               <span>Editar información</span>
@@ -172,16 +177,36 @@ export async function StudentsTable({ query, isAdmin = true }: { query?: string,
                       <div className="flex justify-end gap-2">
                         <TooltipProvider delayDuration={100}>
                           {student.studentProfile && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <a href={`/api/reports/boleta/${student.studentProfile.id}`} target="_blank" rel="noopener noreferrer">
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Descargar Boleta">
-                                    <FileText className="h-4 w-4 text-blue-600" />
-                                  </Button>
-                                </a>
-                              </TooltipTrigger>
-                              <TooltipContent><p>Descargar boleta</p></TooltipContent>
-                            </Tooltip>
+                            <>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <a href={`/api/reports/boleta/${student.studentProfile.id}`} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Descargar Boleta">
+                                      <FileText className="h-4 w-4 text-blue-600" />
+                                    </Button>
+                                  </a>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Descargar boleta</p></TooltipContent>
+                              </Tooltip>
+
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div>
+                                    <StudentPaymentPlanDialog
+                                      studentUser={{
+                                        id: student.id,
+                                        name: student.name,
+                                        email: student.email,
+                                        phone: student.phone,
+                                        photoUrl: student.photoUrl,
+                                      }}
+                                      studentProfile={student.studentProfile}
+                                    />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Plan de Pagos y Cuotas</p></TooltipContent>
+                              </Tooltip>
+                            </>
                           )}
                           {isAdmin && (
                             <>

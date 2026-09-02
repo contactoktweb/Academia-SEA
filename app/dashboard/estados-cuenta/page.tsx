@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic"
 
 export default async function EstadosCuentaPage() {
   const metadata = await getPaymentMetadata()
-  const studentsData = metadata.success ? metadata.data.students.map((s: any) => ({
+  const studentsData = metadata.success && metadata.data?.students ? metadata.data.students.map((s: any) => ({
     id: s.id,
     name: s.name,
     studentProfileId: s.studentProfile?.id || null

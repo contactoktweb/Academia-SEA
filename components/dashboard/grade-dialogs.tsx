@@ -43,7 +43,7 @@ export function GradeDialog({
   exams = [],
   courseAssignments = [],
   trigger,
-}) {
+}: GradeDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();

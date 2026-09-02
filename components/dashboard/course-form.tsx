@@ -54,7 +54,7 @@ export function CourseForm({ initialData, onSuccess }: CourseFormProps) {
   useEffect(() => {
     getTeachersForSelect().then(res => {
       if (res.success && res.data) {
-        setTeachers(res.data);
+        setTeachers(res.data as Array<{id: string, name: string}>);
       }
     });
     getStudentsForSelect().then(res => {

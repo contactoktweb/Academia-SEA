@@ -145,7 +145,7 @@ export async function TeachersTable() {
                   </TableCell>
                 </TableRow>
               ) : (
-                teachers.map((teacher) => (
+                teachers.map((teacher: any) => (
                   <TableRow key={teacher.id}>
                     <TableCell className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">

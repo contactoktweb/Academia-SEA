@@ -75,7 +75,7 @@ export async function GradesTable({ query = "" }: { query?: string }) {
   const userRole = session?.user?.role || "STUDENT";
 
   // Serializar campos Decimal para componentes de cliente
-  const serializedAssignments = courseAssignments.map(ca => ({
+  const serializedAssignments: any[] = courseAssignments.map(ca => ({
     ...ca,
     teacher: ca.teacher ? {
       ...ca.teacher,
@@ -83,7 +83,7 @@ export async function GradesTable({ query = "" }: { query?: string }) {
     } : null,
   }));
 
-  const serializedGrades = grades.map(grade => ({
+  const serializedGrades: any[] = grades.map(grade => ({
     ...grade,
     courseAssignment: grade.courseAssignment ? {
       ...grade.courseAssignment,
@@ -98,12 +98,12 @@ export async function GradesTable({ query = "" }: { query?: string }) {
       )
     : serializedGrades;
 
-  const serializedStudents = students.map(student => ({
+  const serializedStudents: any[] = students.map(student => ({
     ...student,
     // No hay Decimal conocidos aquí, pero aseguramos objeto plano
   }));
 
-  const serializedExams = exams.map(exam => ({
+  const serializedExams: any[] = exams.map(exam => ({
     ...exam,
     // maxScore y weight son Float, no Decimal, pero aseguramos objeto plano
   }));

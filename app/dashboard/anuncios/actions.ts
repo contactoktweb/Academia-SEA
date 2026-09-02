@@ -33,7 +33,7 @@ export async function createAnnouncement(data: {
 
     // Enviar correo a la audiencia seleccionada dentro de la misma sede
     const authorSede = (session.user as any)?.sede || "SEAAUTLAN";
-    let targetUsers = [];
+    let targetUsers: { email: string }[] = [];
     if (data.audience === "ALL") {
       targetUsers = await db.user.findMany({ where: { isActive: true, sede: authorSede as any, deletedAt: null }, select: { email: true } });
     } else if (data.audience === "STUDENTS") {

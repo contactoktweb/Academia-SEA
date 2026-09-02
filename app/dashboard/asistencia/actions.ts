@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
 
 export async function recordAttendance(data: {
   studentId: string;

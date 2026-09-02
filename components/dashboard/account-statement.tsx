@@ -39,7 +39,7 @@ export function AccountStatement({ students }: AccountStatementProps) {
   const [isGeneratingTotalLink, setIsGeneratingTotalLink] = useState(false);
   const [totalLinkDialogOpen, setTotalLinkDialogOpen] = useState(false);
   const [totalLinkData, setTotalLinkData] = useState<{
-    paymentUrl: string;
+    paymentUrl: string | null;
     whatsappUrl: string;
     studentName: string;
     amount: number;
@@ -319,7 +319,7 @@ export function AccountStatement({ students }: AccountStatementProps) {
                     <div className="flex items-center gap-2">
                       <Input
                         readOnly
-                        value={totalLinkData.paymentUrl}
+                        value={totalLinkData.paymentUrl || ""}
                         className="text-xs font-mono bg-slate-50 select-all"
                       />
                       <Button size="sm" variant="outline" onClick={handleCopyLink} className="shrink-0 gap-1">

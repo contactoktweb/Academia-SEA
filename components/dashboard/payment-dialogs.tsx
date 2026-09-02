@@ -63,10 +63,13 @@ import {
   RotateCw,
   Lock,
   FileCheck,
+  Calendar,
   Image as ImageIcon
 } from "lucide-react";
 import { 
   createPayment, 
+  updatePayment,
+  updatePaymentDueDate,
   recordPayment, 
   deletePayment, 
   getPaymentMetadata, 
@@ -281,13 +284,20 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
           conceptId: values.conceptId || undefined,
           amount: parseFloat(values.amount),
         });
+      } else if (mode === "edit") {
+        promise = updatePayment(payment.id, {
+          conceptId: values.conceptId || undefined,
+          amount: parseFloat(values.amount),
+          dueDate: values.dueDate,
+          notes: values.notes,
+        });
       } else {
-        toast.error("Edición no disponible");
+        toast.error("Operación no disponible");
         return;
       }
 
       await toast.promise(promise, {
-        loading: mode === "record" ? "Registrando pago..." : "Creando cobro...",
+        loading: mode === "record" ? "Registrando pago..." : mode === "edit" ? "Actualizando cobro..." : "Creando cobro...",
         success: (result: any) => {
           if (result.success) {
             handleSuccess();
@@ -384,95 +394,112 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
       <DialogContent className="sm:max-w-[460px] max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>
-            {mode === "add" ? "Crear Nuevo Cobro" : "Registrar Pago"}
+            {mode === "add" ? "Crear Nuevo Cobro" : mode === "edit" ? "Editar Cobro Pendiente" : "Registrar Pago"}
           </DialogTitle>
           <DialogDescription>
             {mode === "add" 
-              ? "Genera una nueva obligación de pago para un estudiante." 
+              ? "Genera una nueva obligación de pago manual para un estudiante." 
+              : mode === "edit"
+              ? `Modifica los detalles del cobro pendiente para ${payment?.student?.user?.name || "el alumno"}.`
               : `Registra el pago recibido para ${payment?.student?.user?.name || "el alumno"}.`}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5 pt-1">
-            {mode === "add" && (
+            {(mode === "add" || mode === "edit") && (
               <>
-                <FormField
-                  control={form.control}
-                  name="studentId"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col space-y-1.5">
-                      <FormLabel className="text-xs font-bold text-slate-700">Estudiante</FormLabel>
-                      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn(
-                                "w-full justify-between h-9 text-xs",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              <span className="truncate">
-                                {field.value
-                                  ? metadata.students.find(
-                                      (student: any) => student.studentProfile?.id === field.value
-                                    )?.name
-                                  : "Seleccione un estudiante"}
-                              </span>
-                              <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[360px] p-0" align="start">
-                          <Command>
-                            <CommandInput placeholder="Buscar estudiante..." className="text-xs" />
-                            <CommandList>
-                              <CommandEmpty className="text-xs py-4 text-center">No se encontró ningún estudiante.</CommandEmpty>
-                              <CommandGroup>
-                                {metadata.students.map((student: any) => (
-                                  <CommandItem
-                                    key={student.id}
-                                    value={student.name}
-                                    className="text-xs"
-                                    onSelect={() => {
-                                      const profileId = student.studentProfile?.id;
-                                      field.onChange(profileId);
-                                      setIsPopoverOpen(false);
-                                      if (profileId) {
-                                        getStudentFinancialSummary(profileId).then(res => {
-                                          if (res.success && res.data) {
-                                            setFinancialSummary(res.data);
-                                            if (res.data.activePlans && res.data.activePlans.length > 0) {
-                                              const plan = res.data.activePlans[0];
-                                              const amountToPay = plan.customAmount || plan.plan?.amount;
-                                              if (amountToPay) form.setValue("amount", String(amountToPay));
-                                              if (plan.conceptId) form.setValue("conceptId", plan.conceptId);
-                                              else if (plan.plan?.conceptId) form.setValue("conceptId", plan.plan.conceptId);
+                {mode === "edit" && (
+                  <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 text-xs flex items-center justify-between">
+                    <div>
+                      <span className="text-slate-500 block text-[11px]">Estudiante:</span>
+                      <strong className="text-slate-900 text-sm">{payment?.student?.user?.name || "Alumno"}</strong>
+                    </div>
+                    {payment?.status && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        {payment.status}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {mode === "add" && (
+                  <FormField
+                    control={form.control}
+                    name="studentId"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col space-y-1.5">
+                        <FormLabel className="text-xs font-bold text-slate-700">Estudiante</FormLabel>
+                        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between h-9 text-xs",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                <span className="truncate">
+                                  {field.value
+                                    ? metadata.students.find(
+                                        (student: any) => student.studentProfile?.id === field.value
+                                      )?.name
+                                    : "Seleccione un estudiante"}
+                                </span>
+                                <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[360px] p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Buscar estudiante..." className="text-xs" />
+                              <CommandList>
+                                <CommandEmpty className="text-xs py-4 text-center">No se encontró ningún estudiante.</CommandEmpty>
+                                <CommandGroup>
+                                  {metadata.students.map((student: any) => (
+                                    <CommandItem
+                                      key={student.id}
+                                      value={student.name}
+                                      className="text-xs"
+                                      onSelect={() => {
+                                        const profileId = student.studentProfile?.id;
+                                        field.onChange(profileId);
+                                        setIsPopoverOpen(false);
+                                        if (profileId) {
+                                          getStudentFinancialSummary(profileId).then(res => {
+                                            if (res.success && res.data) {
+                                              setFinancialSummary(res.data);
+                                              if (res.data.activePlans && res.data.activePlans.length > 0) {
+                                                const plan = res.data.activePlans[0];
+                                                const amountToPay = plan.customAmount || plan.plan?.amount;
+                                                if (amountToPay) form.setValue("amount", String(amountToPay));
+                                                if (plan.conceptId) form.setValue("conceptId", plan.conceptId);
+                                                else if (plan.plan?.conceptId) form.setValue("conceptId", plan.plan.conceptId);
+                                              }
                                             }
-                                          }
-                                        });
-                                      }
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-3.5 w-3.5",
-                                        field.value === student.studentProfile?.id ? "opacity-100" : "opacity-0"
-                                      )}
-                                    />
-                                    {student.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-3.5 w-3.5",
+                                          field.value === student.studentProfile?.id ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {student.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 {/* Concepto y Monto en 2 columnas con límite de texto en el selector */}
                 <div className="grid grid-cols-2 gap-3">
@@ -539,10 +566,16 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                   name="dueDate"
                   render={({ field }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-xs font-bold text-slate-700">Fecha de Vencimiento</FormLabel>
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-xs font-bold text-slate-700">Fecha de Vencimiento</FormLabel>
+                        <span className="text-[10px] text-blue-600 font-medium">Editable</span>
+                      </div>
                       <FormControl>
                         <Input type="date" className="h-9 text-xs" {...field} />
                       </FormControl>
+                      <p className="text-[11px] text-slate-500">
+                        *Por defecto se asigna para hoy mismo en cobros manuales, pero puedes seleccionar cualquier fecha.
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -811,7 +844,7 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                 className={mode === "record" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-[#0066cc] hover:bg-[#0055aa] text-white"}
               >
                 {(isPending || isUploadingFile || isCompressing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {mode === "record" ? "Confirmar y Marcar como Pagado" : "Guardar Cobro"}
+                {mode === "record" ? "Confirmar y Marcar como Pagado" : mode === "edit" ? "Guardar Cambios" : "Guardar Cobro"}
               </Button>
             </DialogFooter>
           </form>
@@ -1040,6 +1073,200 @@ export function RevertPaymentDialog({ payment }: { payment: any }) {
             >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Confirmar Reversión
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Modal para Editar Fecha de Vencimiento de un Cobro ───
+export function EditDueDateDialog({
+  payment,
+  trigger,
+  onSuccess,
+}: {
+  payment: {
+    id: string;
+    dueDate?: string | Date;
+    amount?: number;
+    notes?: string;
+    concept?: { name?: string };
+    conceptName?: string;
+    student?: { user?: { name?: string } };
+    studentName?: string;
+  };
+  trigger?: React.ReactNode;
+  onSuccess?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const initialDateStr = payment.dueDate
+    ? new Date(payment.dueDate).toISOString().split("T")[0]
+    : getTodayString();
+
+  const [dueDate, setDueDate] = useState(initialDateStr);
+
+  useEffect(() => {
+    if (open && payment.dueDate) {
+      setDueDate(new Date(payment.dueDate).toISOString().split("T")[0]);
+    }
+  }, [open, payment.dueDate]);
+
+  const handlePreset = (daysToAdd: number) => {
+    const base = new Date();
+    base.setDate(base.getDate() + daysToAdd);
+    const year = base.getFullYear();
+    const month = String(base.getMonth() + 1).padStart(2, "0");
+    const day = String(base.getDate()).padStart(2, "0");
+    setDueDate(`${year}-${month}-${day}`);
+  };
+
+  const handleEndOfMonth = () => {
+    const now = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const year = lastDay.getFullYear();
+    const month = String(lastDay.getMonth() + 1).padStart(2, "0");
+    const day = String(lastDay.getDate()).padStart(2, "0");
+    setDueDate(`${year}-${month}-${day}`);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dueDate) {
+      toast.error("Seleccione una fecha de vencimiento");
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await updatePaymentDueDate(payment.id, dueDate);
+      if (res.success) {
+        setOpen(false);
+        toast.success("Fecha de vencimiento actualizada correctamente");
+        router.refresh();
+        if (onSuccess) onSuccess();
+      } else {
+        toast.error(res.error || "Error al actualizar la fecha");
+      }
+    });
+  };
+
+  const studentName = payment.student?.user?.name || payment.studentName || "Alumno";
+  const conceptName = payment.concept?.name || payment.conceptName || payment.notes || "Colegiatura";
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <TooltipProvider delayDuration={100}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>
+              {trigger || (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
+                >
+                  <Calendar className="h-4 w-4" />
+                </Button>
+              )}
+            </DialogTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            Editar fecha de vencimiento
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <DialogContent className="sm:max-w-[420px]" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-slate-900">
+            <Calendar className="h-5 w-5 text-[#0066cc]" />
+            Editar Fecha de Vencimiento
+          </DialogTitle>
+          <DialogDescription className="text-xs text-slate-500">
+            Cambia la fecha límite de pago para el cobro de {studentName}.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+          <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 text-xs space-y-1.5">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Estudiante:</span>
+              <strong className="text-slate-900">{studentName}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Concepto:</span>
+              <span className="font-semibold text-slate-700 truncate max-w-[200px]">{conceptName}</span>
+            </div>
+            {payment.amount && (
+              <div className="flex justify-between border-t border-slate-200 pt-1">
+                <span className="text-slate-500">Monto:</span>
+                <strong className="text-slate-900">${Number(payment.amount).toFixed(2)} MXN</strong>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700">Nueva Fecha de Vencimiento</label>
+              <span className="text-[10px] text-blue-600 font-medium">Personalizada</span>
+            </div>
+            <Input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              required
+              className="h-9 text-xs"
+            />
+
+            {/* Accesos rápidos */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-[10px] text-slate-400 font-medium">Accesos rápidos:</span>
+              <button
+                type="button"
+                onClick={() => handlePreset(0)}
+                className="text-[10px] font-semibold bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 px-2 py-0.5 rounded border border-slate-200 transition-colors"
+              >
+                Hoy
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePreset(7)}
+                className="text-[10px] font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-200 transition-colors"
+              >
+                +7 días
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePreset(15)}
+                className="text-[10px] font-semibold bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 px-2 py-0.5 rounded border border-slate-200 transition-colors"
+              >
+                +15 días
+              </button>
+              <button
+                type="button"
+                onClick={handleEndOfMonth}
+                className="text-[10px] font-semibold bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 px-2 py-0.5 rounded border border-slate-200 transition-colors"
+              >
+                Fin de mes
+              </button>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="bg-[#0066cc] hover:bg-[#0055aa] text-white font-bold"
+            >
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Guardar Fecha
             </Button>
           </DialogFooter>
         </form>

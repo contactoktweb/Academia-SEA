@@ -36,7 +36,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PaymentDialog, SendPaymentLinkDialog, RevertPaymentDialog } from "./payment-dialogs";
+import { PaymentDialog, SendPaymentLinkDialog, RevertPaymentDialog, EditDueDateDialog } from "./payment-dialogs";
 import { ReceiptViewerDialog } from "./receipt-viewer-dialog";
 import { getPaginatedPaymentsAction } from "@/app/dashboard/pagos/actions";
 
@@ -524,14 +524,20 @@ export function PaymentsTableClient({
                               {/* 1. Enviar Link Asistido por Stripe / WhatsApp */}
                               <SendPaymentLinkDialog payment={payment} />
 
-                              {/* 2. Marcar como Pagado / Registrar Comprobante */}
+                              {/* 2. Editar Fecha de Vencimiento Rápida */}
+                              <EditDueDateDialog payment={payment} />
+
+                              {/* 3. Editar Cobro Completo (Concepto, Monto, Fecha) */}
+                              <PaymentDialog mode="edit" payment={payment} />
+
+                              {/* 4. Marcar como Pagado / Registrar Comprobante */}
                               <PaymentDialog mode="record" payment={payment} />
 
-                              {/* 3. Eliminar Cobro Pendiente */}
+                              {/* 5. Eliminar Cobro Pendiente */}
                               <PaymentDialog mode="delete" payment={payment} />
                             </>
                           ) : (
-                            /* 4. Revertir Pago para el Administrador (Motivo Obligatorio) */
+                            /* Revertir Pago para el Administrador (Motivo Obligatorio) */
                             <RevertPaymentDialog payment={payment} />
                           )}
                         </div>
