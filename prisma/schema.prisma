@@ -328,6 +328,8 @@ model StudentEnrollment {
   totalInstallments   Int?      // Cantidad de mensualidades a cobrar
   isScholarship       Boolean   @default(false)
   scholarshipDiscount Decimal?  @db.Decimal(10, 2)
+  isPlanActive        Boolean   @default(false)
+  planActivatedAt     DateTime?
 
   enrolledAt DateTime       @default(now())
   droppedAt  DateTime?

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe, isStripeConfigured } from "@/lib/stripe";
 import { db } from "@/lib/db";
+import { syncAndGenerateMonthlyPayments } from "@/lib/payment-plan-service";
 import Stripe from "stripe";
 
 export async function POST(req: NextRequest) {
@@ -41,7 +42,10 @@ export async function POST(req: NextRequest) {
         const isAssisted = session.metadata?.isAssisted === "true";
         const tag = isAssisted ? "[ASISTIDO_STRIPE]" : "[PORTAL_ALUMNO]";
         
-        const existing = await db.payment.findUnique({ where: { id: paymentId } });
+        const existing = await db.payment.findUnique({ 
+          where: { id: paymentId },
+          include: { concept: true },
+        });
         const existingNotes = existing?.notes || "";
         const updatedNotes = existingNotes.includes(tag) 
           ? existingNotes 
@@ -58,6 +62,23 @@ export async function POST(req: NextRequest) {
             notes: updatedNotes,
           },
         });
+
+        if (existing?.studentId) {
+          const isEnrollment =
+            existing.concept?.type === "ENROLLMENT" ||
+            existing.concept?.name?.toLowerCase().includes("inscripci") ||
+            existing.notes?.toLowerCase().includes("inscripci");
+
+          if (isEnrollment) {
+            await db.studentEnrollment.updateMany({
+              where: { studentId: existing.studentId, status: "ACTIVE" },
+              data: { isPlanActive: true, planActivatedAt: new Date() },
+            });
+            await syncAndGenerateMonthlyPayments(existing.studentId, { forceActivate: true });
+          } else {
+            await syncAndGenerateMonthlyPayments(existing.studentId);
+          }
+        }
         console.log(`✅ Pago ${paymentId} actualizado a PAID (${isAssisted ? 'Asistido' : 'Portal Alumno'}) por Stripe Webhook`);
       } catch (dbError) {
         console.error("Error actualizando pago en base de datos:", dbError);

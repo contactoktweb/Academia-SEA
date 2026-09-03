@@ -50,6 +50,7 @@ import { toast } from "sonner";
 import {
   getStudentPaymentPlanDetails,
   updateStudentPaymentPlan,
+  activateStudentPaymentPlanAction,
 } from "@/app/dashboard/alumnos/actions";
 import {
   generateAssistedPaymentLink,
@@ -97,6 +98,7 @@ export function StudentPaymentPlanDialog({
     totalInstallments: "",
     isScholarship: false,
     scholarshipDiscount: "",
+    isPlanActive: false,
   });
 
   // Modal para registrar pago de una cuota
@@ -138,6 +140,7 @@ export function StudentPaymentPlanDialog({
             totalInstallments: res.data.enrollment.totalInstallments?.toString() || "6",
             isScholarship: res.data.enrollment.isScholarship || false,
             scholarshipDiscount: res.data.enrollment.scholarshipDiscount?.toString() || "",
+            isPlanActive: Boolean(res.data.isPlanActive),
           });
         }
         if (showToast) {
@@ -154,6 +157,20 @@ export function StudentPaymentPlanDialog({
     }
   }
 
+  async function handleActivatePlan() {
+    startTransition(async () => {
+      const toastId = toast.loading("Habilitando plan de cuotas...");
+      const res = await activateStudentPaymentPlanAction(studentProfile.id);
+      toast.dismiss(toastId);
+      if (res.success && res.data) {
+        setPlanData(res.data);
+        toast.success("¡Plan de pagos habilitado con éxito! Se han generado las mensualidades.");
+      } else {
+        toast.error(res.error || "No se pudo habilitar el plan de pagos.");
+      }
+    });
+  }
+
   async function handleSaveConfig() {
     startTransition(async () => {
       const toastId = toast.loading("Actualizando configuración del plan...");
@@ -164,6 +181,7 @@ export function StudentPaymentPlanDialog({
         totalInstallments: configForm.totalInstallments ? parseInt(configForm.totalInstallments) : undefined,
         isScholarship: configForm.isScholarship,
         scholarshipDiscount: configForm.scholarshipDiscount ? parseFloat(configForm.scholarshipDiscount) : 0,
+        isPlanActive: configForm.isPlanActive,
       });
 
       toast.dismiss(toastId);
@@ -368,11 +386,22 @@ export function StudentPaymentPlanDialog({
                 {enrollment ? (
                   <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="inline-flex items-center gap-1 font-bold text-xs text-[#0066cc] uppercase tracking-wider">
                           <GraduationCap className="h-4 w-4" />
                           Programa de Estudios Activo
                         </span>
+                        {planData?.isPlanActive ? (
+                          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] font-bold flex items-center gap-1 shadow-2xs">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                            Plan Habilitado ({enrollment.totalInstallments || 6} Meses)
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-amber-100 text-amber-900 border-amber-300 text-[10px] font-bold flex items-center gap-1 shadow-2xs">
+                            <Clock className="h-3 w-3 text-amber-600" />
+                            Pendiente de Primer Cobro (Inscripción)
+                          </Badge>
+                        )}
                         {enrollment.isScholarship && (
                           <Badge className="bg-amber-100 text-amber-900 border-amber-300 text-[10px] font-bold flex items-center gap-1">
                             <Sparkles className="h-3 w-3 text-amber-600" />
@@ -419,6 +448,34 @@ export function StudentPaymentPlanDialog({
                         Puedes registrar cobros individuales o inscribir al alumno en un grupo desde la sección de edición.
                       </p>
                     </div>
+                  </div>
+                )}
+
+                {/* ─── Aviso de Plan Pendiente de Activación ─── */}
+                {!planData?.isPlanActive && enrollment && (
+                  <div className="rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/80 p-4 text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-amber-100 text-amber-700 shrink-0">
+                        <Clock className="h-5 w-5" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="font-bold text-sm text-amber-900">
+                          Plan de pagos pendiente de habilitación
+                        </p>
+                        <p className="text-amber-800 text-xs">
+                          El plan se activará automáticamente al registrarse el primer cobro manual de <strong>Inscripción</strong>, habilitando las {enrollment?.totalInstallments || 6} mensualidades del alumno. También puedes habilitarlo directamente con el botón.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={handleActivatePlan}
+                      disabled={isPending}
+                      className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 shadow-xs h-9 gap-1.5"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>Habilitar Plan Ahora</span>
+                    </Button>
                   </div>
                 )}
 
@@ -478,10 +535,27 @@ export function StudentPaymentPlanDialog({
                             value={configForm.totalInstallments}
                             onChange={(e) => setConfigForm({ ...configForm, totalInstallments: e.target.value })}
                             placeholder="Ej. 6"
-                            className="h-8 text-xs bg-white mt-1"
+                            className="h-8 text-xs bg-white mt-1 font-semibold"
                           />
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            *Normalmente 6 meses, editable
+                          </p>
                         </div>
-                        <div className="sm:col-span-2 flex flex-col justify-end">
+                        <div className="flex flex-col justify-end">
+                          <div className="flex items-center space-x-2 bg-white p-2 rounded-md border border-slate-200 h-8 mt-1">
+                            <Checkbox
+                              id="plan-active-check"
+                              checked={configForm.isPlanActive}
+                              onCheckedChange={(checked) =>
+                                setConfigForm({ ...configForm, isPlanActive: !!checked })
+                              }
+                            />
+                            <Label htmlFor="plan-active-check" className="text-xs font-semibold cursor-pointer">
+                              Plan Habilitado (Activo)
+                            </Label>
+                          </div>
+                        </div>
+                        <div className="sm:col-span-3 flex flex-col justify-end">
                           <div className="flex items-center space-x-2 bg-white p-2 rounded-md border border-slate-200">
                             <Checkbox
                               id="beca-check"

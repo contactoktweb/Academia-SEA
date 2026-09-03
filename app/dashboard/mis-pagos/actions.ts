@@ -94,6 +94,11 @@ export async function verifyStripeSessionPayment(sessionId: string) {
       const amountTotal = checkoutSession.amount_total ? checkoutSession.amount_total / 100 : 0;
 
       if (paymentId) {
+        const payment = await db.payment.findUnique({
+          where: { id: paymentId },
+          include: { concept: true },
+        });
+
         await db.payment.update({
           where: { id: paymentId },
           data: {
@@ -105,7 +110,26 @@ export async function verifyStripeSessionPayment(sessionId: string) {
           },
         });
 
+        if (payment?.studentId) {
+          const isEnrollment =
+            payment.concept?.type === "ENROLLMENT" ||
+            payment.concept?.name?.toLowerCase().includes("inscripci") ||
+            payment.notes?.toLowerCase().includes("inscripci");
+
+          if (isEnrollment) {
+            await db.studentEnrollment.updateMany({
+              where: { studentId: payment.studentId, status: "ACTIVE" },
+              data: { isPlanActive: true, planActivatedAt: new Date() },
+            });
+            await syncAndGenerateMonthlyPayments(payment.studentId, { forceActivate: true });
+          } else {
+            await syncAndGenerateMonthlyPayments(payment.studentId);
+          }
+        }
+
         revalidatePath("/dashboard/mis-pagos");
+        revalidatePath("/dashboard/pagos");
+        revalidatePath("/dashboard/estados-cuenta");
         return { success: true, verified: true };
       }
     }

@@ -380,6 +380,20 @@ export async function getStudentPaymentPlanDetails(studentProfileId: string) {
   }
 }
 
+export async function activateStudentPaymentPlanAction(studentProfileId: string) {
+  try {
+    const res = await syncAndGenerateMonthlyPayments(studentProfileId, { forceActivate: true });
+    revalidatePath("/dashboard/alumnos");
+    revalidatePath("/dashboard/pagos");
+    revalidatePath("/dashboard/estados-cuenta");
+    revalidatePath("/dashboard/mis-pagos");
+    return res;
+  } catch (error) {
+    console.error("Error activating student payment plan:", error);
+    return { success: false, error: "Error al activar el plan de pagos del alumno" };
+  }
+}
+
 export async function updateStudentPaymentPlan(
   studentProfileId: string,
   config: {
@@ -389,6 +403,7 @@ export async function updateStudentPaymentPlan(
     isScholarship?: boolean;
     scholarshipDiscount?: number;
     monthlyConcept?: string;
+    isPlanActive?: boolean;
   }
 ) {
   try {

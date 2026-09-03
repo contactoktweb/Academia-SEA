@@ -17,8 +17,82 @@ export async function createPayment(data: {
   dueDate: string;
   method?: string;
   notes?: string;
+  status?: "PENDING" | "PAID" | string;
+  paidAt?: string;
+  reference?: string;
+  receiptUrl?: string;
 }) {
   try {
+    const concept = data.conceptId
+      ? await db.chargeConcept.findUnique({ where: { id: data.conceptId } })
+      : null;
+
+    const isEnrollment =
+      concept?.type === "ENROLLMENT" ||
+      concept?.name?.toLowerCase().includes("inscripci") ||
+      data.notes?.toLowerCase().includes("inscripci");
+
+    const isTuition =
+      concept?.type === "TUITION" ||
+      concept?.name?.toLowerCase().includes("mensualidad") ||
+      concept?.name?.toLowerCase().includes("colegiatura") ||
+      data.notes?.toLowerCase().includes("mensualidad") ||
+      data.notes?.toLowerCase().includes("colegiatura");
+
+    // Si es un cobro de mensualidad y se está registrando pagado, descontar la cuota pendiente más antigua
+    if (isTuition) {
+      const existingPendingTuition = await db.payment.findFirst({
+        where: {
+          studentId: data.studentId,
+          status: "PENDING",
+          OR: [
+            { conceptId: data.conceptId },
+            { concept: { type: "TUITION" } },
+            { notes: { contains: "Colegiatura" } },
+            { notes: { contains: "Mensualidad" } },
+          ],
+        },
+        orderBy: { dueDate: "asc" },
+      });
+
+      if (existingPendingTuition && data.status === "PAID") {
+        const autoRef = `REC-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}${String(new Date().getDate()).padStart(2, "0")}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+        const updated = await db.payment.update({
+          where: { id: existingPendingTuition.id },
+          data: {
+            amountPaid: parseFloat(String(data.amount)),
+            status: "PAID",
+            method: (data.method as any) || "BANK_TRANSFER",
+            paidAt: data.paidAt ? new Date(data.paidAt) : new Date(),
+            reference: data.reference || autoRef,
+            receiptUrl: data.receiptUrl || null,
+            notes: data.notes ? `${existingPendingTuition.notes || ""} | ${data.notes}`.trim() : existingPendingTuition.notes,
+          },
+          include: {
+            student: { include: { user: true } },
+            concept: true,
+          },
+        });
+
+        await syncAndGenerateMonthlyPayments(data.studentId);
+        revalidatePath("/dashboard/pagos");
+        revalidatePath("/dashboard/mis-pagos");
+        revalidatePath("/dashboard/estados-cuenta");
+        revalidatePath("/dashboard/alumnos");
+
+        return {
+          success: true,
+          data: {
+            ...updated,
+            amount: Number(updated.amount),
+            amountPaid: Number(updated.amountPaid),
+            concept: updated.concept ? { ...updated.concept, amount: Number(updated.concept.amount) } : null,
+          },
+          message: "Mensualidad descontada y registrada como pagada con éxito.",
+        };
+      }
+    }
+
     const rawPayment = await db.payment.create({
       data: {
         studentId: data.studentId,
@@ -26,8 +100,12 @@ export async function createPayment(data: {
         conceptId: data.conceptId,
         amount: parseFloat(String(data.amount)),
         dueDate: new Date(data.dueDate),
-        method: data.method as any || "CASH",
-        status: "PENDING",
+        method: (data.method as any) || "CASH",
+        status: (data.status as any) || "PENDING",
+        amountPaid: data.status === "PAID" ? parseFloat(String(data.amount)) : null,
+        paidAt: data.status === "PAID" ? (data.paidAt ? new Date(data.paidAt) : new Date()) : null,
+        reference: data.reference || null,
+        receiptUrl: data.receiptUrl || null,
         notes: data.notes,
         sede: ((await auth())?.user as any)?.sede || "SEAAUTLAN",
       },
@@ -37,20 +115,42 @@ export async function createPayment(data: {
       },
     });
 
+    // Si es cobro/pago de inscripción, habilitar el plan de mensualidades del alumno
+    if (isEnrollment) {
+      await db.studentEnrollment.updateMany({
+        where: { studentId: data.studentId, status: "ACTIVE" },
+        data: { isPlanActive: true, planActivatedAt: new Date() },
+      });
+      await syncAndGenerateMonthlyPayments(data.studentId, { forceActivate: true });
+    } else if (isTuition) {
+      await syncAndGenerateMonthlyPayments(data.studentId);
+    }
+
+    const rawConcept = (rawPayment as any).concept;
     const payment = {
       ...rawPayment,
       amount: Number(rawPayment.amount),
       amountPaid: rawPayment.amountPaid ? Number(rawPayment.amountPaid) : null,
-      concept: rawPayment.concept ? {
-        ...rawPayment.concept,
-        amount: Number(rawPayment.concept.amount),
-      } : null,
+      concept: rawConcept
+        ? {
+            ...rawConcept,
+            amount: Number(rawConcept.amount),
+          }
+        : null,
     };
 
     revalidatePath("/dashboard/pagos");
     revalidatePath("/dashboard/mis-pagos");
     revalidatePath("/dashboard/estados-cuenta");
-    return { success: true, data: payment };
+    revalidatePath("/dashboard/alumnos");
+
+    return {
+      success: true,
+      data: payment,
+      message: isEnrollment
+        ? "Cobro de inscripción registrado. El plan de cuotas de mensualidades ha sido habilitado para el alumno."
+        : undefined,
+    };
   } catch (error) {
     console.error("Error creating payment:", error);
     return { success: false, error: "Error al crear el pago" };
@@ -200,9 +300,31 @@ export async function recordPayment(
       } : null,
     };
 
+    // Regla de negocio: Si el pago liquidado es de Inscripción, habilitar el plan de cuotas del alumno
+    const concept = existing.conceptId
+      ? await db.chargeConcept.findUnique({ where: { id: existing.conceptId } })
+      : null;
+
+    const isEnrollment =
+      concept?.type === "ENROLLMENT" ||
+      concept?.name?.toLowerCase().includes("inscripci") ||
+      existing.notes?.toLowerCase().includes("inscripci");
+
+    if (isEnrollment) {
+      await db.studentEnrollment.updateMany({
+        where: { studentId: existing.studentId, status: "ACTIVE" },
+        data: { isPlanActive: true, planActivatedAt: new Date() },
+      });
+      await syncAndGenerateMonthlyPayments(existing.studentId, { forceActivate: true });
+    } else {
+      // Recalcular el plan para que descuente la cuota pagada
+      await syncAndGenerateMonthlyPayments(existing.studentId);
+    }
+
     revalidatePath("/dashboard/pagos");
     revalidatePath("/dashboard/mis-pagos");
     revalidatePath("/dashboard/estados-cuenta");
+    revalidatePath("/dashboard/alumnos");
     revalidatePath("/dashboard/metricas");
     return { success: true, data: payment };
   } catch (error) {

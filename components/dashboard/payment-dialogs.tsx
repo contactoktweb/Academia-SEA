@@ -64,7 +64,8 @@ import {
   Lock,
   FileCheck,
   Calendar,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Sparkles
 } from "lucide-react";
 import { 
   createPayment, 
@@ -560,6 +561,32 @@ export function PaymentDialog({ mode, payment }: PaymentDialogProps) {
                     )}
                   />
                 </div>
+
+                {/* Mensaje contextual según concepto */}
+                {(() => {
+                  const selId = form.watch("conceptId");
+                  const selConcept = metadata.concepts.find((c: any) => c.id === selId);
+                  const isEnroll = selConcept?.type === "ENROLLMENT" || selConcept?.name?.toLowerCase().includes("inscripci");
+                  const isTuition = selConcept?.type === "TUITION" || selConcept?.name?.toLowerCase().includes("mensualidad") || selConcept?.name?.toLowerCase().includes("colegiatura");
+
+                  if (isEnroll) {
+                    return (
+                      <div className="rounded-lg bg-blue-50 border border-blue-200 p-2 text-[11px] text-[#0066cc] flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                        <span><strong>Cobro de Inscripción:</strong> Al registrarse, se habilitará automáticamente el plan de cuotas de mensualidades para el alumno.</span>
+                      </div>
+                    );
+                  }
+                  if (isTuition) {
+                    return (
+                      <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2 text-[11px] text-emerald-800 flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                        <span><strong>Cobro de Mensualidad:</strong> Al registrarse pagado, el sistema descontará 1 cuota del mes en el plan del alumno.</span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
 
                 <FormField
                   control={form.control}
