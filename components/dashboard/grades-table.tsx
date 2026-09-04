@@ -15,268 +15,483 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { GradeDialog } from "./grade-dialogs";
+import { Badge } from "@/components/ui/badge";
+import { GradeDialog, StudentGradesDetailDialog } from "./grade-dialogs";
 import { auth } from "@/lib/auth";
 import { SearchInput } from "./search-input";
+import { PlusCircle, BookOpen, TrendingUp, Users, ClipboardList } from "lucide-react";
 
 export async function GradesTable({ query = "" }: { query?: string }) {
   const sedeCondition = await getSedeCondition();
   const session = await auth();
 
-  const [grades, students, exams, courseAssignments] = await Promise.all([
+  const userRole = session?.user?.role || "STUDENT";
+  const userId = session?.user?.id;
+
+  // ─── Perfil del profesor si aplica ───────────────────────────────────────────
+  let teacherProfile: { id: string } | null = null;
+  if (userRole === "TEACHER" && userId) {
+    teacherProfile = await db.teacherProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+  }
+
+  // ─── Filtro de estudiantes: solo los alumnos del profesor ────────────────────
+  let studentFilter: any = {
+    isActive: true,
+    user: { ...sedeCondition, deletedAt: null },
+  };
+
+  if (teacherProfile) {
+    studentFilter = {
+      isActive: true,
+      user: { deletedAt: null },
+      enrollments: {
+        some: {
+          course: {
+            assignments: {
+              some: { teacherId: teacherProfile.id },
+            },
+          },
+        },
+      },
+    };
+  }
+
+  // ─── Filtro de exámenes: solo del profesor ────────────────────────────────────
+  let examFilter: any = {
+    isActive: true,
+    unit: { course: { ...sedeCondition } },
+  };
+
+  if (teacherProfile) {
+    examFilter = {
+      isActive: true,
+      unit: {
+        course: {
+          assignments: { some: { teacherId: teacherProfile.id } },
+        },
+      },
+    };
+  }
+
+  // ─── Consultas paralelas ──────────────────────────────────────────────────────
+  const [students, exams, allGrades] = await Promise.all([
+    db.studentProfile.findMany({
+      where: studentFilter,
+      include: {
+        user: true,
+        enrollments: {
+          include: { course: true, group: true },
+          take: 1,
+        },
+      },
+      orderBy: { user: { name: "asc" } },
+    }),
+    db.exam.findMany({
+      where: examFilter,
+      include: { unit: { include: { course: true } } },
+      orderBy: { createdAt: "asc" },
+    }),
     db.grade.findMany({
       where: {
-        student: {
-          user: {
-            ...sedeCondition,
-            deletedAt: null,
-          }
-        }
+        student: studentFilter,
+        comment: { not: { startsWith: "[CALIFICACIÓN ANULADA" } },
       },
       include: {
         student: { include: { user: true } },
         exam: { include: { unit: { include: { course: true } } } },
-        courseAssignment: true,
+        courseAssignment: { include: { course: true } },
       },
       orderBy: { createdAt: "desc" },
     }),
-    db.studentProfile.findMany({
-      where: {
-        isActive: true,
-        user: {
-          ...sedeCondition,
-          deletedAt: null,
-        }
-      },
-      include: { user: true },
-    }),
-    db.exam.findMany({
-      where: {
-        unit: {
-          course: {
-            ...sedeCondition,
-          }
-        }
-      },
-      include: { unit: { include: { course: true } } },
-    }),
-    db.courseAssignment.findMany({
-      where: {
-        ...sedeCondition,
-      },
-      include: {
-        course: true,
-        group: true,
-        teacher: { include: { user: true } },
-      },
-    }),
   ]);
 
-  const userRole = session?.user?.role || "STUDENT";
-
-  // Serializar campos Decimal para componentes de cliente
-  const serializedAssignments: any[] = courseAssignments.map(ca => ({
-    ...ca,
-    teacher: ca.teacher ? {
-      ...ca.teacher,
-      salary: ca.teacher.salary ? Number(ca.teacher.salary) : null,
-    } : null,
+  // ─── Serializar datos ─────────────────────────────────────────────────────────
+  const serializedStudents = students.map((s) => ({
+    ...s,
+    user: { ...s.user },
+    enrollments: s.enrollments.map((e) => ({
+      ...e,
+      course: e.course,
+      group: e.group,
+    })),
   }));
 
-  const serializedGrades: any[] = grades.map(grade => ({
-    ...grade,
-    courseAssignment: grade.courseAssignment ? {
-      ...grade.courseAssignment,
-      // Aunque no incluimos teacher explícitamente, nos aseguramos de que sea un objeto plano
-    } : null,
-  }));
+  const serializedExams = exams.map((e) => ({ ...e }));
 
-  const filteredGrades = query 
-    ? serializedGrades.filter(grade => 
-        grade.student.user.name.toLowerCase().includes(query.toLowerCase()) ||
-        grade.student.user.email?.toLowerCase().includes(query.toLowerCase())
-      )
-    : serializedGrades;
+  // Agrupar calificaciones por alumno
+  const gradesByStudent = allGrades.reduce((acc: Record<string, any[]>, grade) => {
+    if (!acc[grade.studentId]) acc[grade.studentId] = [];
+    acc[grade.studentId].push(grade);
+    return acc;
+  }, {});
 
-  const serializedStudents: any[] = students.map(student => ({
-    ...student,
-    // No hay Decimal conocidos aquí, pero aseguramos objeto plano
-  }));
-
-  const serializedExams: any[] = exams.map(exam => ({
-    ...exam,
-    // maxScore y weight son Float, no Decimal, pero aseguramos objeto plano
-  }));
-
-  const averageGrade = grades.length > 0
-    ? (grades.reduce((sum, g) => sum + g.value, 0) / grades.length).toFixed(2)
-    : 0;
-
-  const topStudents = grades
-    .reduce((acc: any[], grade) => {
-      const existing = acc.find((g) => g.studentId === grade.studentId);
-      if (existing) {
-        existing.grades.push(grade.value);
-      } else {
-        acc.push({ studentId: grade.studentId, grades: [grade.value], student: grade.student });
-      }
+  // Calificaciones de evaluaciones específicas por alumno y examen
+  const evalByStudentExam = allGrades.reduce(
+    (acc: Record<string, Record<string, any>>, grade) => {
+      if (!grade.examId) return acc;
+      if (!acc[grade.studentId]) acc[grade.studentId] = {};
+      acc[grade.studentId][grade.examId] = grade;
       return acc;
-    }, [])
-    .map((g: any) => ({
-      ...g,
-      average: (g.grades.reduce((a: number, b: number) => a + b, 0) / g.grades.length).toFixed(2),
-    }))
-    .sort((a: any, b: any) => parseFloat(b.average) - parseFloat(a.average))
-    .slice(0, 5);
+    },
+    {}
+  );
+
+  // Estadísticas generales
+  const totalGrades = allGrades.length;
+  const avgGeneral =
+    totalGrades > 0
+      ? (allGrades.reduce((sum, g) => sum + g.value, 0) / totalGrades).toFixed(1)
+      : "—";
+
+  const aprobados = serializedStudents.filter((s) => {
+    const sg = gradesByStudent[s.id] || [];
+    if (sg.length === 0) return false;
+    const avg = sg.reduce((sum: number, g: any) => sum + g.value, 0) / sg.length;
+    return avg >= 70;
+  }).length;
+
+  // ─── Filtro de búsqueda ───────────────────────────────────────────────────────
+  const filteredStudents = query
+    ? serializedStudents.filter(
+        (s) =>
+          s.user.name.toLowerCase().includes(query.toLowerCase()) ||
+          s.user.email?.toLowerCase().includes(query.toLowerCase())
+      )
+    : serializedStudents;
 
   return (
     <>
-      {/* Summary Cards */}
+      {/* ── Resumen ─────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Calificaciones</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Users className="size-4 text-primary" />
+              Alumnos
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{grades.length}</div>
-            <p className="text-xs text-muted-foreground">Registradas</p>
+            <div className="text-2xl font-bold">{students.length}</div>
+            <p className="text-xs text-muted-foreground">En mis cursos</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Promedio General</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{averageGrade}</div>
-            <p className="text-xs text-muted-foreground">De 100</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Exámenes</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <ClipboardList className="size-4 text-primary" />
+              Evaluaciones
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{exams.length}</div>
-            <p className="text-xs text-muted-foreground">Creados</p>
+            <p className="text-xs text-muted-foreground">Creadas</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Mejores Alumnos</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="size-4 text-primary" />
+              Promedio General
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{topStudents.length}</div>
-            <p className="text-xs text-muted-foreground">Top 5</p>
+            <div className="text-2xl font-bold">{avgGeneral}</div>
+            <p className="text-xs text-muted-foreground">De 100 pts</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <BookOpen className="size-4 text-primary" />
+              Calificaciones
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalGrades}</div>
+            <p className="text-xs text-muted-foreground">Registradas</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex justify-between items-center mt-6">
+      {/* ── Header + Botón ──────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Calificaciones</h2>
-          <p className="text-muted-foreground">
-            Registra y gestiona las calificaciones de estudiantes.
+          <p className="text-muted-foreground text-sm">
+            {teacherProfile
+              ? "Vista de mis alumnos y sus calificaciones"
+              : "Registro de calificaciones de todos los alumnos"}
           </p>
         </div>
         {userRole !== "ADMIN" && (
-          <GradeDialog 
-            mode="add" 
-            students={serializedStudents} 
-            exams={serializedExams} 
-            courseAssignments={serializedAssignments} 
+          <GradeDialog
+            mode="add"
+            students={serializedStudents}
+            exams={serializedExams}
           />
         )}
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+      {/* ── Tabla Gradebook (Sábana de Notas) ──────────────────────────────── */}
+      <Card className="mt-2">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <CardTitle>Registro de Calificaciones</CardTitle>
-            <CardDescription>Todas las calificaciones registradas</CardDescription>
+            <CardTitle>
+              Sábana de Calificaciones
+            </CardTitle>
+            <CardDescription>
+              {filteredStudents.length} alumno{filteredStudents.length !== 1 ? "s" : ""} ·{" "}
+              {exams.length} evaluaci{exams.length !== 1 ? "ones" : "ón"} registrada{exams.length !== 1 ? "s" : ""}
+            </CardDescription>
           </div>
-          <div className="w-full max-w-sm">
-            <SearchInput placeholder="Buscar alumno por nombre o correo..." />
+          <div className="w-full max-w-xs">
+            <SearchInput placeholder="Buscar alumno..." />
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Estudiante</TableHead>
-                <TableHead>Examen / Evaluación</TableHead>
-                <TableHead>Curso</TableHead>
-                <TableHead>Calificación</TableHead>
-                <TableHead>Comentario</TableHead>
-                <TableHead>Fecha</TableHead>
-                {userRole !== "ADMIN" && (
-                  <TableHead className="text-right">Acciones</TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredGrades.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    {query ? "No se encontraron calificaciones para esa búsqueda." : "No hay calificaciones registradas aún."}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredGrades.map((grade) => (
-                  <TableRow key={grade.id}>
-                    <TableCell className="font-medium">
-                      {grade.student?.user?.name || "Estudiante"}
-                    </TableCell>
-                    <TableCell>{grade.exam?.title || "General"}</TableCell>
-                    <TableCell>
-                      {grade.exam?.unit?.course?.name || grade.courseAssignment?.course?.name || "General"}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`font-bold text-lg ${
-                          grade.value >= 85
-                            ? "text-green-600"
-                            : grade.value >= 70
-                            ? "text-yellow-600"
-                            : "text-red-600"
-                        }`}
+        <CardContent className="p-0">
+          {filteredStudents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+              <Users className="size-10 text-muted-foreground/40 mb-3" />
+              <p className="font-semibold text-foreground">
+                {query ? "No se encontraron alumnos" : "Sin alumnos asignados"}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {query
+                  ? "Intenta con otro término de búsqueda."
+                  : "Aún no tienes alumnos inscritos en tus cursos."}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    {/* Columna fija: Alumno */}
+                    <TableHead className="min-w-[200px] font-semibold sticky left-0 bg-muted/50 z-10">
+                      Estudiante
+                    </TableHead>
+
+                    {/* Columnas dinámicas: una por evaluación */}
+                    {exams.map((exam) => (
+                      <TableHead
+                        key={exam.id}
+                        className="text-center min-w-[110px] font-medium"
                       >
-                        {grade.value.toFixed(1)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {grade.comment || "-"}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {grade.createdAt.toLocaleDateString()}
-                    </TableCell>
-                    {userRole !== "ADMIN" && (
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <GradeDialog 
-                            mode="edit" 
-                            grade={grade}
-                            students={serializedStudents} 
-                            exams={serializedExams} 
-                            courseAssignments={serializedAssignments} 
-                          />
-                          <GradeDialog 
-                            mode="delete" 
-                            grade={grade} 
-                          />
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-xs font-semibold truncate max-w-[100px]" title={exam.title}>
+                            {exam.title}
+                          </span>
+                          <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5 font-normal">
+                            {exam.type === "EXAM"
+                              ? "Examen"
+                              : exam.type === "QUIZ"
+                              ? "Quiz"
+                              : exam.type === "HOMEWORK"
+                              ? "Tarea"
+                              : exam.type === "PROJECT"
+                              ? "Proyecto"
+                              : exam.type}
+                          </Badge>
                         </div>
-                      </TableCell>
+                      </TableHead>
+                    ))}
+
+                    {/* Otras notas */}
+                    <TableHead className="text-center min-w-[90px] font-medium">
+                      Otras notas
+                    </TableHead>
+
+                    {/* Promedio */}
+                    <TableHead className="text-center min-w-[90px] font-semibold">
+                      Promedio
+                    </TableHead>
+
+                    {/* Acciones */}
+                    {userRole !== "ADMIN" && (
+                      <TableHead className="text-center min-w-[120px]">
+                        Acciones
+                      </TableHead>
                     )}
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+
+                <TableBody>
+                  {filteredStudents.map((student) => {
+                    const studentGrades = gradesByStudent[student.id] || [];
+                    const evalGrades = evalByStudentExam[student.id] || {};
+                    const otherGrades = studentGrades.filter((g) => !g.examId);
+                    const otherAvg =
+                      otherGrades.length > 0
+                        ? otherGrades.reduce((s: number, g: any) => s + g.value, 0) / otherGrades.length
+                        : null;
+
+                    // Promedio general del alumno
+                    const overallAvg =
+                      studentGrades.length > 0
+                        ? studentGrades.reduce((sum: number, g: any) => sum + g.value, 0) / studentGrades.length
+                        : null;
+
+                    const courseName =
+                      student.enrollments?.[0]?.course?.name || "";
+                    const groupName =
+                      student.enrollments?.[0]?.group?.name || "";
+
+                    return (
+                      <TableRow key={student.id} className="hover:bg-muted/30 transition-colors">
+                        {/* Columna Alumno */}
+                        <TableCell className="sticky left-0 bg-background z-10 border-r">
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <span className="font-semibold text-sm text-foreground truncate">
+                              {student.user.name}
+                            </span>
+                            {(courseName || groupName) && (
+                              <span className="text-[10px] text-muted-foreground truncate">
+                                {courseName}
+                                {groupName ? ` · ${groupName}` : ""}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+
+                        {/* Columnas de evaluaciones */}
+                        {exams.map((exam) => {
+                          const gradeForExam = evalGrades[exam.id];
+                          return (
+                            <TableCell key={exam.id} className="text-center px-2">
+                              {gradeForExam ? (
+                                <span
+                                  className={`inline-block font-bold text-sm px-2 py-0.5 rounded-md ${
+                                    gradeForExam.value >= 85
+                                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                                      : gradeForExam.value >= 70
+                                      ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+                                      : "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300"
+                                  }`}
+                                >
+                                  {gradeForExam.value.toFixed(1)}
+                                </span>
+                              ) : userRole !== "ADMIN" ? (
+                                <GradeDialog
+                                  mode="add"
+                                  students={serializedStudents}
+                                  exams={serializedExams}
+                                  defaultStudentId={student.id}
+                                  defaultExamId={exam.id}
+                                  defaultType="EVALUATION"
+                                  trigger={
+                                    <button
+                                      className="inline-flex items-center justify-center size-7 rounded-md border border-dashed border-muted-foreground/30 text-muted-foreground/50 hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all"
+                                      title={`Calificar ${exam.title} para ${student.user.name}`}
+                                    >
+                                      <PlusCircle className="size-3.5" />
+                                    </button>
+                                  }
+                                />
+                              ) : (
+                                <span className="text-muted-foreground/40 text-xs">—</span>
+                              )}
+                            </TableCell>
+                          );
+                        })}
+
+                        {/* Otras notas */}
+                        <TableCell className="text-center px-2">
+                          {otherGrades.length > 0 ? (
+                            <StudentGradesDetailDialog
+                              student={student}
+                              grades={otherGrades}
+                              exams={serializedExams}
+                              studentsList={serializedStudents}
+                              trigger={
+                                <button className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium">
+                                  {otherGrades.length} nota{otherGrades.length !== 1 ? "s" : ""}
+                                  {otherAvg !== null && (
+                                    <span className="text-muted-foreground font-normal">
+                                      ({otherAvg.toFixed(1)})
+                                    </span>
+                                  )}
+                                </button>
+                              }
+                            />
+                          ) : (
+                            <span className="text-muted-foreground/40 text-xs">—</span>
+                          )}
+                        </TableCell>
+
+                        {/* Promedio */}
+                        <TableCell className="text-center">
+                          {overallAvg !== null ? (
+                            <span
+                              className={`font-black text-base ${
+                                overallAvg >= 85
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : overallAvg >= 70
+                                  ? "text-amber-600 dark:text-amber-400"
+                                  : "text-rose-600 dark:text-rose-400"
+                              }`}
+                            >
+                              {overallAvg.toFixed(1)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground/40 text-sm">—</span>
+                          )}
+                        </TableCell>
+
+                        {/* Acciones */}
+                        {userRole !== "ADMIN" && (
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              {/* Ver historial completo */}
+                              <StudentGradesDetailDialog
+                                student={student}
+                                grades={studentGrades}
+                                exams={serializedExams}
+                                studentsList={serializedStudents}
+                                trigger={
+                                  <button
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground border rounded-md px-2 py-1 hover:bg-muted/60 transition-colors"
+                                    title="Ver todas las calificaciones"
+                                  >
+                                    <BookOpen className="size-3.5" />
+                                    <span>Ver</span>
+                                  </button>
+                                }
+                              />
+
+                              {/* Agregar nota rápida */}
+                              <GradeDialog
+                                mode="add"
+                                students={serializedStudents}
+                                exams={serializedExams}
+                                defaultStudentId={student.id}
+                                trigger={
+                                  <button
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-primary border border-primary/40 rounded-md px-2 py-1 hover:bg-primary/10 transition-colors"
+                                    title="Agregar calificación"
+                                  >
+                                    <PlusCircle className="size-3.5" />
+                                    <span>+ Calificar</span>
+                                  </button>
+                                }
+                              />
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </>
   );
 }
-

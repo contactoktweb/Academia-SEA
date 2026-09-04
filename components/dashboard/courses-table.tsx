@@ -7,13 +7,47 @@ export async function CoursesTable({ isAdmin = true }: { isAdmin?: boolean }) {
   const sedeCondition = await getSedeCondition();
   const session = await auth();
   const activeSede = (session?.user as any)?.sede || "SEAAUTLAN";
+  const userRole = session?.user?.role;
+  const userId = session?.user?.id;
+
+  // Obtener perfil de profesor si aplica
+  let teacherProfile: { id: string } | null = null;
+  if (userRole === "TEACHER" && userId) {
+    teacherProfile = await db.teacherProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+  }
+
+  // ─── Filtros por rol ─────────────────────────────────────────────────────────
+  const courseWhere = teacherProfile
+    ? {
+        isActive: true,
+        assignments: {
+          some: { teacherId: teacherProfile.id },
+        },
+      }
+    : { ...sedeCondition, isActive: true };
+
+  const groupWhere = teacherProfile
+    ? {
+        isActive: true,
+        assignments: {
+          some: { teacherId: teacherProfile.id },
+        },
+      }
+    : { ...sedeCondition, isActive: true };
 
   const [rawCourses, rawGroups] = await Promise.all([
     db.course.findMany({
-      where: { ...sedeCondition, isActive: true },
+      where: courseWhere,
       include: {
         cycle: true,
         assignments: {
+          // Si es profesor, incluir solo sus asignaciones; si es admin, todas
+          ...(teacherProfile
+            ? { where: { teacherId: teacherProfile.id } }
+            : {}),
           include: {
             teacher: { include: { user: true } },
             group: true,
@@ -25,9 +59,12 @@ export async function CoursesTable({ isAdmin = true }: { isAdmin?: boolean }) {
       orderBy: { name: "asc" },
     }),
     db.group.findMany({
-      where: { ...sedeCondition, isActive: true },
+      where: groupWhere,
       include: {
         assignments: {
+          ...(teacherProfile
+            ? { where: { teacherId: teacherProfile.id } }
+            : {}),
           include: {
             course: true,
             teacher: { include: { user: true } },
@@ -91,3 +128,4 @@ export async function CoursesTable({ isAdmin = true }: { isAdmin?: boolean }) {
     />
   );
 }
+
