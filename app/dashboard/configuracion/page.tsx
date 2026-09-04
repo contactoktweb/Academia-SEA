@@ -4,10 +4,20 @@ import { ConfigTabsClient } from "@/components/dashboard/config-tabs"
 import { Suspense } from "react"
 import { Loader2, Info } from "lucide-react"
 import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
+import { checkAndActivateTeacherByUserId } from "@/lib/teacher-activation"
 
 export default async function Page() {
   const session = await auth();
-  const isApproved = session?.user?.isApproved ?? true;
+  let isApproved = session?.user?.isApproved ?? true;
+
+  if (session?.user?.role === "TEACHER" && !isApproved && session?.user?.id) {
+    const activated = await checkAndActivateTeacherByUserId(session.user.id);
+    if (activated) {
+      redirect("/dashboard");
+    }
+  }
+
   const result = await getSystemConfig();
 
   return (

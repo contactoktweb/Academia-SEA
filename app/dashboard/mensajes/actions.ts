@@ -12,22 +12,50 @@ export async function getContacts() {
 
     const sedeCondition = await getSedeCondition();
 
-    // Fetch all users in the same sede, excluding the current user
+    // Consultar únicamente usuarios activos y no eliminados
     const users = await db.user.findMany({
       where: {
         ...sedeCondition,
         id: { not: session.user.id },
+        deletedAt: null,
+        isActive: true,
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        createdAt: true,
       },
-      orderBy: { name: "asc" }
+      orderBy: [
+        { name: "asc" },
+        { createdAt: "desc" },
+      ],
     });
 
-    return { success: true, data: users };
+    // Deduplicar personas por nombre y correo para evitar registros duplicados
+    const seen = new Set<string>();
+    const uniqueUsers: Array<{
+      id: string;
+      name: string;
+      email: string;
+      role: any;
+    }> = [];
+
+    for (const u of users) {
+      const key = `${u.name.trim().toLowerCase()}_${u.email.trim().toLowerCase()}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueUsers.push({
+          id: u.id,
+          name: u.name.trim(),
+          email: u.email.trim(),
+          role: u.role,
+        });
+      }
+    }
+
+    return { success: true, data: uniqueUsers };
   } catch (error) {
     console.error("Error fetching contacts:", error);
     return { success: false, error: "Error al obtener contactos" };

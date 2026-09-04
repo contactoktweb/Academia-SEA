@@ -106,7 +106,7 @@ export function GradeForm({
                 <SelectContent>
                   {students.map((student) => (
                     <SelectItem key={student.id} value={student.id}>
-                      {student.user.name}
+                      {student.user?.name || "Estudiante"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -129,11 +129,16 @@ export function GradeForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {courseAssignments.map((ca) => (
-                    <SelectItem key={ca.id} value={ca.id}>
-                      {ca.course.name} - {ca.group.name} ({ca.teacher.user.name})
-                    </SelectItem>
-                  ))}
+                  {courseAssignments.map((ca) => {
+                    const courseName = ca.course?.name || "Curso";
+                    const groupPart = ca.group?.name ? ` - ${ca.group.name}` : "";
+                    const teacherPart = ca.teacher?.user?.name ? ` (${ca.teacher.user.name})` : "";
+                    return (
+                      <SelectItem key={ca.id} value={ca.id}>
+                        {courseName}{groupPart}{teacherPart}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -157,7 +162,7 @@ export function GradeForm({
                   <SelectItem value="none">Ninguno</SelectItem>
                   {exams.map((exam) => (
                     <SelectItem key={exam.id} value={exam.id}>
-                      {exam.title} ({exam.unit.course.name})
+                      {exam.title} {exam.unit?.course?.name ? `(${exam.unit.course.name})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>

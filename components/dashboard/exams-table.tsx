@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { auth } from "@/lib/auth";
 import {
   Card,
   CardContent,
@@ -18,7 +19,41 @@ import { ExamDialog } from "./exam-dialogs";
 import { SearchInput } from "./search-input";
 
 export async function ExamsTable({ query = "" }: { query?: string }) {
+  const session = await auth();
+  const userRole = session?.user?.role;
+  const userId = session?.user?.id;
+  const sede = (session?.user as any)?.sede || "SEAAUTLAN";
+
+  let whereCondition: any = { isActive: true };
+
+  if (userRole === "TEACHER" && userId) {
+    whereCondition = {
+      isActive: true,
+      unit: {
+        course: {
+          assignments: {
+            some: {
+              teacher: {
+                userId: userId,
+              },
+            },
+          },
+        },
+      },
+    };
+  } else if (userRole === "ADMIN") {
+    whereCondition = {
+      isActive: true,
+      unit: {
+        course: {
+          sede: sede,
+        },
+      },
+    };
+  }
+
   const exams = await db.exam.findMany({
+    where: whereCondition,
     include: {
       unit: {
         include: {
@@ -31,14 +66,12 @@ export async function ExamsTable({ query = "" }: { query?: string }) {
 
   const serializedExams = exams.map((exam) => ({
     ...exam,
-    // Max score & weight might need to be converted to plain numbers if they were decimals,
-    // but they are Float in Prisma which is just a number in JS. So this is safe.
   }));
 
   const filteredExams = query
     ? serializedExams.filter((exam) =>
         exam.title.toLowerCase().includes(query.toLowerCase()) ||
-        exam.unit.course.name.toLowerCase().includes(query.toLowerCase())
+        (exam.unit?.course?.name || "").toLowerCase().includes(query.toLowerCase())
       )
     : serializedExams;
 
@@ -110,8 +143,8 @@ export async function ExamsTable({ query = "" }: { query?: string }) {
                     <TableCell className="font-medium">{exam.title}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-semibold">{exam.unit.course.name}</span>
-                        <span className="text-xs text-muted-foreground">{exam.unit.name}</span>
+                        <span className="font-semibold">{exam.unit?.course?.name || "Curso"}</span>
+                        <span className="text-xs text-muted-foreground">{exam.unit?.name || "-"}</span>
                       </div>
                     </TableCell>
                     <TableCell>

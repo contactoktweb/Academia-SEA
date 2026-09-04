@@ -227,11 +227,11 @@ export async function GradesTable({ query = "" }: { query?: string }) {
                 filteredGrades.map((grade) => (
                   <TableRow key={grade.id}>
                     <TableCell className="font-medium">
-                      {grade.student.user.name}
+                      {grade.student?.user?.name || "Estudiante"}
                     </TableCell>
                     <TableCell>{grade.exam?.title || "General"}</TableCell>
                     <TableCell>
-                      {grade.exam?.unit.course.name || "N/A"}
+                      {grade.exam?.unit?.course?.name || grade.courseAssignment?.course?.name || "General"}
                     </TableCell>
                     <TableCell>
                       <span

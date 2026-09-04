@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
+import { activateTeacherProfile } from "@/lib/teacher-activation";
 
 export async function createCourse(data: {
   name: string;
@@ -34,6 +35,7 @@ export async function createCourse(data: {
           sede,
         }
       });
+      await activateTeacherProfile(teacherId);
     }
 
     if (studentIds && studentIds.length > 0) {
@@ -115,6 +117,7 @@ export async function updateCourse(
           data: { courseId, teacherId }
         });
       }
+      await activateTeacherProfile(teacherId);
     }
 
     if (studentIds) {
@@ -177,7 +180,13 @@ export async function createCourseAssignment(data: {
       },
     });
 
+    // Activar automáticamente al profesor al asignarle un curso
+    if (data.teacherId) {
+      await activateTeacherProfile(data.teacherId);
+    }
+
     revalidatePath("/dashboard/cursos");
+    revalidatePath("/dashboard/profesores");
     return { success: true, data: assignment };
   } catch (error) {
     console.error("Error creating assignment:", error);

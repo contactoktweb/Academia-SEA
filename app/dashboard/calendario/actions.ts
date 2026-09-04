@@ -13,6 +13,18 @@ export async function createCalendarEvent(data: {
 }) {
   try {
     const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "No autorizado" };
+    }
+
+    // Regla de permisos: el profesor solo tiene vista de lectura; solo el administrador puede crear eventos
+    if (session.user.role !== "ADMIN") {
+      return { 
+        success: false, 
+        error: "Solo los administradores tienen autorización para programar eventos en el calendario escolar." 
+      };
+    }
+
     const sede = (session?.user as any)?.sede || "SEAAUTLAN";
 
     const event = await db.calendarEvent.create({
@@ -36,6 +48,11 @@ export async function createCalendarEvent(data: {
 
 export async function deleteCalendarEvent(id: string) {
   try {
+    const session = await auth();
+    if (!session?.user?.id || session.user.role !== "ADMIN") {
+      return { success: false, error: "Solo los administradores pueden eliminar eventos" };
+    }
+
     const existing = await db.calendarEvent.findUnique({ where: { id } });
     await db.calendarEvent.update({
       where: { id },

@@ -5,6 +5,7 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar"
 import { client } from "@/sanity/lib/client"
 import { GLOBAL_CONFIG_QUERY } from "@/sanity/lib/queries"
 import { urlFor } from "@/sanity/lib/image"
+import { checkAndActivateTeacherByUserId } from "@/lib/teacher-activation"
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const [session, globalConfig] = await Promise.all([
@@ -16,6 +17,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     redirect("/login")
   }
 
+  let effectiveApproved = session.user.isApproved;
+  if (session.user.role === 'TEACHER' && !effectiveApproved && session.user.id) {
+    effectiveApproved = await checkAndActivateTeacherByUserId(session.user.id);
+  }
+
   const logoUrl = globalConfig?.logo?.asset ? urlFor(globalConfig.logo.asset).url() : "/images/SEA_LOGO-05.png"
 
   return (
@@ -24,7 +30,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         userRole={session.user.role as any} 
         userName={session.user.name || "Usuario"} 
         logoUrl={logoUrl}
-        isApproved={session.user.isApproved}
+        isApproved={effectiveApproved}
       />
       <main className="flex-1 min-w-0 flex flex-col overflow-y-auto">
         <div className="flex-1 flex flex-col p-4 md:p-8 lg:p-10 gap-6">

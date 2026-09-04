@@ -42,14 +42,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, Edit2, Trash2, Loader2 } from "lucide-react";
+import { UserX, Edit2, Trash2, Loader2, Info } from "lucide-react";
 import { recordAttendance, deleteAttendance, getStudentsForAttendance } from "@/app/dashboard/asistencia/actions";
 import { toast } from "sonner";
 
 const attendanceSchema = z.object({
   studentId: z.string().min(1, "Seleccione un estudiante"),
   date: z.string().min(1, "Seleccione una fecha"),
-  status: z.string().min(1, "Seleccione el estado"),
+  status: z.enum(["ABSENT", "EXCUSED", "LATE"], {
+    errorMap: () => ({ message: "Seleccione el tipo de inasistencia" }),
+  }),
   notes: z.string().optional(),
 });
 
@@ -63,26 +65,29 @@ interface AttendanceDialogProps {
 export function AttendanceDialog({ mode, attendance }: AttendanceDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const router = useRouter();
 
   function handleSuccess() {
     setOpen(false);
-    const toastId = toast.loading("Actualizando tabla...");
+    const toastId = toast.loading("Actualizando registros...");
     startTransition(() => {
       router.refresh();
       toast.dismiss(toastId);
       toast.success("Datos actualizados");
     });
   }
+
   const [students, setStudents] = useState<any[]>([]);
 
   useEffect(() => {
     if (open && (mode === "add" || mode === "edit")) {
-      const fetchStudents = async () => {
-        const result = await getStudentsForAttendance();
-        if (result.success) setStudents(result.data || []);
-      };
-      fetchStudents();
+      setIsLoadingStudents(true);
+      getStudentsForAttendance()
+        .then((result) => {
+          if (result.success) setStudents(result.data || []);
+        })
+        .finally(() => setIsLoadingStudents(false));
     }
   }, [open, mode]);
 
@@ -90,8 +95,10 @@ export function AttendanceDialog({ mode, attendance }: AttendanceDialogProps) {
     resolver: zodResolver(attendanceSchema),
     defaultValues: {
       studentId: attendance?.studentId || "",
-      date: attendance?.date ? new Date(attendance.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      status: attendance?.status || "PRESENT",
+      date: attendance?.date 
+        ? new Date(attendance.date).toISOString().split('T')[0] 
+        : new Date().toISOString().split('T')[0],
+      status: attendance?.status && attendance.status !== "PRESENT" ? attendance.status : "ABSENT",
       notes: attendance?.notes || "",
     },
   });
@@ -100,15 +107,15 @@ export function AttendanceDialog({ mode, attendance }: AttendanceDialogProps) {
     startTransition(async () => {
       const promise = recordAttendance(values);
       await toast.promise(promise, {
-        loading: "Registrando asistencia...",
+        loading: "Registrando inasistencia...",
         success: (result: any) => {
           if (result.success) {
             handleSuccess();
-            return mode === "add" ? "Asistencia registrada" : "Asistencia actualizada";
+            return mode === "add" ? "Inasistencia registrada" : "Inasistencia actualizada";
           }
           throw new Error(result.error);
         },
-        error: (err) => err.message || "Error al registrar la asistencia",
+        error: (err) => err.message || "Error al registrar la inasistencia",
       });
     });
   };
@@ -117,15 +124,15 @@ export function AttendanceDialog({ mode, attendance }: AttendanceDialogProps) {
     startTransition(async () => {
       const promise = deleteAttendance(attendance.id);
       await toast.promise(promise, {
-        loading: "Eliminando registro...",
+        loading: "Eliminando inasistencia...",
         success: (result: any) => {
           if (result.success) {
             handleSuccess();
-            return "Registro eliminado correctamente";
+            return "Inasistencia eliminada. Asistencia normal restablecida.";
           }
           throw new Error(result.error);
         },
-        error: (err) => err.message || "Error al eliminar el registro",
+        error: (err) => err.message || "Error al eliminar la inasistencia",
       });
     });
   };
@@ -140,16 +147,16 @@ export function AttendanceDialog({ mode, attendance }: AttendanceDialogProps) {
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar inasistencia?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción eliminará el registro de asistencia de {attendance?.student?.user?.name} para el día {new Date(attendance?.date).toLocaleDateString()}.
+              Esta acción eliminará el reporte de inasistencia de <strong>{attendance?.student?.user?.name}</strong> para el día {new Date(attendance?.date).toLocaleDateString()}. El estudiante volverá a contar con asistencia normal en dicha fecha.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Eliminar
+              Eliminar Inasistencia
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -161,9 +168,9 @@ export function AttendanceDialog({ mode, attendance }: AttendanceDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {mode === "add" ? (
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Registrar Asistencia
+          <Button className="bg-[#0066cc] hover:bg-[#0055aa] text-white">
+            <UserX className="mr-2 h-4 w-4" />
+            Registrar Inasistencia
           </Button>
         ) : (
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -171,95 +178,140 @@ export function AttendanceDialog({ mode, attendance }: AttendanceDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle>{mode === "add" ? "Registrar Asistencia" : "Editar Asistencia"}</DialogTitle>
+          <DialogTitle>{mode === "add" ? "Registrar Inasistencia" : "Editar Inasistencia"}</DialogTitle>
           <DialogDescription>
-            Indique el estado de asistencia del estudiante para la fecha seleccionada.
+            Indique la falta o inasistencia del estudiante para la fecha seleccionada.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Nota explicativa de negocio */}
+        <div className="flex items-start gap-2.5 p-3 rounded-lg bg-blue-50/80 border border-blue-200/80 text-blue-900 text-xs mt-1">
+          <Info className="h-4 w-4 text-[#0066cc] shrink-0 mt-0.5" />
+          <p>
+            <strong>Asistencia por Excepción:</strong> Todos los estudiantes cuentan con asistencia por defecto. Solo es necesario registrar a aquellos alumnos que hayan faltado o llegado tarde.
+          </p>
+        </div>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
             <FormField
               control={form.control}
               name="studentId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Estudiante</FormLabel>
+                  <FormLabel className="text-xs font-bold text-slate-700">Estudiante</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value} disabled={mode === "edit"}>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccione un estudiante" />
+                      <SelectTrigger className="h-9 text-xs">
+                        <SelectValue placeholder={isLoadingStudents ? "Cargando alumnos..." : "Seleccione un estudiante"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {students.map((student) => (
-                        <SelectItem key={student.id} value={student.studentProfile?.id || ""}>
-                          {student.name}
+                      {students.map((student) => {
+                        const profileId = student.studentProfile?.id || "";
+                        const enrollments = student.studentProfile?.enrollments || [];
+                        const courseInfo = enrollments.length > 0
+                          ? ` (${enrollments[0].course?.name || "Curso"}${enrollments[0].group?.name ? ` - ${enrollments[0].group.name}` : ""})`
+                          : "";
+                        return (
+                          <SelectItem key={student.id} value={profileId} className="text-xs">
+                            {student.name}{courseInfo}
+                          </SelectItem>
+                        );
+                      })}
+                      {!isLoadingStudents && students.length === 0 && (
+                        <SelectItem value="none" disabled className="text-xs">
+                          No se encontraron estudiantes
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fecha</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} disabled={mode === "edit"} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estado</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold text-slate-700">Fecha de Inasistencia</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccione el estado" />
-                      </SelectTrigger>
+                      <Input type="date" className="h-9 text-xs" {...field} disabled={mode === "edit"} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="PRESENT">Presente</SelectItem>
-                      <SelectItem value="ABSENT">Ausente</SelectItem>
-                      <SelectItem value="LATE">Tarde</SelectItem>
-                      <SelectItem value="EXCUSED">Excusado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold text-slate-700">Tipo de Inasistencia</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-9 text-xs">
+                          <SelectValue placeholder="Seleccione el estado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ABSENT" className="text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-red-500" />
+                            <span className="font-semibold text-red-700">Inasistencia / Falta</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="EXCUSED" className="text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-blue-500" />
+                            <span className="font-semibold text-blue-700">Falta Justificada</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="LATE" className="text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-amber-500" />
+                            <span className="font-semibold text-amber-700">Retardo / Tardanza</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notas / Observaciones</FormLabel>
+                  <FormLabel className="text-xs font-bold text-slate-700">Motivo / Observaciones (Opcional)</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Ej. El alumno llegó tarde por transporte..." {...field} />
+                    <Textarea 
+                      placeholder="Ej. Justificante médico entregado, aviso de ausencia familiar..." 
+                      className="text-xs min-h-[80px]"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-9 text-xs">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending} className="bg-[#0066cc] hover:bg-[#0055aa] text-white h-9 text-xs font-bold">
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {mode === "add" ? "Registrar" : "Guardar Cambios"}
+                {mode === "add" ? "Registrar Inasistencia" : "Guardar Cambios"}
               </Button>
             </div>
           </form>

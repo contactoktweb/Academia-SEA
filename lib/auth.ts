@@ -71,6 +71,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           },
         })
 
+        // Si es profesor y aún no está aprobado, verificar si ya tiene cursos asignados para activarlo automáticamente
+        let isApproved = user.isApproved;
+        if (user.role === 'TEACHER' && !isApproved && user.teacherProfile?.id) {
+          const coursesCount = await db.courseAssignment.count({
+            where: { teacherId: user.teacherProfile.id },
+          });
+          if (coursesCount > 0) {
+            await db.user.update({
+              where: { id: user.id },
+              data: { isApproved: true, isActive: true },
+            });
+            isApproved = true;
+          }
+        }
+
         return {
           id: user.id,
           email: user.email,
@@ -78,9 +93,54 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: user.role,
           image: user.photoUrl,
           sede: sede,
-          isApproved: user.isApproved,
+          isApproved,
         }
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    async jwt({ token, user, trigger, session }) {
+      token = await authConfig.callbacks.jwt({ token, user, trigger, session });
+
+      // Si es profesor y aún no está aprobado en el token, verificar si ya tiene cursos asignados
+      if (token?.id && token?.role === 'TEACHER' && !token?.isApproved) {
+        try {
+          const teacherUser = await db.user.findUnique({
+            where: { id: token.id as string },
+            include: {
+              teacherProfile: {
+                include: {
+                  courses: { take: 1 },
+                },
+              },
+            },
+          });
+
+          if (teacherUser?.isApproved || (teacherUser?.teacherProfile?.courses?.length || 0) > 0) {
+            if (!teacherUser?.isApproved) {
+              await db.user.update({
+                where: { id: teacherUser!.id },
+                data: { isApproved: true, isActive: true },
+              });
+            }
+            token.isApproved = true;
+          }
+        } catch (err) {
+          console.error("Error auto-activating teacher in jwt callback:", err);
+        }
+      }
+
+      return token;
+    },
+    async session({ session, token }: any) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as any;
+        session.user.sede = token.sede as string;
+        session.user.isApproved = Boolean(token.isApproved);
+      }
+      return session;
+    },
+  },
 })

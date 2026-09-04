@@ -68,6 +68,7 @@ export async function updateTeacher(
     salary?: number;
     sede?: string;
     isActive?: boolean;
+    isApproved?: boolean;
   }
 ) {
   try {
@@ -79,6 +80,7 @@ export async function updateTeacher(
         phone: data.phone,
         ...(data.sede ? { sede: data.sede as any } : {}),
         ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+        ...(data.isApproved !== undefined ? { isApproved: data.isApproved } : {}),
         teacherProfile: data.specialty || data.salary || data.sede ? {
           update: {
             specialty: data.specialty,

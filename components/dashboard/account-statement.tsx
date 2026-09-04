@@ -164,7 +164,8 @@ export function AccountStatement({ students }: AccountStatementProps) {
               <p className="text-muted-foreground font-medium">{statement.student.name}</p>
               {statement.student.enrollment && (
                 <p className="text-sm text-slate-500">
-                  {statement.student.enrollment.course.name} - {statement.student.enrollment.group.name}
+                  {statement.student.enrollment.course?.name || "Curso"}
+                  {statement.student.enrollment.group?.name ? ` - ${statement.student.enrollment.group.name}` : ""}
                 </p>
               )}
             </div>

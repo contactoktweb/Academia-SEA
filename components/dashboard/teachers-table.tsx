@@ -40,6 +40,7 @@ export async function TeachersTable() {
       phone: true,
       photoUrl: true,
       isActive: true,
+      isApproved: true,
       role: true,
       createdAt: true,
       updatedAt: true,
@@ -183,9 +184,15 @@ export async function TeachersTable() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                        Activo
-                      </span>
+                      {teacher.isApproved ? (
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                          Aprobado
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
+                          En revisión
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">

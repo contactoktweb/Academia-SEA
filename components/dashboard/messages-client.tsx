@@ -237,7 +237,7 @@ export function MessagesClient({ currentUserId }: MessagesClientProps) {
                           {contacts.map((contact) => (
                             <CommandItem
                               key={contact.id}
-                              value={contact.name}
+                              value={`${contact.name} ${contact.email}`}
                               onSelect={() => {
                                 setComposeReceiverId(contact.id);
                                 setOpenCombobox(false);

@@ -25,9 +25,18 @@ import { ReportDeleteButton } from "./report-delete-button";
 export async function ReportsTable({ query = "" }: { query?: string }) {
   const session = await auth();
   const userName = session?.user?.name || "Administrador";
+  const userRole = session?.user?.role;
+
+  let whereCondition: any = { type: "REPORT_CARD" };
+  if (userRole === "TEACHER" && userName) {
+    whereCondition = {
+      type: "REPORT_CARD",
+      generatedBy: userName,
+    };
+  }
 
   const reports = await db.report.findMany({
-    where: { type: "REPORT_CARD" },
+    where: whereCondition,
     include: {
       cycle: true,
     },
@@ -39,6 +48,7 @@ export async function ReportsTable({ query = "" }: { query?: string }) {
     return {
       ...report,
       studentName: data.studentName || "Desconocido",
+      courseName: data.courseName || null,
       generalAverage: data.generalAverage || "0.00",
     };
   });
@@ -101,7 +111,14 @@ export async function ReportsTable({ query = "" }: { query?: string }) {
                         {report.title}
                       </div>
                     </TableCell>
-                    <TableCell>{report.studentName}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{report.studentName}</span>
+                        {report.courseName && (
+                          <span className="text-[11px] text-muted-foreground">{report.courseName}</span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{report.cycle?.name || "Todos los ciclos"}</TableCell>
                     <TableCell>
                       <span className="font-bold text-sea-blue">{report.generalAverage}</span>
