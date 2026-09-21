@@ -28,20 +28,53 @@ import Link from "next/link"
 import { StudentDialog } from "./student-dialogs"
 import { StudentPaymentPlanDialog } from "./student-payment-plan-dialog"
 
-export async function StudentsTable({ query, isAdmin = true }: { query?: string, isAdmin?: boolean }) {
+export async function StudentsTable({
+  query,
+  isAdmin = true,
+  userRole,
+  userId,
+}: {
+  query?: string;
+  isAdmin?: boolean;
+  userRole?: string;
+  userId?: string;
+}) {
   const sedeCondition = await getSedeCondition();
-  
+
+  // Si es TEACHER, solo muestra alumnos de sus cursos asignados
+  const teacherFilter =
+    userRole === "TEACHER" && userId
+      ? {
+          studentProfile: {
+            enrollments: {
+              some: {
+                course: {
+                  assignments: {
+                    some: {
+                      teacher: { userId },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }
+      : {};
+
   const students = await db.user.findMany({
-    where: { 
+    where: {
       role: "STUDENT",
       deletedAt: null,
       ...sedeCondition,
-      ...(query ? {
-        OR: [
-          { name: { contains: query, mode: "insensitive" } },
-          { email: { contains: query, mode: "insensitive" } }
-        ]
-      } : {})
+      ...teacherFilter,
+      ...(query
+        ? {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { email: { contains: query, mode: "insensitive" } },
+            ],
+          }
+        : {}),
     },
     select: {
       id: true,

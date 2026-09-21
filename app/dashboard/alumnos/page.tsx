@@ -12,7 +12,9 @@ export default async function AlumnosPage(props: { searchParams: Promise<{ query
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
   const session = await auth();
-  const isAdmin = (session?.user as any)?.role === "ADMIN";
+  const userRole = (session?.user as any)?.role as string | undefined;
+  const userId = session?.user?.id;
+  const isAdmin = userRole === "ADMIN";
 
   return (
     <div className="flex flex-col gap-6">
@@ -22,7 +24,9 @@ export default async function AlumnosPage(props: { searchParams: Promise<{ query
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Alumnos</h2>
           <p className="text-muted-foreground">
-            Administra los datos y matrícula de estudiantes.
+            {userRole === "TEACHER"
+              ? "Alumnos inscritos en tus clases asignadas."
+              : "Administra los datos y matrícula de estudiantes."}
           </p>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -32,7 +36,7 @@ export default async function AlumnosPage(props: { searchParams: Promise<{ query
       </div>
 
       <Suspense fallback={<TableLoadingState />} key={query}>
-        <StudentsTable query={query} isAdmin={isAdmin} />
+        <StudentsTable query={query} isAdmin={isAdmin} userRole={userRole} userId={userId} />
       </Suspense>
     </div>
   );
